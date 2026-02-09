@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>添加章节</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .novel-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 300px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-cancel {
+            background-color: #95a5a6;
+        }
+        .btn-cancel:hover {
+            background-color: #7f8c8d;
+        }
+        .form-actions {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a th:href="@{/novels/{id}(id=${novel.id})}" class="back-link">← 返回小说详情</a>
+        
+        <h1>➕ 添加新章节</h1>
+        
+        <div class="novel-info">
+            <strong>小说：</strong><span th:text="${novel.title}">小说标题</span> - 
+            <strong>作者：</strong><span th:text="${novel.author}">作者</span>
+        </div>
+        
+        <form th:action="@{/novel/{novelId}/chapter(novelId=${novel.id})}" method="post">
+            <div class="form-group">
+                <label for="title">章节标题：</label>
+                <input type="text" id="title" name="title" required placeholder="请输入章节标题">
+            </div>
+            
+            <div class="form-group">
+                <label for="content">章节内容：</label>
+                <textarea id="content" name="content" required placeholder="请输入章节内容..."></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn">💾 保存章节</button>
+                <a th:href="@{/novels/{id}(id=${novel.id})}" class="btn btn-cancel">取消</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

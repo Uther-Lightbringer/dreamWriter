@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>章节详情 - 小说管理平台</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f5ec;
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .breadcrumb {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .breadcrumb a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .content {
+            padding: 30px 40px;
+        }
+        .chapter-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .chapter-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .chapter-info {
+            color: #666;
+            font-size: 14px;
+        }
+        .chapter-content {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.8;
+            margin: 30px 0;
+            text-align: justify;
+            white-space: pre-wrap;
+        }
+        .navigation {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-button {
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-button.secondary {
+            background-color: #6c757d;
+        }
+        .nav-button.secondary:hover {
+            background-color: #545b62;
+        }
+        .chapter-list-btn {
+            background-color: #28a745;
+        }
+        .chapter-list-btn:hover {
+            background-color: #218838;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        .error-message {
+            text-align: center;
+            padding: 50px;
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin: 20px;
+        }
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .nav-button {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>小说阅读</h1>
+        </div>
+        
+        <div class="breadcrumb">
+            <a href="/">首页</a> &gt; 
+            <a href="" id="novelLink">小说列表</a> &gt; 
+            <span id="currentChapter">章节详情</span>
+        </div>
+        
+        <div class="content">
+            <div id="loading" class="loading">正在加载章节内容...</div>
+            
+            <div id="error" class="error-message" style="display: none;">
+                加载失败，请稍后重试
+            </div>
+            
+            <div id="chapterContent" style="display: none;">
+                <div class="chapter-header">
+                    <h2 class="chapter-title" id="chapterTitle"></h2>
+                    <div class="chapter-info" id="chapterInfo"></div>
+                </div>
+                
+                <div class="chapter-content" id="chapterText"></div>
+                
+                <div class="navigation">
+                    <button id="prevButton" class="nav-button secondary" onclick="goToPrevious()" disabled>
+                        上一章
+                    </button>
+                    
+                    <button class="nav-button chapter-list-btn" onclick="goToChapterList()">
+                        章节列表
+                    </button>
+                    
+                    <button id="nextButton" class="nav-button" onclick="goToNext()" disabled>
+                        下一章
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // 从URL获取参数
+        const novelId = /*[[${novelId}]]*/ 1;
+        const chapterId = /*[[${chapterId}]]*/ 1;
+        
+        // 页面加载时获取章节详情
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChapterDetail();
+        });
+
+        // 加载章节详情
+        function loadChapterDetail() {
+            fetch(`/api/chapters/detail/${novelId}/${chapterId}`)
+            .then(response => {
+                if (response.status === 404) {
+                    showError('章节不存在');
+                    return null;
+                }
+                return response.json();
+            })
+            .then(detailView => {
+                if (detailView) {
+                    displayChapter(detailView);
+                }
+            })
+            .catch(error => {
+                console.error('加载章节详情失败:', error);
+                showError('网络错误，请稍后重试');
+            });
+        }
+
+        // 显示章节内容
+        function displayChapter(detailView) {
+            const chapter = detailView.chapter;
+            
+            // 设置面包屑导航链接
+            document.getElementById('novelLink').href = `/novel/${novelId}`;
+            document.getElementById('novelLink').textContent = detailView.novelTitle;
+            document.getElementById('currentChapter').textContent = chapter.title;
+            
+            // 显示章节信息
+            document.getElementById('chapterTitle').textContent = chapter.title;
+            document.getElementById('chapterInfo').textContent = 
+                `第${chapter.chapterNumber}章 | ` +
+                `创建时间: ${new Date(chapter.createTime).toLocaleString()}`;
+            document.getElementById('chapterText').textContent = chapter.content || '暂无内容';
+            
+            // 设置导航按钮状态
+            const prevButton = document.getElementById('prevButton');
+            const nextButton = document.getElementById('nextButton');
+            
+            if (detailView.hasPrevious && detailView.previousChapterId) {
+                prevButton.disabled = false;
+                prevButton.onclick = () => goToChapter(detailView.previousChapterId);
+            } else {
+                prevButton.disabled = true;
+            }
+            
+            if (detailView.hasNext && detailView.nextChapterId) {
+                nextButton.disabled = false;
+                nextButton.onclick = () => goToChapter(detailView.nextChapterId);
+            } else {
+                nextButton.disabled = true;
+            }
+            
+            // 隐藏加载状态，显示内容
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('chapterContent').style.display = 'block';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('chapterContent').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+        }
+
+        // 跳转到指定章节
+        function goToChapter(targetChapterId) {
+            window.location.href = `/novel/${novelId}/chapter/${targetChapterId}`;
+        }
+
+        // 跳转到上一章
+        function goToPrevious() {
+            // 这个函数会在displayChapter中被重新绑定
+        }
+
+        // 跳转到下一章
+        function goToNext() {
+            // 这个函数会在displayChapter中被重新绑定
+        }
+
+        // 跳转到章节列表
+        function goToChapterList() {
+            window.location.href = `/novel/${novelId}`;
+        }
+    </script>
+</body>
+</html>

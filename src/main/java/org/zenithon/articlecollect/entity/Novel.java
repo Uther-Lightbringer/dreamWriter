@@ -1,0 +1,176 @@
+package org.zenithon.articlecollect.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+/**
+ * 小说实体类
+ */
+@Entity
+@Table(name = "novels")
+public class Novel {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false, length = 255)
+    private String title;
+    
+    @Column(length = 100)
+    private String author;
+    
+    @Column(length = 1000)
+    private String description;
+    
+    @Column(name = "create_time")
+    private LocalDateTime createTime;
+    
+    @Column(name = "update_time")
+    private LocalDateTime updateTime;
+    
+    // 一对多关系：一个小说对应多个章节
+    @OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Chapter> chapters;
+    
+    // 用于Thymeleaf模板的格式化时间字符串
+    @Transient
+    private String formattedCreateTime;
+
+    public Novel() {
+    }
+
+    public Novel(String title) {
+        this.title = title;
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.createTime);
+    }
+
+    public Novel(String title, String author) {
+        this.title = title;
+        this.author = author;
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.createTime);
+    }
+
+    public Novel(String title, String author, String description) {
+        this.title = title;
+        this.author = author;
+        this.description = description;
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.createTime);
+    }
+
+    public Novel(Long id, String title) {
+        this.id = id;
+        this.title = title;
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.createTime);
+    }
+
+    // getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.updateTime);
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.updateTime);
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.updateTime);
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+        this.formattedCreateTime = formatTime(createTime);
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+        this.formattedCreateTime = formatTime(updateTime);
+    }
+    
+    public List<Chapter> getChapters() {
+        return chapters;
+    }
+    
+    public void setChapters(List<Chapter> chapters) {
+        this.chapters = chapters;
+    }
+    
+    public String getFormattedCreateTime() {
+        return formattedCreateTime;
+    }
+    
+    public void setFormattedCreateTime(String formattedCreateTime) {
+        this.formattedCreateTime = formattedCreateTime;
+    }
+    
+    // 公共方法：格式化时间供外部使用
+    public String formatDateTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return "";
+        }
+        return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+    }
+    
+    // 私有方法：格式化时间
+    private String formatTime(LocalDateTime dateTime) {
+        return formatDateTime(dateTime);
+    }
+
+    @Override
+    public String toString() {
+        return "Novel{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                ", description='" + description + '\'' +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", chapters=" + (chapters != null ? chapters.size() : 0) +
+                '}';
+    }
+}
