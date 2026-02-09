@@ -4,31 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>章节详情 - 小说管理平台</title>
+    <!-- 引入Marked.js用于Markdown渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 引入highlight.js用于代码高亮 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" id="hljs-theme">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <style>
+        :root {
+            /* 默认主题变量 */
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0,0,0,0.1);
+            --font-size-base: 16px;
+        }
+        
+        /* 暗黑主题变量 */
+        .dark-theme {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --header-bg: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            --card-bg: #2d2d2d;
+            --border-color: #404040;
+            --shadow-color: rgba(0,0,0,0.3);
+        }
+        
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f5ec;
+            background-color: var(--bg-color);
             line-height: 1.8;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background-color: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            background-color: var(--card-bg);
+            box-shadow: 0 0 20px var(--shadow-color);
             min-height: 100vh;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--header-bg);
             color: white;
             padding: 20px;
             text-align: center;
         }
         .breadcrumb {
             padding: 15px 20px;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .breadcrumb a {
             color: #007bff;
@@ -37,6 +67,105 @@
         .breadcrumb a:hover {
             text-decoration: underline;
         }
+        
+        /* 阅读设置区域 */
+        .reading-settings-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .setting-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .setting-label {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .font-size-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .font-size-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .font-size-btn:hover {
+            background-color: var(--bg-color);
+            transform: scale(1.1);
+        }
+        
+        .font-size-display {
+            min-width: 35px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        
+        .theme-toggle {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .theme-toggle:hover {
+            background-color: var(--bg-color);
+            transform: translateY(-1px);
+        }
+        
+        .reset-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #6c757d;
+            background-color: #6c757d;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .reset-btn:hover {
+            background-color: #545b62;
+            transform: translateY(-1px);
+        }
+        
         .content {
             padding: 30px 40px;
         }
@@ -44,33 +173,176 @@
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--border-color);
+            transition: border-color 0.3s ease;
         }
         .chapter-title {
-            font-size: 28px;
-            color: #333;
+            font-size: calc(var(--font-size-base) * 1.75);
+            color: var(--text-color);
             margin-bottom: 10px;
             font-weight: bold;
+            transition: color 0.3s ease;
         }
         .chapter-info {
-            color: #666;
-            font-size: 14px;
+            color: var(--text-color);
+            font-size: calc(var(--font-size-base) * 0.875);
+            opacity: 0.8;
+            transition: color 0.3s ease;
         }
         .chapter-content {
-            font-size: 16px;
-            color: #333;
+            font-size: var(--font-size-base);
+            color: var(--text-color);
             line-height: 1.8;
             margin: 30px 0;
             text-align: justify;
-            white-space: pre-wrap;
+            transition: color 0.3s ease, font-size 0.3s ease;
         }
+        
+        /* Markdown样式优化 */
+        .markdown-content {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            font-size: var(--font-size-base);
+            transition: all 0.3s ease;
+        }
+        
+        .markdown-content h1, .markdown-content h2, .markdown-content h3, 
+        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+            margin: 24px 0 16px 0;
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--text-color);
+            transition: color 0.3s ease;
+        }
+        
+        .markdown-content h1 { font-size: calc(var(--font-size-base) * 2); border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+        .markdown-content h2 { font-size: calc(var(--font-size-base) * 1.5); border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+        .markdown-content h3 { font-size: calc(var(--font-size-base) * 1.25); }
+        .markdown-content h4 { font-size: var(--font-size-base); }
+        .markdown-content h5 { font-size: calc(var(--font-size-base) * 0.875); color: var(--text-color); opacity: 0.8; }
+        .markdown-content h6 { font-size: calc(var(--font-size-base) * 0.85); color: var(--text-color); opacity: 0.7; }
+        
+        .markdown-content p {
+            margin: 16px 0;
+            line-height: 1.8;
+            color: var(--text-color);
+            transition: color 0.3s ease;
+        }
+        
+        .markdown-content ul, .markdown-content ol {
+            padding-left: 2em;
+            margin: 16px 0;
+            color: var(--text-color);
+        }
+        
+        .markdown-content li {
+            margin: 8px 0;
+            color: var(--text-color);
+        }
+        
+        .markdown-content blockquote {
+            margin: 16px 0;
+            padding: 0 1em;
+            color: var(--text-color);
+            opacity: 0.8;
+            border-left: 0.25em solid var(--border-color);
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .markdown-content code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: rgba(27,31,35,0.05);
+            border-radius: 3px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            color: var(--text-color);
+        }
+        
+        .dark-theme .markdown-content code {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .markdown-content pre {
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: #f6f8fa;
+            border-radius: 3px;
+            margin: 16px 0;
+        }
+        
+        .dark-theme .markdown-content pre {
+            background-color: #2d2d2d;
+        }
+        
+        .markdown-content pre code {
+            padding: 0;
+            margin: 0;
+            overflow: visible;
+            font-size: 100%;
+            word-wrap: normal;
+            background-color: transparent;
+            border: 0;
+        }
+        
+        .markdown-content a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        
+        .dark-theme .markdown-content a {
+            color: #58a6ff;
+        }
+        
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .markdown-content img {
+            max-width: 100%;
+            box-sizing: content-box;
+            background-color: var(--card-bg);
+        }
+        
+        .markdown-content table {
+            display: block;
+            width: 100%;
+            overflow: auto;
+            margin: 16px 0;
+        }
+        
+        .markdown-content table th, .markdown-content table td {
+            padding: 6px 13px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
+        }
+        
+        .markdown-content table tr {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .markdown-content table tr:nth-child(2n) {
+            background-color: rgba(0,0,0,0.03);
+        }
+        
+        .dark-theme .markdown-content table tr:nth-child(2n) {
+            background-color: rgba(255,255,255,0.05);
+        }
+        
         .navigation {
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
+            transition: border-color 0.3s ease;
         }
         .nav-button {
             padding: 12px 25px;
@@ -82,6 +354,9 @@
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            flex: 1;
+            text-align: center;
+            min-width: 100px;
         }
         .nav-button:hover {
             background-color: #0056b3;
@@ -107,7 +382,8 @@
         .loading {
             text-align: center;
             padding: 50px;
-            color: #666;
+            color: var(--text-color);
+            transition: color 0.3s ease;
         }
         .error-message {
             text-align: center;
@@ -118,17 +394,75 @@
             border-radius: 4px;
             margin: 20px;
         }
+        
+        /* 移动端优化 */
         @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                box-shadow: none;
+            }
             .content {
-                padding: 20px;
+                padding: 20px 15px;
+            }
+            .chapter-title {
+                font-size: calc(var(--font-size-base) * 1.5);
+            }
+            .chapter-content {
+                font-size: var(--font-size-base);
+                line-height: 1.7;
             }
             .navigation {
                 flex-direction: column;
-                gap: 15px;
+                gap: 10px;
             }
             .nav-button {
                 width: 100%;
-                text-align: center;
+                padding: 15px;
+                font-size: 16px;
+            }
+            .breadcrumb {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            .reading-settings-bar {
+                padding: 12px 15px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .setting-group {
+                justify-content: space-between;
+            }
+            .markdown-content {
+                font-size: var(--font-size-base);
+            }
+            .markdown-content h1 { font-size: calc(var(--font-size-base) * 1.7); }
+            .markdown-content h2 { font-size: calc(var(--font-size-base) * 1.4); }
+            .markdown-content h3 { font-size: calc(var(--font-size-base) * 1.2); }
+        }
+        
+        @media (max-width: 480px) {
+            .content {
+                padding: 15px 10px;
+            }
+            .chapter-title {
+                font-size: calc(var(--font-size-base) * 1.375);
+            }
+            .chapter-content {
+                font-size: calc(var(--font-size-base) * 0.875);
+            }
+            .nav-button {
+                padding: 12px;
+                font-size: 15px;
+            }
+            .font-size-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 14px;
+            }
+            .theme-toggle, .reset-btn {
+                padding: 6px 12px;
+                font-size: 13px;
             }
         }
     </style>
@@ -145,6 +479,31 @@
             <span id="currentChapter">章节详情</span>
         </div>
         
+        <!-- 阅读设置栏 -->
+        <div class="reading-settings-bar">
+            <div class="setting-group">
+                <span class="setting-label">字体大小:</span>
+                <div class="font-size-controls">
+                    <button class="font-size-btn" onclick="adjustFontSize(-1)">A-</button>
+                    <div class="font-size-display" id="fontSizeDisplay">16px</div>
+                    <button class="font-size-btn" onclick="adjustFontSize(1)">A+</button>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <span class="setting-label">主题模式:</span>
+                <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+                    🌙 暗黑模式
+                </button>
+            </div>
+            
+            <div class="setting-group">
+                <button class="reset-btn" onclick="resetSettings()">
+                    🔄 重置
+                </button>
+            </div>
+        </div>
+
         <div class="content">
             <div id="loading" class="loading">正在加载章节内容...</div>
             
@@ -158,7 +517,9 @@
                     <div class="chapter-info" id="chapterInfo"></div>
                 </div>
                 
-                <div class="chapter-content" id="chapterText"></div>
+                <div class="chapter-content">
+                    <div class="markdown-content" id="chapterText"></div>
+                </div>
                 
                 <div class="navigation">
                     <button id="prevButton" class="nav-button secondary" onclick="goToPrevious()" disabled>
@@ -182,10 +543,109 @@
         const novelId = /*[[${novelId}]]*/ 1;
         const chapterId = /*[[${chapterId}]]*/ 1;
         
-        // 页面加载时获取章节详情
+        // 阅读设置相关变量
+        let currentFontSize = 16; // 默认字体大小
+        let isDarkMode = false;   // 默认亮色主题
+        
+        // 配置marked.js
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                } else {
+                    return hljs.highlightAuto(code).value;
+                }
+            },
+            breaks: true,
+            gfm: true
+        });
+        
+        // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
+            loadReadingSettings();
             loadChapterDetail();
         });
+
+        // 加载阅读设置
+        function loadReadingSettings() {
+            // 从localStorage加载设置
+            const savedFontSize = localStorage.getItem('fontSize');
+            const savedTheme = localStorage.getItem('darkMode');
+            
+            if (savedFontSize) {
+                currentFontSize = parseInt(savedFontSize);
+                updateFontSize();
+            }
+            
+            if (savedTheme !== null) {
+                isDarkMode = savedTheme === 'true';
+                updateTheme();
+            }
+            
+            // 更新设置面板显示
+            document.getElementById('fontSizeDisplay').textContent = currentFontSize + 'px';
+            document.getElementById('themeToggle').innerHTML = 
+                isDarkMode ? '☀️ 亮色模式' : '🌙 暗黑模式';
+        }
+
+        // 保存阅读设置
+        function saveReadingSettings() {
+            localStorage.setItem('fontSize', currentFontSize.toString());
+            localStorage.setItem('darkMode', isDarkMode.toString());
+        }
+
+        // 调整字体大小
+        function adjustFontSize(change) {
+            const newSize = currentFontSize + change;
+            if (newSize >= 12 && newSize <= 24) {
+                currentFontSize = newSize;
+                updateFontSize();
+                document.getElementById('fontSizeDisplay').textContent = currentFontSize + 'px';
+                saveReadingSettings();
+            }
+        }
+
+        // 更新字体大小
+        function updateFontSize() {
+            document.documentElement.style.setProperty('--font-size-base', currentFontSize + 'px');
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            updateTheme();
+            document.getElementById('themeToggle').innerHTML = 
+                isDarkMode ? '☀️ 亮色模式' : '🌙 暗黑模式';
+            saveReadingSettings();
+        }
+
+        // 更新主题
+        function updateTheme() {
+            const body = document.body;
+            const hljsTheme = document.getElementById('hljs-theme');
+            
+            if (isDarkMode) {
+                body.classList.add('dark-theme');
+                hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css';
+            } else {
+                body.classList.remove('dark-theme');
+                hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css';
+            }
+        }
+
+        // 重置设置
+        function resetSettings() {
+            if (confirm('确定要重置所有阅读设置吗？')) {
+                currentFontSize = 16;
+                isDarkMode = false;
+                updateFontSize();
+                updateTheme();
+                document.getElementById('fontSizeDisplay').textContent = '16px';
+                document.getElementById('themeToggle').innerHTML = '🌙 暗黑模式';
+                localStorage.removeItem('fontSize');
+                localStorage.removeItem('darkMode');
+            }
+        }
 
         // 加载章节详情
         function loadChapterDetail() {
@@ -222,7 +682,15 @@
             document.getElementById('chapterInfo').textContent = 
                 `第${chapter.chapterNumber}章 | ` +
                 `创建时间: ${new Date(chapter.createTime).toLocaleString()}`;
-            document.getElementById('chapterText').textContent = chapter.content || '暂无内容';
+            
+            // 渲染Markdown内容
+            const content = chapter.content || '暂无内容';
+            document.getElementById('chapterText').innerHTML = marked.parse(content);
+            
+            // 高亮代码块
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
             
             // 设置导航按钮状态
             const prevButton = document.getElementById('prevButton');

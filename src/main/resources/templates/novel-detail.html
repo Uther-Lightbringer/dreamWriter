@@ -2,139 +2,259 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${novel.title} + ' - 小说详情'">小说详情</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --border-color: #dee2e6;
         }
+        
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-bg);
+            line-height: 1.6;
+            color: var(--secondary-color);
+        }
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background-color: white;
+            min-height: 100vh;
+        }
+        
+        /* 头部区域 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             padding: 20px;
-            border-radius: 8px;
+            text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
-            color: #3498db;
+            color: rgba(255,255,255,0.9);
             text-decoration: none;
             font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background-color: rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
         }
+        
         .back-link:hover {
-            text-decoration: underline;
+            background-color: rgba(255,255,255,0.2);
+            text-decoration: none;
         }
+        
         .novel-header {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            padding: 30px 20px;
+            border-bottom: 1px solid var(--border-color);
         }
+        
         .novel-title {
             font-size: 28px;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-weight: 600;
         }
+        
         .novel-meta {
             display: flex;
+            flex-wrap: wrap;
             gap: 20px;
             color: #7f8c8d;
             font-size: 14px;
+            margin-bottom: 15px;
         }
+        
         .novel-description {
-            color: #34495e;
+            color: var(--secondary-color);
             font-size: 16px;
-            line-height: 1.6;
+            line-height: 1.7;
             margin: 20px 0;
-        }
-        .section-title {
-            font-size: 20px;
-            color: #2c3e50;
-            margin: 30px 0 20px 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        .chapter-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .chapter-item {
-            border: 1px solid #ddd;
-            border-radius: 6px;
             padding: 15px;
-            background-color: #fafafa;
-            transition: all 0.2s;
+            background-color: var(--light-bg);
+            border-radius: 8px;
         }
+        
+        /* 内容区域 */
+        .content {
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            color: var(--secondary-color);
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 章节列表 - 移动端优化 */
+        .chapter-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .chapter-item {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            background-color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
         .chapter-item:hover {
-            background-color: #f0f8ff;
-            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
         }
-        .chapter-title {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-        .chapter-meta {
-            font-size: 12px;
-            color: #7f8c8d;
+        
+        .chapter-header {
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .chapter-actions {
-            margin-top: 10px;
-            display: flex;
-            gap: 8px;
+        
+        .chapter-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 18px;
+            flex: 1;
+            min-width: 200px;
         }
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        
+        .chapter-number {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
+            font-weight: 600;
         }
+        
+        .chapter-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .chapter-date {
+            font-size: 12px;
+            color: #95a5a6;
+        }
+        
+        .chapter-preview {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* 按钮样式 */
+        .chapter-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            flex: 1;
+            min-width: 80px;
+        }
+        
         .btn-primary {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
         }
+        
         .btn-primary:hover {
             background-color: #2980b9;
+            transform: translateY(-1px);
         }
+        
         .btn-edit {
-            background-color: #f39c12;
+            background-color: var(--warning-color);
             color: white;
         }
+        
         .btn-edit:hover {
             background-color: #e67e22;
+            transform: translateY(-1px);
         }
+        
         .btn-delete {
-            background-color: #e74c3c;
+            background-color: var(--danger-color);
             color: white;
         }
+        
         .btn-delete:hover {
             background-color: #c0392b;
+            transform: translateY(-1px);
         }
+        
         .add-chapter-btn {
-            background-color: #27ae60;
+            background-color: var(--success-color);
             color: white;
-            padding: 10px 20px;
-            font-size: 14px;
-            border-radius: 4px;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
             text-decoration: none;
-            display: inline-block;
-            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
         }
+        
         .add-chapter-btn:hover {
             background-color: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
         }
+        
+        /* 模态框样式 */
         .modal {
             display: none;
             position: fixed;
@@ -145,92 +265,221 @@
             height: 100%;
             background-color: rgba(0,0,0,0.5);
         }
+        
         .modal-content {
             background-color: white;
             margin: 5% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
             max-width: 600px;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+        
         .close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
+            transition: color 0.3s ease;
         }
+        
         .close:hover {
-            color: black;
+            color: #333;
         }
-        textarea {
+        
+        textarea, input[type="text"] {
             width: 100%;
-            min-height: 200px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
             font-size: 14px;
             resize: vertical;
+            transition: border-color 0.3s ease;
         }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 15px;
+        
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
+        
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+        
         .form-label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #2c3e50;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                box-shadow: none;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .novel-header {
+                padding: 20px 15px;
+            }
+            
+            .novel-title {
+                font-size: 24px;
+            }
+            
+            .section-title {
+                font-size: 20px;
+            }
+            
+            .chapter-item {
+                padding: 15px;
+            }
+            
+            .chapter-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .chapter-title {
+                font-size: 16px;
+            }
+            
+            .chapter-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 15px;
+            }
+            
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .novel-title {
+                font-size: 22px;
+            }
+            
+            .section-title {
+                font-size: 18px;
+            }
+            
+            .chapter-item {
+                padding: 12px;
+            }
+            
+            .chapter-title {
+                font-size: 15px;
+            }
+            
+            .btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .add-chapter-btn {
+                padding: 10px 20px;
+                font-size: 15px;
+            }
+        }
+        
+        /* 加载动画 */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="/" class="back-link">← 返回首页</a>
+        <div class="header">
+            <a href="/" class="back-link">← 返回首页</a>
+            <h1 th:text="${novel.title}">小说标题</h1>
+        </div>
         
         <div class="novel-header">
             <h1 class="novel-title" th:text="${novel.title}">小说标题</h1>
             <div class="novel-meta">
-                <span th:text="'作者: ' + ${novel.author}">作者</span>
+                <span th:if="${novel.author}" th:text="'作者: ' + ${novel.author}">作者</span>
                 <span th:text="'章节数: ' + ${#lists.size(novel.chapters)}">章节数</span>
                 <span th:text="'创建时间: ' + ${novel.formattedCreateTime}">创建时间</span>
             </div>
-            <div class="novel-description" th:text="${novel.description}">小说描述</div>
+            <div th:if="${novel.description}" class="novel-description" th:text="${novel.description}">小说描述</div>
         </div>
         
-        <h2 class="section-title">📖 章节列表</h2>
-        <a th:href="@{/novel/{novelId}/chapter/add(novelId=${novel.id})}" class="add-chapter-btn">➕ 添加章节</a>
-        
-        <div th:if="${#lists.isEmpty(novel.chapters)}" style="text-align: center; padding: 30px; color: #7f8c8d;">
-            <p>暂无章节，请添加第一个章节</p>
-        </div>
-        
-        <div class="chapter-list">
-            <div th:each="chapter : ${novel.chapters}" class="chapter-item">
-                <div class="chapter-title" th:text="${chapter.title}">章节标题</div>
-                <div class="chapter-meta">
-                    <span th:text="'第' + ${chapter.chapterNumber} + '章'">第X章</span>
-                    <span th:text="${chapter.formattedCreateTime}">创建时间</span>
-                </div>
-                <div class="chapter-actions">
-                    <a th:href="@{/novel/{novelId}/chapter/{chapterId}(novelId=${novel.id}, chapterId=${chapter.id})}"
-                       class="btn btn-primary">查看</a>
-                    <button th:data-chapter-id="${chapter.id}" th:data-chapter-title="${chapter.title}"
-                            onclick="editChapter(this.getAttribute('data-chapter-id'), this.getAttribute('data-chapter-title'))" 
-                            class="btn btn-edit">编辑</button>
-                    <button th:data-chapter-id="${chapter.id}"
-                            onclick="deleteChapter(this.getAttribute('data-chapter-id'))" 
-                            class="btn btn-delete">删除</button>
+        <div class="content">
+            <h2 class="section-title">📖 章节列表</h2>
+            <a th:href="@{/novel/{novelId}/chapter/add(novelId=${novel.id})}" class="add-chapter-btn">
+                ➕ 添加章节
+            </a>
+            
+            <div th:if="${#lists.isEmpty(novel.chapters)}" class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <h3>暂无章节</h3>
+                <p>点击上方按钮添加第一个章节开始创作吧！</p>
+            </div>
+            
+            <div class="chapter-list">
+                <div th:each="chapter : ${novel.chapters}" class="chapter-item">
+                    <div class="chapter-header">
+                        <div class="chapter-title" th:text="${chapter.title}">章节标题</div>
+                        <div class="chapter-number" th:text="'第' + ${chapter.chapterNumber} + '章'">第X章</div>
+                    </div>
+                    
+                    <div class="chapter-meta">
+                        <span class="chapter-date" th:text="${chapter.formattedCreateTime}">创建时间</span>
+                        <span th:if="${#strings.length(chapter.content) > 50}" 
+                              th:text="'字数: ' + ${#strings.length(chapter.content)} + '字'">字数统计</span>
+                    </div>
+                    
+                    <div th:if="${chapter.content}" class="chapter-preview" 
+                         th:text="${#strings.abbreviate(chapter.content, 100)}">章节预览内容</div>
+                    
+                    <div class="chapter-actions">
+                        <a th:href="@{/novel/{novelId}/chapter/{chapterId}(novelId=${novel.id}, chapterId=${chapter.id})}"
+                           class="btn btn-primary">📖 阅读</a>
+                        <button th:data-chapter-id="${chapter.id}" th:data-chapter-title="${chapter.title}"
+                                onclick="editChapter(this.getAttribute('data-chapter-id'), this.getAttribute('data-chapter-title'))" 
+                                class="btn btn-edit">✏️ 编辑</button>
+                        <button th:data-chapter-id="${chapter.id}"
+                                onclick="deleteChapter(this.getAttribute('data-chapter-id'))" 
+                                class="btn btn-delete">🗑️ 删除</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -240,7 +489,7 @@
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>编辑章节内容</h2>
+            <h2>📝 编辑章节内容</h2>
             <form id="editChapterForm">
                 <input type="hidden" id="chapterId" name="chapterId">
                 <div class="form-group">
@@ -251,7 +500,7 @@
                     <label class="form-label" for="chapterContent">章节内容:</label>
                     <textarea id="chapterContent" name="content" placeholder="请输入章节内容..." required></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">保存修改</button>
+                <button type="submit" class="btn btn-primary">💾 保存修改</button>
             </form>
         </div>
     </div>
@@ -275,6 +524,11 @@
 
         // 编辑章节
         function editChapter(chapterId, chapterTitle) {
+            // 显示加载状态
+            const contentField = document.getElementById('chapterContent');
+            contentField.placeholder = '正在加载内容...';
+            contentField.classList.add('loading');
+            
             // 先获取章节内容
             fetch(`/api/chapters/${chapterId}`)
                 .then(response => response.json())
@@ -282,11 +536,14 @@
                     document.getElementById('chapterId').value = chapterId;
                     document.getElementById('chapterTitle').value = chapterTitle;
                     document.getElementById('chapterContent').value = data.content || '';
+                    document.getElementById('chapterContent').placeholder = '请输入章节内容...';
+                    document.getElementById('chapterContent').classList.remove('loading');
                     modal.style.display = 'block';
                 })
                 .catch(error => {
                     console.error('获取章节内容失败:', error);
                     alert('获取章节内容失败');
+                    document.getElementById('chapterContent').classList.remove('loading');
                 });
         }
 
@@ -297,6 +554,12 @@
             const chapterId = document.getElementById('chapterId').value;
             const title = document.getElementById('chapterTitle').value;
             const content = document.getElementById('chapterContent').value;
+            
+            // 显示提交状态
+            const submitBtn = editForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '🔄 保存中...';
+            submitBtn.disabled = true;
             
             fetch(`/api/chapters/${chapterId}`, {
                 method: 'PUT',
@@ -319,12 +582,24 @@
             .catch(error => {
                 console.error('更新章节失败:', error);
                 alert('更新章节失败');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             });
         });
 
         // 删除章节
         function deleteChapter(chapterId) {
-            if (confirm('确定要删除这个章节吗？')) {
+            if (confirm('确定要删除这个章节吗？此操作不可撤销！')) {
+                // 显示删除状态
+                const deleteButtons = document.querySelectorAll(`button[data-chapter-id="${chapterId}"]`);
+                deleteButtons.forEach(btn => {
+                    btn.innerHTML = '🗑️ 删除中...';
+                    btn.disabled = true;
+                });
+                
                 fetch(`/api/chapters/${chapterId}`, {
                     method: 'DELETE'
                 })
@@ -338,6 +613,11 @@
                 .catch(error => {
                     console.error('删除章节失败:', error);
                     alert('删除章节失败');
+                    // 恢复按钮状态
+                    deleteButtons.forEach(btn => {
+                        btn.innerHTML = '🗑️ 删除';
+                        btn.disabled = false;
+                    });
                 });
             }
         }

@@ -64,10 +64,10 @@ public class NovelService {
     }
     
     /**
-     * 获取所有小说
+     * 获取所有小说，按创建时间倒序排列（最新的在最前面）
      */
     public List<Novel> getAllNovels() {
-        List<Novel> novels = novelRepository.findAll();
+        List<Novel> novels = novelRepository.findAllByOrderByCreateTimeDesc();
         // 为所有小说确保格式化时间字段被正确设置
         novels.forEach(this::ensureFormattedTime);
         return novels;
