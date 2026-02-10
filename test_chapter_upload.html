@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>章节图片上传测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .upload-btn:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>章节图片上传功能测试</h1>
+    
+    <div class="upload-section">
+        <h2>测试章节图片上传</h2>
+        <p>请输入测试用的章节ID:</p>
+        <input type="number" id="chapterId" placeholder="章节ID" value="1">
+        
+        <input type="file" id="chapterImageInput" class="file-input" accept="image/*">
+        <button type="button" class="upload-btn" onclick="document.getElementById('chapterImageInput').click()">
+            📤 选择图片上传
+        </button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 设置图片上传监听器
+        document.getElementById('chapterImageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                uploadChapterImage(file);
+            }
+        });
+
+        // 上传章节插图
+        function uploadChapterImage(file) {
+            const chapterId = document.getElementById('chapterId').value;
+            if (!chapterId) {
+                showResult('请输入有效的章节ID', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // 显示上传状态
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">📤 正在上传...</div>';
+            
+            fetch(`/api/images/chapter/${chapterId}/image`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResult(`✅ 上传成功: ${data.message}<br>图片路径: ${data.imageUrl}`, 'success');
+                } else {
+                    showResult(`❌ 上传失败: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('上传失败:', error);
+                showResult(`❌ 网络错误: ${error.message}`, 'error');
+            });
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

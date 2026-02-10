@@ -19,6 +19,8 @@
             --border-color: #dee2e6;
             --shadow-color: rgba(0,0,0,0.1);
             --font-size-base: 16px;
+            --primary-color: #007bff;
+            --danger-color: #dc3545;
         }
         
         /* 暗黑主题变量 */
@@ -395,6 +397,91 @@
             margin: 20px;
         }
         
+        /* 章节插图样式 */
+        .chapter-image-container {
+            text-align: center;
+            margin: 25px 0;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .chapter-image-wrapper {
+            display: inline-block;
+            max-width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .chapter-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            object-fit: contain;
+        }
+        
+        .chapter-image-placeholder {
+            display: inline-block;
+            min-width: 200px;
+            min-height: 150px;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chapter-image-placeholder:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .chapter-image-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .chapter-upload-btn, .chapter-delete-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .chapter-upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .chapter-upload-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .chapter-delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .chapter-delete-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+        
         /* 文件上传控件样式 */
         .chapter-file-input {
             display: none;
@@ -596,12 +683,25 @@
         
         // 设置图片上传监听器
         function setupImageUploadListeners() {
-            document.getElementById('chapterImageInput').addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    uploadChapterImage(file);
-                }
-            });
+            console.log('设置图片上传监听器...');
+            const fileInput = document.getElementById('chapterImageInput');
+            console.log('文件输入框元素:', fileInput);
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', function(event) {
+                    console.log('文件选择事件触发:', event);
+                    const file = event.target.files[0];
+                    console.log('选中的文件:', file);
+                    if (file) {
+                        uploadChapterImage(file);
+                    } else {
+                        console.log('未选择文件');
+                    }
+                });
+                console.log('文件输入监听器设置成功');
+            } else {
+                console.error('文件输入框未找到');
+            }
         }
 
         // 加载阅读设置

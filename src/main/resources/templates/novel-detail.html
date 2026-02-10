@@ -413,6 +413,81 @@
             }
         }
         
+        /* 封面图片样式 */
+        .cover-image-container {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .cover-image-wrapper {
+            display: inline-block;
+            max-width: 300px;
+            margin-bottom: 15px;
+        }
+        
+        .cover-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            object-fit: contain;
+        }
+        
+        .cover-placeholder {
+            display: inline-block;
+            width: 200px;
+            height: 250px;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .image-upload-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .upload-btn, .delete-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .upload-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+        
         /* 文件上传控件样式 */
         .file-input {
             display: none;
