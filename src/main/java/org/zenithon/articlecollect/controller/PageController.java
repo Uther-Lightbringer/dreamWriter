@@ -5,6 +5,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.zenithon.articlecollect.entity.Novel;
 import org.zenithon.articlecollect.service.NovelService;
 
@@ -56,5 +58,43 @@ public class PageController {
         model.addAttribute("novelId", novelId);
         model.addAttribute("chapterId", chapterId);
         return "chapter-detail";
+    }
+
+    /**
+     * 添加章节页面
+     */
+    @GetMapping("/novel/{novelId}/chapter/add")
+    public String addChapter(@PathVariable Long novelId, Model model) {
+        Novel novel = novelService.getNovelById(novelId);
+        if (novel == null) {
+            // 如果小说不存在，重定向到首页
+            return "redirect:/";
+        }
+        model.addAttribute("novel", novel);
+        return "add-chapter";
+    }
+
+    /**
+     * 处理添加章节表单提交
+     */
+    @PostMapping("/novel/{novelId}/chapter")
+    public String createChapter(@PathVariable Long novelId,
+                                @RequestParam String title,
+                                @RequestParam String content,
+                                Model model) {
+        try {
+            // 创建章节
+            novelService.createChapter(novelId, title.trim(), content, null);
+            // 重定向到小说详情页
+            return "redirect:/novel/" + novelId;
+        } catch (Exception e) {
+            // 如果创建失败，返回添加章节页面并显示错误
+            Novel novel = novelService.getNovelById(novelId);
+            if (novel != null) {
+                model.addAttribute("novel", novel);
+            }
+            model.addAttribute("error", "创建章节失败: " + e.getMessage());
+            return "add-chapter";
+        }
     }
 }

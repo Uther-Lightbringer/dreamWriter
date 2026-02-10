@@ -20,10 +20,10 @@ public class Chapter {
     
     @Column(nullable = false, length = 255)
     private String title;
-    
-    @Column(length = 10000)
+
+    @Column(columnDefinition = "TEXT")
     private String content;
-    
+
     @Column(name = "chapter_number")
     private Integer chapterNumber;
     

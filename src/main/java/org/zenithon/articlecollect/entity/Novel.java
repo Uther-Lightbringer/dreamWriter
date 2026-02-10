@@ -19,10 +19,10 @@ public class Novel {
     @Column(nullable = false, length = 255)
     private String title;
     
-    @Column(length = 100)
+    @Column(length = 1000)
     private String author;
     
-    @Column(length = 1000)
+    @Column(length = 10000)
     private String description;
     
     @Column(name = "create_time")

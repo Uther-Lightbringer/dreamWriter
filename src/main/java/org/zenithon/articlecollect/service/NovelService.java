@@ -9,8 +9,8 @@ import org.zenithon.articlecollect.repository.NovelRepository;
 import org.zenithon.articlecollect.repository.ChapterRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -101,15 +101,18 @@ public class NovelService {
     /**
      * 创建小说章节
      */
-    public Chapter createChapter(Long novelId, String title, String content) {
+    public Chapter createChapter(Long novelId, String title, String content, Long index) {
         // 检查小说是否存在
         if (!novelRepository.existsById(novelId)) {
             throw new RuntimeException("小说不存在，ID: " + novelId);
         }
-        
-        // 计算章节序号
-        int chapterNumber = chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId).size() + 1;
-        
+        int chapterNumber = 1;
+        if (Objects.isNull(index)){
+            chapterNumber = chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId).size() + 1;
+        }else {
+            chapterNumber = index.intValue() + 1;
+        }
+
         Chapter chapter = new Chapter(novelId, title, content, chapterNumber);
         return chapterRepository.save(chapter);
     }

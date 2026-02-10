@@ -103,12 +103,14 @@ public class NovelController {
         try {
             String title = request.get("title");
             String content = request.get("content");
+            String index = request.get("index");
+
             
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("章节标题不能为空");
             }
             
-            Chapter chapter = novelService.createChapter(novelId, title.trim(), content);
+            Chapter chapter = novelService.createChapter(novelId, title.trim(), content, Long.valueOf(index));
             return ResponseEntity.ok(chapter);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
