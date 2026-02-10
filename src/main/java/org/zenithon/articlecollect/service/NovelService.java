@@ -9,9 +9,7 @@ import org.zenithon.articlecollect.repository.NovelRepository;
 import org.zenithon.articlecollect.repository.ChapterRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 小说管理服务类
@@ -57,6 +55,7 @@ public class NovelService {
         if (novelOpt.isPresent()) {
             Novel novel = novelOpt.get();
             // 确保格式化时间字段被正确设置
+            Collections.sort(novel.getChapters(), Comparator.comparing(Chapter::getChapterNumber));
             ensureFormattedTime(novel);
             return novel;
         }
