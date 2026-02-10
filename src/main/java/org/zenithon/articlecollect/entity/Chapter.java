@@ -39,6 +39,10 @@ public class Chapter {
     @JsonIgnore
     private Novel novel;
     
+    // 章节插图路径
+    @Column(name = "chapter_image", length = 500)
+    private String chapterImage;
+    
     // 用于Thymeleaf模板的格式化时间字符串
     @Transient
     private String formattedCreateTime;
@@ -130,6 +134,14 @@ public class Chapter {
         this.formattedCreateTime = formatTime(updateTime);
     }
     
+    public String getChapterImage() {
+        return chapterImage;
+    }
+    
+    public void setChapterImage(String chapterImage) {
+        this.chapterImage = chapterImage;
+    }
+    
     public Novel getNovel() {
         return novel;
     }
@@ -169,6 +181,7 @@ public class Chapter {
                 ", chapterNumber=" + chapterNumber +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
+                ", chapterImage='" + getChapterImage() + '\'' +
                 '}';
     }
 }

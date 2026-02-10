@@ -39,6 +39,15 @@
 4. **阅读章节**：点击"阅读"按钮进入章节详情页
 5. **导航浏览**：使用上一章/下一章按钮连续阅读
 
+## 修改数据库
+启动您的应用
+在浏览器中访问：http://localhost:38081/h2-console
+连接信息：
+JDBC URL: jdbc:h2:file:./data/article_collect
+User Name: sa
+Password: （留空）
+
+
 ## API接口文档
 
 ### 小说相关接口

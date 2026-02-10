@@ -54,6 +54,30 @@
             padding: 20px;
             background-color: #fff;
             transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .novel-cover {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .novel-cover-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 14px;
         }
         .novel-card:hover {
             transform: translateY(-5px);
@@ -159,8 +183,18 @@
                 let html = '';
                 novels.forEach(novel => {
                     const chapterCount = novel.chapters ? novel.chapters.length : 0;
+                    
+                    // 处理封面图片
+                    let coverHtml = '';
+                    if (novel.coverImage) {
+                        coverHtml = `<img src="${novel.coverImage}" alt="${novel.title}" class="novel-cover">`;
+                    } else {
+                        coverHtml = `<div class="novel-cover-placeholder">📖<br>暂无封面</div>`;
+                    }
+                    
                     html += `
                         <div class="novel-card">
+                            ${coverHtml}
                             <div class="novel-title">${novel.title}</div>
                             <div class="novel-info">ID: ${novel.id}</div>
                             <div class="novel-stats">

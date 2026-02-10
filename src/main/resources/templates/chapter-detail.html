@@ -395,6 +395,11 @@
             margin: 20px;
         }
         
+        /* 文件上传控件样式 */
+        .chapter-file-input {
+            display: none;
+        }
+        
         /* 移动端优化 */
         @media (max-width: 768px) {
             .container {
@@ -517,6 +522,20 @@
                     <div class="chapter-info" id="chapterInfo"></div>
                 </div>
                 
+                <!-- 章节插图区域 -->
+                <div class="chapter-image-container" id="chapterImageContainer" style="display: none;">
+                    <div id="chapterImageWrapper"></div>
+                    <div class="chapter-image-controls">
+                        <input type="file" id="chapterImageInput" class="chapter-file-input" accept="image/*">
+                        <button type="button" class="chapter-upload-btn" onclick="document.getElementById('chapterImageInput').click()">
+                            📤 上传插图
+                        </button>
+                        <button type="button" class="chapter-delete-btn" id="chapterDeleteBtn" onclick="deleteChapterImage()" style="display: none;">
+                            🗑️ 删除插图
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="chapter-content">
                     <div class="markdown-content" id="chapterText"></div>
                 </div>
@@ -540,8 +559,16 @@
 
     <script th:inline="javascript">
         // 从URL获取参数
-        const novelId = /*[[${novelId}]]*/ 1;
-        const chapterId = /*[[${chapterId}]]*/ 1;
+        const novelId = /*[[${novelId}]]*/ null;
+        const chapterId = /*[[${chapterId}]]*/ null;
+        
+        // 验证ID
+        if (!novelId || !chapterId) {
+            console.error('小说ID或章节ID获取失败');
+        }
+        
+        // 章节插图相关变量
+        let currentChapterImage = null;
         
         // 阅读设置相关变量
         let currentFontSize = 16; // 默认字体大小
@@ -564,7 +591,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadReadingSettings();
             loadChapterDetail();
+            setupImageUploadListeners();
         });
+        
+        // 设置图片上传监听器
+        function setupImageUploadListeners() {
+            document.getElementById('chapterImageInput').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    uploadChapterImage(file);
+                }
+            });
+        }
 
         // 加载阅读设置
         function loadReadingSettings() {
@@ -683,6 +721,9 @@
                 `第${chapter.chapterNumber}章 | ` +
                 `创建时间: ${new Date(chapter.createTime).toLocaleString()}`;
             
+            // 处理章节插图
+            handleChapterImage(chapter);
+            
             // 渲染Markdown内容
             const content = chapter.content || '暂无内容';
             document.getElementById('chapterText').innerHTML = marked.parse(content);
@@ -742,6 +783,98 @@
         // 跳转到章节列表
         function goToChapterList() {
             window.location.href = `/novel/${novelId}`;
+        }
+        
+        // 处理章节插图显示
+        function handleChapterImage(chapter) {
+            const container = document.getElementById('chapterImageContainer');
+            const wrapper = document.getElementById('chapterImageWrapper');
+            const deleteBtn = document.getElementById('chapterDeleteBtn');
+            
+            if (chapter.chapterImage) {
+                // 显示已有的插图
+                wrapper.innerHTML = `
+                    <img src="${chapter.chapterImage}" alt="章节插图" class="chapter-image">
+                `;
+                container.style.display = 'block';
+                deleteBtn.style.display = 'inline-block';
+                currentChapterImage = chapter.chapterImage;
+            } else {
+                // 显示占位符
+                wrapper.innerHTML = `
+                    <div class="chapter-image-placeholder">
+                        📖<br>暂无插图<br>点击上传
+                    </div>
+                `;
+                container.style.display = 'block';
+                deleteBtn.style.display = 'none';
+                currentChapterImage = null;
+            }
+        }
+        
+        // 上传章节插图
+        function uploadChapterImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // 显示上传状态
+            const uploadBtn = document.querySelector('.chapter-upload-btn');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '📤 上传中...';
+            uploadBtn.disabled = true;
+            
+            fetch(`/api/images/chapter/${chapterId}/image`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('上传失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('上传失败:', error);
+                alert('上传失败');
+            })
+            .finally(() => {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                document.getElementById('chapterImageInput').value = '';
+            });
+        }
+        
+        // 删除章节插图
+        function deleteChapterImage() {
+            if (confirm('确定要删除章节插图吗？')) {
+                // 显示删除状态
+                const deleteBtn = document.getElementById('chapterDeleteBtn');
+                const originalText = deleteBtn.innerHTML;
+                deleteBtn.innerHTML = '🗑️ 删除中...';
+                deleteBtn.disabled = true;
+                
+                fetch(`/api/images/chapter/${chapterId}/image`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('删除失败:', error);
+                    alert('删除失败');
+                })
+                .finally(() => {
+                    deleteBtn.innerHTML = originalText;
+                    deleteBtn.disabled = false;
+                });
+            }
         }
     </script>
 </body>

@@ -413,6 +413,11 @@
             }
         }
         
+        /* 文件上传控件样式 */
+        .file-input {
+            display: none;
+        }
+        
         /* 加载动画 */
         @keyframes pulse {
             0% { opacity: 1; }
@@ -433,6 +438,25 @@
         </div>
         
         <div class="novel-header">
+            <!-- 封面图片区域 -->
+            <div class="cover-image-container">
+                <div th:if="${novel.coverImage}" class="cover-image-wrapper">
+                    <img th:src="${novel.coverImage}" alt="小说封面" class="cover-image">
+                </div>
+                <div th:unless="${novel.coverImage}" class="cover-placeholder">
+                    📖<br>暂无封面<br>点击上传
+                </div>
+                <div class="image-upload-controls">
+                    <input type="file" id="coverImageInput" class="file-input" accept="image/*">
+                    <button type="button" class="upload-btn" onclick="document.getElementById('coverImageInput').click()">
+                        📤 上传封面
+                    </button>
+                    <button th:if="${novel.coverImage}" type="button" class="delete-btn" onclick="deleteCoverImage()">
+                        🗑️ 删除封面
+                    </button>
+                </div>
+            </div>
+            
             <h1 class="novel-title" th:text="${novel.title}">小说标题</h1>
             <div class="novel-meta">
                 <span th:if="${novel.author}" th:text="'作者: ' + ${novel.author}">作者</span>
@@ -506,6 +530,85 @@
     </div>
 
     <script>
+        // 封面图片上传处理
+        document.getElementById('coverImageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                uploadCoverImage(file, novelId);
+            }
+        });
+        
+        function uploadCoverImage(file, novelId) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // 显示上传状态
+            const uploadBtn = document.querySelector('.upload-btn');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '📤 上传中...';
+            uploadBtn.disabled = true;
+            
+            fetch(`/api/images/novel/${novelId}/cover`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('上传失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('上传失败:', error);
+                alert('上传失败');
+            })
+            .finally(() => {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                document.getElementById('coverImageInput').value = '';
+            });
+        }
+        
+        function deleteCoverImage() {
+            if (confirm('确定要删除封面图片吗？')) {
+                // 显示删除状态
+                const deleteBtn = document.querySelector('.delete-btn');
+                const originalText = deleteBtn.innerHTML;
+                deleteBtn.innerHTML = '🗑️ 删除中...';
+                deleteBtn.disabled = true;
+                
+                fetch(`/api/images/novel/${novelId}/cover`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('删除失败:', error);
+                    alert('删除失败');
+                })
+                .finally(() => {
+                    deleteBtn.innerHTML = originalText;
+                    deleteBtn.disabled = false;
+                });
+            }
+        }
+        
+        // 获取小说ID
+        const novelId = /*[[${novel.id}]]*/ null;
+        
+        // 验证小说ID
+        if (!novelId) {
+            console.error('小说ID获取失败');
+        }
+        
         // 获取模态框元素
         const modal = document.getElementById('editModal');
         const span = document.getElementsByClassName('close')[0];

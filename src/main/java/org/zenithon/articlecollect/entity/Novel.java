@@ -31,6 +31,10 @@ public class Novel {
     @Column(name = "update_time")
     private LocalDateTime updateTime;
     
+    // 小说封面图片路径
+    @Column(name = "cover_image", length = 500)
+    private String coverImage;
+    
     // 一对多关系：一个小说对应多个章节
     @OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -132,6 +136,14 @@ public class Novel {
         this.formattedCreateTime = formatTime(updateTime);
     }
     
+    public String getCoverImage() {
+        return coverImage;
+    }
+    
+    public void setCoverImage(String coverImage) {
+        this.coverImage = coverImage;
+    }
+    
     public List<Chapter> getChapters() {
         return chapters;
     }
@@ -170,6 +182,7 @@ public class Novel {
                 ", description='" + description + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
+                ", coverImage='" + getCoverImage() + '\'' +
                 ", chapters=" + (chapters != null ? chapters.size() : 0) +
                 '}';
     }
