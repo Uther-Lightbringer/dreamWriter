@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>章节标签功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .chapter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0;
+        }
+        .chapter-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        .tag-punishment {
+            background-color: #e74c3c;
+        }
+        .tag-reward {
+            background-color: #27ae60;
+        }
+        .tag-training {
+            background-color: #3498db;
+        }
+        .tag-discipline {
+            background-color: #9b59b6;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>章节标签功能演示</h1>
+    
+    <div class="test-section">
+        <h2>标签显示效果测试</h2>
+        <p>以下是不同标签类型的显示效果：</p>
+        
+        <div class="chapter-tags">
+            <span class="chapter-tag tag-punishment">惩罚</span>
+            <span class="chapter-tag tag-reward">奖励</span>
+            <span class="chapter-tag tag-training">训练</span>
+            <span class="chapter-tag tag-discipline">调教</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>模拟章节内容分析</h2>
+        <textarea id="chapterContent" rows="10" cols="80" placeholder="在此输入章节内容进行标签检测测试...">今天老师严厉地惩罚了不听话的学生，作为奖励，表现好的同学得到了表扬。学校安排了专门的训练课程来调教学生们的行为规范。</textarea>
+        <br><br>
+        <button onclick="analyzeContent()">分析内容</button>
+        <div id="analysisResult"></div>
+    </div>
+
+    <script>
+        // 模拟关键词检测
+        const TAG_KEYWORDS = {
+            'punishment': ['惩罚', '处罚', '惩戒', '责罚', '教训'],
+            'reward': ['奖励', '奖赏', '报酬', '回报', '激励'],
+            'training': ['训练', '练习', '锻炼', '培养', '教导'],
+            'discipline': ['调教', '管教', '驯服', '约束', '规范']
+        };
+        
+        function analyzeContent() {
+            const content = document.getElementById('chapterContent').value;
+            const resultDiv = document.getElementById('analysisResult');
+            
+            if (!content.trim()) {
+                resultDiv.innerHTML = '<div class="result error">请输入章节内容</div>';
+                return;
+            }
+            
+            const detectedTags = [];
+            
+            // 检测每个标签类型的关键词
+            for (const [tagType, keywords] of Object.entries(TAG_KEYWORDS)) {
+                const foundKeywords = [];
+                for (const keyword of keywords) {
+                    if (content.includes(keyword)) {
+                        foundKeywords.push(keyword);
+                    }
+                }
+                
+                if (foundKeywords.length > 0) {
+                    const tagName = getTagName(tagType);
+                    detectedTags.push({
+                        type: tagType,
+                        name: tagName,
+                        keywords: foundKeywords
+                    });
+                }
+            }
+            
+            // 显示结果
+            if (detectedTags.length > 0) {
+                let html = '<div class="result success"><h3>检测到的标签：</h3><div class="chapter-tags">';
+                detectedTags.forEach(tag => {
+                    html += `<span class="chapter-tag tag-${tag.type}">${tag.name}</span>`;
+                });
+                html += '</div><h4>匹配的关键词：</h4><ul>';
+                detectedTags.forEach(tag => {
+                    html += `<li><strong>${tag.name}:</strong> ${tag.keywords.join(', ')}</li>`;
+                });
+                html += '</ul></div>';
+                resultDiv.innerHTML = html;
+            } else {
+                resultDiv.innerHTML = '<div class="result success">未检测到任何标签关键词</div>';
+            }
+        }
+        
+        function getTagName(tagType) {
+            const nameMap = {
+                'punishment': '惩罚',
+                'reward': '奖励',
+                'training': '训练',
+                'discipline': '调教'
+            };
+            return nameMap[tagType] || tagType;
+        }
+        
+        // 页面加载完成后自动分析一次
+        document.addEventListener('DOMContentLoaded', function() {
+            analyzeContent();
+        });
+    </script>
+</body>
+</html>

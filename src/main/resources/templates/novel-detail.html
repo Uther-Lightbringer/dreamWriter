@@ -535,7 +535,7 @@
             <h1 class="novel-title" th:text="${novel.title}">小说标题</h1>
             <div class="novel-meta">
                 <span th:if="${novel.author}" th:text="'作者: ' + ${novel.author}">作者</span>
-                <span th:text="'章节数: ' + ${#lists.size(novel.chapters)}">章节数</span>
+                <span th:text="'章节数: ' + ${novel.chaptersCount}">章节数</span>
                 <span th:text="'创建时间: ' + ${novel.formattedCreateTime}">创建时间</span>
             </div>
             <div th:if="${novel.description}" class="novel-description" th:text="${novel.description}">小说描述</div>
@@ -554,28 +554,37 @@
             </div>
             
             <div class="chapter-list">
-                <div th:each="chapter : ${novel.chapters}" class="chapter-item">
+                <div th:each="chapterWithTags : ${chaptersWithTags}" class="chapter-item">
                     <div class="chapter-header">
-                        <div class="chapter-title" th:text="${chapter.title}">章节标题</div>
-                        <div class="chapter-number" th:text="'第' + ${chapter.chapterNumber} + '章'">第X章</div>
+                        <div class="chapter-title" th:text="${chapterWithTags.chapter.title}">章节标题</div>
+                        <div class="chapter-number" th:text="'第' + ${chapterWithTags.chapter.chapterNumber} + '章'">第X章</div>
+                    </div>
+                    
+                    <!-- 章节标签 -->
+                    <div th:if="${not #lists.isEmpty(chapterWithTags.tags)}" class="chapter-tags">
+                        <span th:each="tag : ${chapterWithTags.tags}" 
+                              th:class="'chapter-tag tag-' + ${tag.tagType}" 
+                              th:text="${tag.tagValue}">
+                            标签
+                        </span>
                     </div>
                     
                     <div class="chapter-meta">
-                        <span class="chapter-date" th:text="${chapter.formattedCreateTime}">创建时间</span>
-                        <span th:if="${#strings.length(chapter.content) > 50}" 
-                              th:text="'字数: ' + ${#strings.length(chapter.content)} + '字'">字数统计</span>
+                        <span class="chapter-date" th:text="${chapterWithTags.chapter.formattedCreateTime}">创建时间</span>
+                        <span th:if="${#strings.length(chapterWithTags.chapter.content) > 50}" 
+                              th:text="'字数: ' + ${#strings.length(chapterWithTags.chapter.content)} + '字'">字数统计</span>
                     </div>
                     
-                    <div th:if="${chapter.content}" class="chapter-preview" 
-                         th:text="${#strings.abbreviate(chapter.content, 100)}">章节预览内容</div>
+                    <div th:if="${chapterWithTags.chapter.content}" class="chapter-preview" 
+                         th:text="${#strings.abbreviate(chapterWithTags.chapter.content, 100)}">章节预览内容</div>
                     
                     <div class="chapter-actions">
-                        <a th:href="@{/novel/{novelId}/chapter/{chapterId}(novelId=${novel.id}, chapterId=${chapter.id})}"
+                        <a th:href="@{/novel/{novelId}/chapter/{chapterId}(novelId=${novel.id}, chapterId=${chapterWithTags.chapter.id})}"
                            class="btn btn-primary">📖 阅读</a>
-                        <button th:data-chapter-id="${chapter.id}" th:data-chapter-title="${chapter.title}"
+                        <button th:data-chapter-id="${chapterWithTags.chapter.id}" th:data-chapter-title="${chapterWithTags.chapter.title}"
                                 onclick="editChapter(this.getAttribute('data-chapter-id'), this.getAttribute('data-chapter-title'))" 
                                 class="btn btn-edit">✏️ 编辑</button>
-                        <button th:data-chapter-id="${chapter.id}"
+                        <button th:data-chapter-id="${chapterWithTags.chapter.id}"
                                 onclick="deleteChapter(this.getAttribute('data-chapter-id'))" 
                                 class="btn btn-delete">🗑️ 删除</button>
                     </div>

@@ -44,6 +44,12 @@ public class Novel {
     @Transient
     private String formattedCreateTime;
 
+
+
+    // 用于Thymeleaf模板的格式化时间字符串
+    @Transient
+    private Integer chaptersCount;
+
     public Novel() {
     }
 
@@ -171,6 +177,14 @@ public class Novel {
     // 私有方法：格式化时间
     private String formatTime(LocalDateTime dateTime) {
         return formatDateTime(dateTime);
+    }
+
+    public Integer getChaptersCount() {
+        return chaptersCount;
+    }
+
+    public void setChaptersCount(Integer chaptersCount) {
+        this.chaptersCount = chaptersCount;
     }
 
     @Override

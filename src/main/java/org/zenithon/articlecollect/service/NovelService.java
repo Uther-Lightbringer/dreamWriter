@@ -2,11 +2,14 @@ package org.zenithon.articlecollect.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.zenithon.articlecollect.dto.ChapterWithTags;
+import org.zenithon.articlecollect.entity.ChapterTag;
 import org.zenithon.articlecollect.entity.Novel;
 import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.ChapterDetailView;
 import org.zenithon.articlecollect.repository.NovelRepository;
 import org.zenithon.articlecollect.repository.ChapterRepository;
+import org.zenithon.articlecollect.repository.ChapterTagRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,6 +25,12 @@ public class NovelService {
     
     @Autowired
     private ChapterRepository chapterRepository;
+    
+    @Autowired
+    private ChapterTagRepository chapterTagRepository;
+    
+    @Autowired
+    private ChapterTagService chapterTagService;
     
     /**
      * 创建新小说
@@ -55,19 +64,34 @@ public class NovelService {
         if (novelOpt.isPresent()) {
             Novel novel = novelOpt.get();
             // 确保格式化时间字段被正确设置
-            Collections.sort(novel.getChapters(), Comparator.comparing(Chapter::getChapterNumber));
             ensureFormattedTime(novel);
+            setCharactersCount(novel);
+            // 批量分析章节标签（首次访问时生成，后续直接读取数据库）
+            chapterTagService.batchAnalyzeNovelChapters(novelId);
+            
+            // 对章节进行排序并重新设置
+            List<Chapter> sortedChapters = novel.getChapters();
+            if (sortedChapters != null) {
+                Collections.sort(sortedChapters, Comparator.comparing(Chapter::getChapterNumber));
+                novel.setChapters(sortedChapters);
+            }
+            
             return novel;
         }
         return null;
     }
-    
+
+    private void setCharactersCount(Novel novel) {
+        novel.setChaptersCount(novel.getChapters().size());
+    }
+
     /**
      * 获取所有小说，按创建时间倒序排列（最新的在最前面）
      */
     public List<Novel> getAllNovels() {
         List<Novel> novels = novelRepository.findAllByOrderByCreateTimeDesc();
         // 为所有小说确保格式化时间字段被正确设置
+        novels.forEach(n -> n.setChaptersCount(n.getChapters().size()));
         novels.forEach(this::ensureFormattedTime);
         return novels;
     }
@@ -124,6 +148,22 @@ public class NovelService {
         // 为所有章节确保格式化时间字段被正确设置
         chapters.forEach(this::ensureFormattedTime);
         return chapters;
+    }
+    
+    /**
+     * 根据小说ID获取所有带标签的章节
+     */
+    public List<ChapterWithTags> getChaptersWithTagsByNovelId(Long novelId) {
+        List<Chapter> chapters = getChaptersByNovelId(novelId);
+        Map<Long, List<ChapterTag>> chapterTagsMap = chapterTagService.batchAnalyzeNovelChapters(novelId);
+        
+        List<ChapterWithTags> result = new ArrayList<>();
+        for (Chapter chapter : chapters) {
+            List<ChapterTag> tags = chapterTagsMap.getOrDefault(chapter.getId(), new ArrayList<>());
+            result.add(new ChapterWithTags(chapter, tags));
+        }
+        
+        return result;
     }
     
     /**

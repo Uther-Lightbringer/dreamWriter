@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.zenithon.articlecollect.entity.Novel;
+import org.zenithon.articlecollect.dto.ChapterWithTags;
 import org.zenithon.articlecollect.service.NovelService;
+
+import java.util.List;
 
 /**
  * 前端页面控制器
@@ -45,8 +48,13 @@ public class PageController {
             // 如果小说不存在，可以重定向到首页或者显示错误页面
             return "redirect:/";
         }
+        
+        // 获取带标签的章节列表
+        List<ChapterWithTags> chaptersWithTags = novelService.getChaptersWithTagsByNovelId(novelId);
+        
         model.addAttribute("novel", novel);
         model.addAttribute("novelId", novelId);
+        model.addAttribute("chaptersWithTags", chaptersWithTags);
         return "novel-detail";
     }
     
