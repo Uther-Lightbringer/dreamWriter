@@ -44,9 +44,7 @@ public class Novel {
     @Transient
     private String formattedCreateTime;
 
-
-
-    // 用于Thymeleaf模板的格式化时间字符串
+    // 章节数量（用于JSON序列化）
     @Transient
     private Integer chaptersCount;
 

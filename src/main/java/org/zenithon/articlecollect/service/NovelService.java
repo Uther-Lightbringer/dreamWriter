@@ -65,7 +65,7 @@ public class NovelService {
             Novel novel = novelOpt.get();
             // 确保格式化时间字段被正确设置
             ensureFormattedTime(novel);
-            setCharactersCount(novel);
+            setChaptersCount(novel);
             // 批量分析章节标签（首次访问时生成，后续直接读取数据库）
             chapterTagService.batchAnalyzeNovelChapters(novelId);
             
@@ -76,13 +76,20 @@ public class NovelService {
                 novel.setChapters(sortedChapters);
             }
             
+            // 设置章节数
+            setChaptersCount(novel);
+            
             return novel;
         }
         return null;
     }
 
-    private void setCharactersCount(Novel novel) {
-        novel.setChaptersCount(novel.getChapters().size());
+    private void setChaptersCount(Novel novel) {
+        if (novel.getChapters() != null) {
+            novel.setChaptersCount(novel.getChapters().size());
+        } else {
+            novel.setChaptersCount(0);
+        }
     }
 
     /**
