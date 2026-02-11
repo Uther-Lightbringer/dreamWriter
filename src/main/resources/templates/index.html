@@ -195,8 +195,7 @@
 
                 let html = '';
                 novels.forEach(novel => {
-                    const chapterCount = novel.chapters ? novel.chapters.length : 0;
-                    
+
                     // 处理封面图片
                     let coverHtml = '';
                     if (novel.coverImage) {
@@ -211,7 +210,7 @@
                             <div class="novel-title">${novel.title}</div>
                             <div class="novel-info">ID: ${novel.id}</div>
                             <div class="novel-stats">
-                                <span>章节数: ${chapterCount}</span>
+                                <span>章节数: ${novel.chaptersCount}</span>
                                 <span>创建时间: ${new Date(novel.createTime).toLocaleDateString()}</span>
                             </div>
                             <div class="actions">
