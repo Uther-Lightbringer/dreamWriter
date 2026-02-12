@@ -857,6 +857,39 @@
             document.getElementById('chapterContent').style.display = 'block';
         }
 
+        // 显示章节标签
+        function displayChapterTags(tags) {
+            const tagsContainer = document.getElementById('chapterTags');
+            
+            if (tags && tags.length > 0) {
+                let tagsHtml = '';
+                tags.forEach(tag => {
+                    const icon = getTagIcon(tag.tagType);
+                    tagsHtml += `
+                        <span class="chapter-tag tag-${tag.tagType}">
+                            <span class="tag-icon">${icon}</span>
+                            ${tag.tagValue}
+                        </span>
+                    `;
+                });
+                tagsContainer.innerHTML = tagsHtml;
+                tagsContainer.style.display = 'flex';
+            } else {
+                tagsContainer.style.display = 'none';
+            }
+        }
+        
+        // 获取标签图标
+        function getTagIcon(tagType) {
+            const icons = {
+                'punishment': '⚡',
+                'reward': '🏆',
+                'training': '💪',
+                'discipline': '🎓'
+            };
+            return icons[tagType] || '🏷️';
+        }
+
         // 显示错误信息
         function showError(message) {
             document.getElementById('loading').style.display = 'none';
