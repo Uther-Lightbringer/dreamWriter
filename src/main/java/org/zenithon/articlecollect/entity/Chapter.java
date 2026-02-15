@@ -43,6 +43,10 @@ public class Chapter {
     @Column(name = "chapter_image", length = 500)
     private String chapterImage;
     
+    // 故事概括
+    @Column(name = "story_summary", columnDefinition = "TEXT")
+    private String storySummary;
+    
     // 用于Thymeleaf模板的格式化时间字符串
     @Transient
     private String formattedCreateTime;
@@ -69,6 +73,17 @@ public class Chapter {
         this.createTime = LocalDateTime.now();
         this.updateTime = LocalDateTime.now();
         this.formattedCreateTime = formatTime(this.createTime);
+    }
+
+    public Chapter(Long novelId, String title, String content, Integer chapterNumber, String storySummary) {
+        this.novelId = novelId;
+        this.title = title;
+        this.content = content;
+        this.chapterNumber = chapterNumber;
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.createTime);
+        this.storySummary = storySummary;
     }
 
     // getters and setters
@@ -142,6 +157,14 @@ public class Chapter {
         this.chapterImage = chapterImage;
     }
     
+    public String getStorySummary() {
+        return storySummary;
+    }
+    
+    public void setStorySummary(String storySummary) {
+        this.storySummary = storySummary;
+    }
+    
     public Novel getNovel() {
         return novel;
     }
@@ -182,6 +205,7 @@ public class Chapter {
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", chapterImage='" + getChapterImage() + '\'' +
+                ", storySummary='" + storySummary + '\'' +
                 '}';
     }
 }

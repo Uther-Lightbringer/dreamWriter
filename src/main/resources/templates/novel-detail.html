@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${novel.title} + ' - 小说详情'">小说详情</title>
+    <link rel="stylesheet" href="/css/chapter-tags.css">
     <style>
         :root {
             --primary-color: #3498db;
@@ -172,11 +173,9 @@
             font-size: 14px;
             line-height: 1.6;
             margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            /* 移除了行数限制，让内容完全显示 */
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         /* 按钮样式 */
@@ -334,6 +333,24 @@
         
         /* 响应式设计 */
         @media (max-width: 768px) {
+            .chapter-preview {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+            
+            .story-summary {
+                padding: 10px 12px;
+                margin: 12px 0;
+            }
+            
+            .summary-label {
+                font-size: 12px;
+            }
+            
+            .summary-content {
+                font-size: 12px;
+            }
+            
             .container {
                 margin: 0;
                 box-shadow: none;
@@ -640,7 +657,7 @@
                     </div>
                     
                     <div th:if="${chapterWithTags.chapter.content}" class="chapter-preview" 
-                         th:text="${#strings.abbreviate(chapterWithTags.chapter.content, 100)}">章节预览内容</div>
+                         th:text="${chapterWithTags.chapter.storySummary}">章节预览内容</div>
                     
                     <div class="chapter-actions">
                         <a th:href="@{/novel/{novelId}/chapter/{chapterId}(novelId=${novel.id}, chapterId=${chapterWithTags.chapter.id})}"

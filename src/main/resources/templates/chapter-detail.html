@@ -6,6 +6,43 @@
     <title>章节详情 - 小说管理平台</title>
     <!-- 引入Marked.js用于Markdown渲染 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 备用本地引入 -->
+    <script>
+        // 检查marked是否加载成功，如果没有则使用备用方案
+        if (typeof marked === 'undefined') {
+            console.warn('Marked.js CDN加载失败，使用备用方案');
+            // 简单的Markdown解析替代方案
+            window.marked = {
+                setOptions: function(options) {
+                    // 简单配置，实际使用中可以扩展
+                    this.options = options;
+                },
+                parse: function(markdown) {
+                    // 简单的Markdown转HTML转换
+                    if (!markdown) return '';
+                    
+                    // 基本的Markdown转换
+                    let html = markdown
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // 粗体
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')              // 斜体
+                        .replace(/~~(.*?)~~/g, '<del>$1</del>')            // 删除线
+                        .replace(/`(.*?)`/g, '<code>$1</code>')            // 行内代码
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')  // 链接
+                        .replace(/^#{1,6}\s+(.*?)$/gm, function(match, p1, offset, string) {
+                            const level = match.match(/^#+/)[0].length;
+                            return `<h${level}>${p1}</h${level}>`;
+                        })  // 标题
+                        .replace(/^\*\s+(.*?)$/gm, '<li>$1</li>')         // 无序列表项
+                        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')         // 包装无序列表
+                        .replace(/^\d+\.\s+(.*?)$/gm, '<li>$1</li>')     // 有序列表项
+                        .replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>')         // 包装有序列表
+                        .replace(/\n/g, '<br>');                          // 换行
+                    
+                    return html;
+                }
+            };
+        }
+    </script>
     <!-- 引入highlight.js用于代码高亮 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" id="hljs-theme">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
@@ -826,7 +863,19 @@
             
             // 渲染Markdown内容
             const content = chapter.content || '暂无内容';
-            document.getElementById('chapterText').innerHTML = marked.parse(content);
+            try {
+                if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+                    document.getElementById('chapterText').innerHTML = marked.parse(content);
+                } else {
+                    // 降级处理：直接显示文本内容
+                    console.warn('Marked.js不可用，直接显示文本内容');
+                    document.getElementById('chapterText').textContent = content;
+                }
+            } catch (error) {
+                console.error('Markdown解析错误:', error);
+                // 出错时直接显示原始内容
+                document.getElementById('chapterText').textContent = content;
+            }
             
             // 高亮代码块
             document.querySelectorAll('pre code').forEach((block) => {

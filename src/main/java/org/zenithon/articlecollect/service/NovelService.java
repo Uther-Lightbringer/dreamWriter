@@ -131,7 +131,7 @@ public class NovelService {
     /**
      * 创建小说章节
      */
-    public Chapter createChapter(Long novelId, String title, String content, Long index) {
+    public Chapter createChapter(Long novelId, String title, String content, Long index, String storySummary) {
         // 检查小说是否存在
         if (!novelRepository.existsById(novelId)) {
             throw new RuntimeException("小说不存在，ID: " + novelId);
@@ -142,8 +142,7 @@ public class NovelService {
         }else {
             chapterNumber = index.intValue() + 1;
         }
-
-        Chapter chapter = new Chapter(novelId, title, content, chapterNumber);
+        Chapter chapter = new Chapter(novelId, title, content, chapterNumber, storySummary);
         return chapterRepository.save(chapter);
     }
     

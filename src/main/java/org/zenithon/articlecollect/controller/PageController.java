@@ -92,7 +92,7 @@ public class PageController {
                                 Model model) {
         try {
             // 创建章节
-            novelService.createChapter(novelId, title.trim(), content, null);
+            novelService.createChapter(novelId, title.trim(), content, null,  null);
             // 重定向到小说详情页
             return "redirect:/novel/" + novelId;
         } catch (Exception e) {

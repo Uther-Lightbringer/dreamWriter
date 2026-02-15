@@ -117,5 +117,74 @@
             </div>
         </form>
     </div>
+    <script>
+        // 获取小说ID
+        const novelId = /*[[${novel.id}]]*/ null;
+        
+        // 表单提交处理
+        document.getElementById('chapterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const storySummary = document.getElementById('storySummary').value.trim();
+            
+            if (!title) {
+                alert('请输入章节标题');
+                return;
+            }
+            
+            if (!content) {
+                alert('请输入章节内容');
+                return;
+            }
+            
+            // 显示提交状态
+            const submitBtn = document.querySelector('.btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '🔄 保存中...';
+            submitBtn.disabled = true;
+            
+            // 准备请求数据
+            const requestData = {
+                title: title,
+                content: content,
+                index: '', // 可以根据需要添加章节排序逻辑
+                storySummary: storySummary || '' // 如果为空则传空字符串
+            };
+            
+            // 发送请求
+            fetch(`/api/novels/${novelId}/chapters`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text || '保存失败');
+                    });
+                }
+            })
+            .then(data => {
+                alert('章节保存成功！');
+                // 跳转回小说详情页
+                window.location.href = `/novels/${novelId}`;
+            })
+            .catch(error => {
+                console.error('保存失败:', error);
+                alert('保存失败: ' + error.message);
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>章节故事概括功能测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .feature-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            background-color: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        .feature-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        .feature-desc {
+            color: #555;
+            line-height: 1.6;
+        }
+        .code-block {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        .demo-section {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .chapter-item {
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        .chapter-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .chapter-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        .chapter-number {
+            background-color: #3498db;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .story-summary {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .summary-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3498db;
+            margin-bottom: 6px;
+        }
+        .summary-content {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 章节故事概括功能说明</h1>
+        
+        <div class="feature-section">
+            <div class="feature-title">✨ 新增功能</div>
+            <div class="feature-desc">
+                已为章节添加故事概括功能，用户可以在创建章节时填写该章节的故事概括，
+                在小说详情页的章节列表中会展示每个章节的故事概括。
+            </div>
+        </div>
+        
+        <div class="feature-section">
+            <div class="feature-title">🔧 后端修改</div>
+            <div class="feature-desc">1. 修改Chapter实体类，添加storySummary字段：</div>
+            <div class="code-block">@Column(name = "story_summary", columnDefinition = "TEXT")
+private String storySummary;</div>
+            
+            <div class="feature-desc">2. 修改NovelController的createChapter接口，接收storySummary参数：</div>
+            <div class="code-block">@PostMapping("/novels/{novelId}/chapters")
+public ResponseEntity&lt;?&gt; createChapter(
+        @PathVariable Long novelId,
+        @RequestBody Map&lt;String, String&gt; request) {
+    
+    String storySummary = request.get("storySummary");
+    // ... 其他逻辑
+    
+    // 设置故事概括
+    if (storySummary != null && !storySummary.trim().isEmpty()) {
+        chapter.setStorySummary(storySummary.trim());
+    }
+    
+    return ResponseEntity.ok(chapter);
+}</div>
+        </div>
+        
+        <div class="feature-section">
+            <div class="feature-title">🎨 前端修改</div>
+            <div class="feature-desc">1. 修改小说详情页模板，在章节列表中显示故事概括：</div>
+            <div class="code-block">&lt;!-- 故事概括 --&gt;
+&lt;div th:if="${chapterWithTags.chapter.storySummary}" class="story-summary"&gt;
+    &lt;div class="summary-label"&gt;📋 故事概括:&lt;/div&gt;
+    &lt;div class="summary-content" th:text="${chapterWithTags.chapter.storySummary}"&gt;&lt;/div&gt;
+&lt;/div&gt;</div>
+            
+            <div class="feature-desc">2. 修改添加章节页面，增加故事概括输入框并使用AJAX提交：</div>
+            <div class="code-block">&lt;div class="form-group"&gt;
+    &lt;label for="storySummary"&gt;故事概括：&lt;/label&gt;
+    &lt;textarea id="storySummary" name="storySummary" 
+              placeholder="请输入本章节的故事概括（可选）" rows="4"&gt;&lt;/textarea&gt;
+    &lt;small style="color: #7f8c8d; font-size: 12px;"&gt;
+        简要描述本章节的主要情节和发展
+    &lt;/small&gt;
+&lt;/div&gt;</div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>📊 展示效果演示</h2>
+            
+            <div class="chapter-item">
+                <div class="chapter-header">
+                    <div class="chapter-title">第一章：初入异界</div>
+                    <div class="chapter-number">第1章</div>
+                </div>
+                <div class="story-summary">
+                    <div class="summary-label">📋 故事概括:</div>
+                    <div class="summary-content">
+                        主角意外穿越到异世界，发现自己拥有了特殊的能力。在这个陌生的世界里，他遇到了第一位导师，并开始了解这个世界的规则和危险。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chapter-item">
+                <div class="chapter-header">
+                    <div class="chapter-title">第二章：能力觉醒</div>
+                    <div class="chapter-number">第2章</div>
+                </div>
+                <div class="story-summary">
+                    <div class="summary-label">📋 故事概括:</div>
+                    <div class="summary-content">
+                        经过刻苦训练，主角的能力逐渐觉醒，掌握了基础的战斗技巧。在一次意外中，他救下了一个重要人物，也因此卷入了更大的阴谋之中。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chapter-item">
+                <div class="chapter-header">
+                    <div class="chapter-title">第三章：暗流涌动</div>
+                    <div class="chapter-number">第3章</div>
+                </div>
+                <div class="story-summary">
+                    <div class="summary-label">📋 故事概括:</div>
+                    <div class="summary-content">
+                        主角发现这个世界背后隐藏着巨大的秘密，各方势力都在暗中较劲。为了保护身边的人，他决定主动出击，寻找真相的线索。
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feature-section">
+            <div class="feature-title">✅ 功能特点</div>
+            <div class="feature-desc">
+                • <strong>可选填写</strong>：故事概括为可选字段，不影响原有功能<br>
+                • <strong>清晰展示</strong>：在章节列表中以醒目的样式展示故事概括<br>
+                • <strong>响应式设计</strong>：适配各种屏幕尺寸<br>
+                • <strong>无缝集成</strong>：与现有章节标签功能完美配合<br>
+                • <strong>易于使用</strong>：界面简洁直观，操作便捷
+            </div>
+        </div>
+    </div>
+</body>
+</html>
