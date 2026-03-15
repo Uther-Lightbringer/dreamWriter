@@ -7,6 +7,7 @@ import org.zenithon.articlecollect.entity.Novel;
 import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.ChapterDetailView;
 import org.zenithon.articlecollect.service.NovelService;
+import org.zenithon.articlecollect.dto.WorldViewRequest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -301,6 +302,63 @@ public class NovelController {
         Map<String, Object> response = new HashMap<>();
         response.put("success", success);
         response.put("message", success ? "章节删除成功" : "章节删除失败");
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * 更新小说的世界观
+     * PUT /api/novels/{novelId}/worldview
+     * 请求体：{"worldView": "世界观内容（支持 Markdown 格式）"}
+     * 返回：{"success": true, "message": "...", "data": {更新后的小说对象}}
+     */
+    @PutMapping("/novels/{novelId}/worldview")
+    public ResponseEntity<Map<String, Object>> updateWorldView(
+            @PathVariable Long novelId,
+            @RequestBody WorldViewRequest request) {
+        
+        Novel novel = novelService.getNovelById(novelId);
+        if (novel == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "小说不存在，ID: " + novelId);
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        try {
+            String worldView = request.getWorldView();
+            Novel updatedNovel = novelService.updateWorldView(novelId, worldView);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "世界观更新成功");
+            response.put("data", updatedNovel);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "世界观更新失败：" + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    /**
+     * 获取小说的世界观
+     * GET /api/novels/{novelId}/worldview
+     * 返回：{"success": true, "worldView": "世界观内容"}
+     */
+    @GetMapping("/novels/{novelId}/worldview")
+    public ResponseEntity<Map<String, Object>> getWorldView(@PathVariable Long novelId) {
+        Novel novel = novelService.getNovelById(novelId);
+        if (novel == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "小说不存在，ID: " + novelId);
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("worldView", novel.getWorldView() != null ? novel.getWorldView() : "");
         return ResponseEntity.ok(response);
     }
 }

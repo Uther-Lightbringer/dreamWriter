@@ -25,6 +25,9 @@ public class Novel {
     @Column(length = 10000)
     private String description;
     
+    @Column(name = "world_view", length = 50000, columnDefinition = "TEXT")
+    private String worldView;
+    
     @Column(name = "create_time")
     private LocalDateTime createTime;
     
@@ -44,20 +47,20 @@ public class Novel {
     @Transient
     private String formattedCreateTime;
 
-    // 章节数量（用于JSON序列化）
+    // 章节数量（用于 JSON 序列化）
     @Transient
     private Integer chaptersCount;
-
+    
     public Novel() {
     }
-
+    
     public Novel(String title) {
         this.title = title;
         this.createTime = LocalDateTime.now();
         this.updateTime = LocalDateTime.now();
         this.formattedCreateTime = formatTime(this.createTime);
     }
-
+    
     public Novel(String title, String author) {
         this.title = title;
         this.author = author;
@@ -65,7 +68,7 @@ public class Novel {
         this.updateTime = LocalDateTime.now();
         this.formattedCreateTime = formatTime(this.createTime);
     }
-
+    
     public Novel(String title, String author, String description) {
         this.title = title;
         this.author = author;
@@ -74,7 +77,7 @@ public class Novel {
         this.updateTime = LocalDateTime.now();
         this.formattedCreateTime = formatTime(this.createTime);
     }
-
+    
     public Novel(Long id, String title) {
         this.id = id;
         this.title = title;
@@ -118,6 +121,16 @@ public class Novel {
 
     public void setDescription(String description) {
         this.description = description;
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.updateTime);
+    }
+
+    public String getWorldView() {
+        return worldView;
+    }
+
+    public void setWorldView(String worldView) {
+        this.worldView = worldView;
         this.updateTime = LocalDateTime.now();
         this.formattedCreateTime = formatTime(this.updateTime);
     }
@@ -192,6 +205,7 @@ public class Novel {
                 ", title='" + title + '\'' +
                 ", author='" + author + '\'' +
                 ", description='" + description + '\'' +
+                ", worldView='" + (worldView != null ? worldView.substring(0, Math.min(50, worldView.length())) + "..." : "null") + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", coverImage='" + getCoverImage() + '\'' +

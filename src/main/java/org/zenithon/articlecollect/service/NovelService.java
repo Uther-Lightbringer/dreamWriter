@@ -64,7 +64,7 @@ public class NovelService {
         if (novelOpt.isPresent()) {
             Novel novel = novelOpt.get();
             // 确保格式化时间字段被正确设置
-            ensureFormattedTime(novel);
+             ensureFormattedTime(novel);
             setChaptersCount(novel);
             // 批量分析章节标签（首次访问时生成，后续直接读取数据库）
             chapterTagService.batchAnalyzeNovelChapters(novelId);
@@ -266,5 +266,18 @@ public class NovelService {
         if (chapter.getCreateTime() != null && chapter.getFormattedCreateTime() == null) {
             chapter.setFormattedCreateTime(chapter.formatDateTime(chapter.getCreateTime()));
         }
+    }
+    
+    /**
+     * 更新小说的世界观
+     */
+    public Novel updateWorldView(Long novelId, String worldView) {
+        Optional<Novel> novelOpt = novelRepository.findById(novelId);
+        if (novelOpt.isPresent()) {
+            Novel novel = novelOpt.get();
+            novel.setWorldView(worldView);
+            return novelRepository.save(novel);
+        }
+        throw new RuntimeException("小说不存在，ID: " + novelId);
     }
 }

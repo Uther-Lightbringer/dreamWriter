@@ -594,6 +594,153 @@
                 font-size: 13px;
             }
         }
+        
+        /* 世界观按钮样式 */
+        .worldview-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #17a2b8;
+            background-color: #17a2b8;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .worldview-btn:hover {
+            background-color: #138496;
+            transform: translateY(-1px);
+        }
+        
+        /* 世界观弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-color);
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--text-color);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: var(--border-color);
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-ok-btn {
+            padding: 10px 25px;
+            border-radius: 6px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-ok-btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .worldview-content {
+            color: var(--text-color);
+            line-height: 1.8;
+        }
+        
+        @media (max-width: 768px) {
+            .worldview-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 20px 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -629,6 +776,12 @@
             <div class="setting-group">
                 <button class="reset-btn" onclick="resetSettings()">
                     🔄 重置
+                </button>
+            </div>
+            
+            <div class="setting-group">
+                <button class="worldview-btn" onclick="showWorldViewModal()">
+                    📖 查看世界观
                 </button>
             </div>
         </div>
@@ -677,6 +830,24 @@
                         下一章
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 世界观弹窗 -->
+    <div id="worldViewModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📖 小说世界观</h3>
+                <button class="modal-close" onclick="closeWorldViewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="worldViewContent" class="worldview-content markdown-content">
+                    <p style="text-align: center; color: #6c757d;">暂无世界观内容</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-ok-btn" onclick="closeWorldViewModal()">确定</button>
             </div>
         </div>
     </div>
@@ -1058,6 +1229,50 @@
                 });
             }
         }
+        
+        // 显示世界观弹窗
+        function showWorldViewModal() {
+            const modal = document.getElementById('worldViewModal');
+            const contentDiv = document.getElementById('worldViewContent');
+            
+            // 显示加载状态
+            contentDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">正在加载世界观内容...</p>';
+            modal.classList.add('active');
+            
+            // 获取世界观数据
+            fetch(`/api/novels/${novelId}/worldview`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.worldView && data.worldView.trim()) {
+                            // 使用 marked.js 渲染 Markdown
+                            contentDiv.innerHTML = marked.parse(data.worldView);
+                        } else {
+                            contentDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无世界观内容</p>';
+                        }
+                    } else {
+                        contentDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败：' + (data.message || '未知错误') + '</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取世界观失败:', error);
+                    contentDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                });
+        }
+        
+        // 关闭世界观弹窗
+        function closeWorldViewModal() {
+            const modal = document.getElementById('worldViewModal');
+            modal.classList.remove('active');
+        }
+        
+        // 点击弹窗外部关闭弹窗
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('worldViewModal');
+            if (event.target === modal) {
+                closeWorldViewModal();
+            }
+        });
     </script>
 </body>
 </html>
