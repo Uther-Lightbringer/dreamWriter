@@ -43,6 +43,19 @@ public class ImageGeneratedUtils {
             Object response = visualService.cvProcess(req);
             JSONObject jsonResponse = JSON.parseObject(JSON.toJSONString(response));
             log.info("\n=== 开始生成图片响应 ===");
+            
+            // 检查响应中的错误码和消息
+            Integer code = jsonResponse.getInteger("code");
+            String message = jsonResponse.getString("message");
+            Integer status = jsonResponse.getInteger("status");
+            
+            // 如果有错误码且不是成功状态码（200 或 10000）
+            if (code != null && code != 200 && code != 10000) {
+                log.error("图片生成失败：code={}, message={}, status={}", code, message, status);
+                String errorMessage = buildErrorMessage(code, message);
+                return new AiImageGenerationResponse(false, errorMessage);
+            }
+            
             // 打印图片 URLs
             JSONObject data = jsonResponse.getJSONObject("data");
             if (data != null) {
@@ -73,6 +86,41 @@ public class ImageGeneratedUtils {
         } catch (Exception e) {
             log.error("调用视觉服务失败", e);
             return new AiImageGenerationResponse(false, "生成失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据错误码和消息构建友好的错误信息
+     */
+    private static String buildErrorMessage(Integer code, String message) {
+        if (message == null || message.isEmpty()) {
+            return "图片生成失败（错误码：" + code + ")";
+        }
+        
+        // 根据 message 内容返回对应的错误提示
+        if ("Text Risk Not Pass".equals(message)) {
+            return "输入文本包含敏感内容，审核未通过，请修改提示词后重试";
+        } else if ("Pre Img Risk Not Pass".equals(message)) {
+            return "输入图片审核未通过，可能包含敏感内容";
+        } else if ("Post Img Risk Not Pass".equals(message)) {
+            return "生成图片审核未通过，请重新尝试";
+        } else if ("Post Text Risk Not Pass".equals(message)) {
+            return "输出文本包含敏感词或版权词，审核未通过";
+        } else if (message.contains("Risk Not Pass")) {
+            return "内容审核未通过：" + message;
+        } else if ("Request Has Reached API Limit".equals(message) || "Please Try Later".equals(message)) {
+            return "API 请求超限，请稍后重试";
+        } else if ("Request Has Reached API Concurrent Limit".equals(message)) {
+            return "并发请求超限，请稍后重试";
+        } else if ("Internal Error".equals(message) || "Internal RPC Error".equals(message)) {
+            return "服务器内部错误，请稍后重试";
+        } else if ("Risk Internal Error".equals(message)) {
+            return "审核服务异常，请稍后重试";
+        } else if ("Image Copyright Internal Error".equals(message)) {
+            return "版权图服务异常，请稍后重试";
+        } else {
+            // 其他错误直接返回原始消息
+            return message + "（错误码：" + code + ")";
         }
     }
 

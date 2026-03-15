@@ -361,9 +361,7 @@ public class NovelService {
             CharacterCardEntity entity = convertToEntity(card, novelId, i);
             characterCardRepository.save(entity);
         }
-        
-        // 启动异步任务处理 AI 绘画提示词生成和图片生成
-        characterCardAsyncService.processCharacterCardsAsync(novelId, characterCards);
+
     }
     
     /**

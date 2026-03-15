@@ -6,16 +6,14 @@ import org.springframework.web.bind.annotation.*;
 import org.zenithon.articlecollect.entity.Novel;
 import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.ChapterDetailView;
+import org.zenithon.articlecollect.service.CharacterCardAsyncService;
 import org.zenithon.articlecollect.service.NovelService;
 import org.zenithon.articlecollect.dto.WorldViewRequest;
 import org.zenithon.articlecollect.dto.CharacterCardRequest;
 import org.zenithon.articlecollect.dto.CharacterCard;
 import org.zenithon.articlecollect.dto.CharacterCardBatchRequest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 小说管理REST控制器
@@ -26,6 +24,9 @@ public class NovelController {
     
     @Autowired
     private NovelService novelService;
+
+    @Autowired
+    private CharacterCardAsyncService characterCardAsyncService;
     
     /**
      * 创建新小说
@@ -415,7 +416,10 @@ public class NovelController {
             }
             
             Novel updatedNovel = novelService.updateCharacterCardsBatch(novelId, characterCards);
-            
+
+            // 启动异步任务处理 AI 绘画提示词生成和图片生成
+            characterCardAsyncService.processCharacterCardsAsync(novelId, characterCards);
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "角色卡更新成功");
@@ -499,7 +503,7 @@ public class NovelController {
             
             // 保存到数据库
             novelService.updateCharacterCardsBatch(novelId, existingCards);
-            
+            characterCardAsyncService.processCharacterCardsAsync(novelId, existingCards);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "角色卡添加成功");
