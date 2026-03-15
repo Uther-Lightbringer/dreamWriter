@@ -635,7 +635,6 @@ public class NovelController {
             response.put("message", "小说不存在，ID: " + novelId);
             return ResponseEntity.status(404).body(response);
         }
-        
         try {
             // 获取角色卡信息
             CharacterCard card = characterCardService.getCharacterCardById(characterId);
@@ -645,6 +644,10 @@ public class NovelController {
                 response.put("message", "角色卡不存在，ID: " + characterId);
                 return ResponseEntity.status(404).body(response);
             }
+            log.info("正在为角色卡重新生成提示词，characterId={}, 角色名称:{}", characterId, card.getName());
+
+            characterCardService.updateCharacterCardAIGeneratedFields(characterId,
+                card.getAppearanceDescription(), card.getGeneratedImageUrl());
             
             // 创建任务
             CharacterCardPromptTaskService.TaskStatus taskStatus = 

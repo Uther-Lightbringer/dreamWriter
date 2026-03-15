@@ -84,4 +84,16 @@ public class ImageController {
         response.setEntityId(chapterId);
         return ResponseEntity.ok(response);
     }
+    
+    /**
+     * 上传角色卡图片
+     */
+    @PostMapping("/character/{characterId}/upload")
+    public ResponseEntity<ImageUploadResponse> uploadCharacterImage(
+            @PathVariable Long characterId,
+            @RequestParam("file") MultipartFile file) {
+        
+        ImageUploadResponse response = imageService.uploadCharacterImage(characterId, file);
+        return ResponseEntity.ok(response);
+    }
 }

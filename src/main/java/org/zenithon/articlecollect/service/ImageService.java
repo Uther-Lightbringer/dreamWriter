@@ -6,8 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.zenithon.articlecollect.entity.Novel;
 import org.zenithon.articlecollect.entity.Chapter;
+import org.zenithon.articlecollect.entity.CharacterCardEntity;
 import org.zenithon.articlecollect.repository.NovelRepository;
 import org.zenithon.articlecollect.repository.ChapterRepository;
+import org.zenithon.articlecollect.repository.CharacterCardRepository;
 import org.zenithon.articlecollect.util.FileUploadUtil;
 import org.zenithon.articlecollect.dto.ImageUploadResponse;
 
@@ -26,6 +28,10 @@ public class ImageService {
     @Autowired
     private ChapterRepository chapterRepository;
     
+    @Autowired
+    private CharacterCardRepository characterCardRepository;
+
+
     /**
      * 上传小说封面图片
      */
@@ -166,5 +172,37 @@ public class ImageService {
     public String getChapterImagePath(Long chapterId) {
         Optional<Chapter> chapterOpt = chapterRepository.findById(chapterId);
         return chapterOpt.map(Chapter::getChapterImage).orElse(null);
+    }
+    
+    /**
+     * 上传角色卡图片
+     */
+    @Transactional
+    public ImageUploadResponse uploadCharacterImage(Long characterId, MultipartFile file) {
+        try {
+            // 验证角色卡是否存在
+            Optional<CharacterCardEntity> cardOpt = characterCardRepository.findById(characterId);
+            if (!cardOpt.isPresent()) {
+                return new ImageUploadResponse(false, "角色卡不存在");
+            }
+            
+            CharacterCardEntity card = cardOpt.get();
+            
+            // 保存文件
+            String imagePath = FileUploadUtil.saveImage(file, "character", characterId);
+            
+            // 更新角色卡实体
+            card.setGeneratedImageUrl(imagePath);
+            characterCardRepository.save(card);
+            
+            return new ImageUploadResponse(true, "角色卡图片上传成功", imagePath, characterId);
+            
+        } catch (IllegalArgumentException e) {
+            return new ImageUploadResponse(false, e.getMessage());
+        } catch (IOException e) {
+            return new ImageUploadResponse(false, "文件保存失败：" + e.getMessage());
+        } catch (Exception e) {
+            return new ImageUploadResponse(false, "上传失败：" + e.getMessage());
+        }
     }
 }
