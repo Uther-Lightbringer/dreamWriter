@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色卡版本号功能测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .input-group input {
+            padding: 8px;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left: 4px solid #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-left: 4px solid #dc3545;
+            background-color: #f8d7da;
+        }
+        .info {
+            border-left: 4px solid #17a2b8;
+            background-color: #d1ecf1;
+        }
+        .version-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .version-prompt {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        .version-image {
+            background-color: #fce4ec;
+            color: #c2185b;
+        }
+        .character-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: white;
+            transition: box-shadow 0.3s;
+        }
+        .character-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .character-image {
+            width: 200px;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .image-placeholder {
+            width: 200px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            color: #999;
+            font-size: 14px;
+        }
+        .character-info {
+            flex: 1;
+        }
+        .character-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .character-details {
+            color: #555;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+        .version-info {
+            margin: 10px 0;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 角色卡版本号功能测试</h1>
+        
+        <!-- 输入区域 -->
+        <div class="test-section">
+            <h2>📝 测试参数</h2>
+            <div class="input-group">
+                <label for="novelId">小说 ID:</label>
+                <input type="number" id="novelId" value="1" />
+            </div>
+            <div class="input-group">
+                <label for="characterId">角色卡 ID:</label>
+                <input type="number" id="characterId" placeholder="例如：1" />
+            </div>
+            <button class="btn" onclick="loadCharacter()">👤 加载角色卡</button>
+            <button class="btn btn-success" onclick="regeneratePrompt()">✨ 重新生成提示词（+版本）</button>
+            <button class="btn btn-warning" onclick="regenerateImage()">🎨 重新生成图片（+版本）</button>
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
+        
+        <!-- 角色卡展示区域 -->
+        <div class="test-section">
+            <h2>👥 角色卡详情（带版本号）</h2>
+            <div id="characterDetail">
+                <p style="text-align: center; color: #999;">点击"加载角色卡"按钮显示详情</p>
+            </div>
+        </div>
+        
+        <!-- 版本历史说明 -->
+        <div class="test-section">
+            <h2>📊 版本号说明</h2>
+            <div style="line-height: 2; color: #555;">
+                <p><strong>提示词版本号 (promptVersion):</strong></p>
+                <ul>
+                    <li>每次点击"重新生成 AI 绘画提示词"时递增</li>
+                    <li>初始值为 0，第一次生成后变为 1</li>
+                    <li>用于追踪提示词的更新次数</li>
+                </ul>
+                
+                <p><strong>图片版本号 (imageVersion):</strong></p>
+                <ul>
+                    <li>每次点击"生成角色图片"时递增</li>
+                    <li>初始值为 0，第一次生成后变为 1</li>
+                    <li>用于追踪图片的生成次数</li>
+                </ul>
+                
+                <p><strong>示例：</strong></p>
+                <ul>
+                    <li>提示词版本：3 → 表示这是第 3 次生成的提示词</li>
+                    <li>图片版本：5 → 表示这是第 5 次生成的图片</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:38081/api';
+        
+        // 显示结果
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+        
+        // 加载角色卡
+        async function loadCharacter() {
+            const novelId = document.getElementById('novelId').value;
+            const characterId = document.getElementById('characterId').value;
+            const detailDiv = document.getElementById('characterDetail');
+            
+            if (!novelId || !characterId) {
+                showResult('请输入小说 ID 和角色卡 ID', 'error');
+                return;
+            }
+            
+            detailDiv.innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/novels/${novelId}/character-cards/list`);
+                const data = await response.json();
+                
+                if (data.success && data.characterCards) {
+                    const card = data.characterCards.find(c => c.id == characterId);
+                    
+                    if (card) {
+                        displayCharacter(card);
+                        showResult(`角色卡加载成功\n提示词版本：${card.promptVersion || 0}\n图片版本：${card.imageVersion || 0}`, 'success');
+                    } else {
+                        detailDiv.innerHTML = '<p style="text-align: center; color: #999;">未找到该角色卡</p>';
+                        showResult('未找到该角色卡', 'error');
+                    }
+                } else {
+                    detailDiv.innerHTML = '<p style="text-align: center; color: #999;">加载失败</p>';
+                    showResult('加载失败：' + (data.message || '未知错误'), 'error');
+                }
+            } catch (error) {
+                detailDiv.innerHTML = '<p style="text-align: center; color: red;">加载失败</p>';
+                showResult('请求失败：' + error.message, 'error');
+            }
+        }
+        
+        // 显示角色卡详情
+        function displayCharacter(card) {
+            const detailDiv = document.getElementById('characterDetail');
+            const imageUrl = card.generatedImageUrl;
+            const webImageUrl = imageUrl ? imageUrl.replace('uploads/', '/') : null;
+            
+            let html = `
+                <div class="character-card">
+                    ${webImageUrl 
+                        ? `<img src="${webImageUrl}" alt="${card.name}" class="character-image" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>图片加载失败</div>';" />`
+                        : '<div class="image-placeholder">暂无图片</div>'
+                    }
+                    <div class="character-info">
+                        <div class="character-name">${card.name || '未知'}</div>
+                        <div class="version-info">
+                            <span class="version-badge version-prompt">📝 提示词版本 v${card.promptVersion || 0}</span>
+                            <span class="version-badge version-image">🎨 图片版本 v${card.imageVersion || 0}</span>
+                        </div>
+                        <div class="character-details">
+                            <div><strong>ID:</strong> ${card.id}</div>
+                            <div><strong>年龄:</strong> ${card.age || '未知'}</div>
+                            <div><strong>性别:</strong> ${card.gender || '未知'}</div>
+                            <div><strong>职业:</strong> ${card.occupation || '未知'}</div>
+                            <div><strong>外貌描述:</strong> ${card.appearanceDescription ? card.appearanceDescription.substring(0, 200) + '...' : '无'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            detailDiv.innerHTML = html;
+        }
+        
+        // 重新生成提示词
+        async function regeneratePrompt() {
+            const novelId = document.getElementById('novelId').value;
+            const characterId = document.getElementById('characterId').value;
+            
+            if (!novelId || !characterId) {
+                showResult('请输入小说 ID 和角色卡 ID', 'error');
+                return;
+            }
+            
+            showResult('正在重新生成 AI 绘画提示词...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/novels/${novelId}/character-cards/${characterId}/generate-prompt`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const updatedCard = data.data;
+                    displayCharacter(updatedCard);
+                    showResult(`✅ 提示词重新生成成功！\n新版本号：${updatedCard.promptVersion}\n更新时间：${new Date().toLocaleString()}`, 'success');
+                } else {
+                    showResult('❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showResult('请求失败：' + error.message, 'error');
+            }
+        }
+        
+        // 重新生成图片
+        async function regenerateImage() {
+            const novelId = document.getElementById('novelId').value;
+            const characterId = document.getElementById('characterId').value;
+            
+            if (!novelId || !characterId) {
+                showResult('请输入小说 ID 和角色卡 ID', 'error');
+                return;
+            }
+            
+            showResult('正在重新生成角色图片，这可能需要几秒钟...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/novels/${novelId}/character-cards/${characterId}/generate-image`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const updatedCard = data.data;
+                    displayCharacter(updatedCard);
+                    showResult(`✅ 图片重新生成成功！\n新版本号：${updatedCard.imageVersion}\n更新时间：${new Date().toLocaleString()}`, 'success');
+                } else {
+                    showResult('❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showResult('请求失败：' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

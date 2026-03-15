@@ -358,13 +358,7 @@ public class NovelService {
         // 从数据库表读取角色卡
         return getCharacterCardsFromDatabase(novelId);
     }
-    
-    /**
-     * 为单个角色生成 AI 绘画提示词
-     */
-    public String generateAIPromptForCharacter(CharacterCard characterCard) {
-        return aiPromptService.generateAIPrompt(characterCard);
-    }
+
     
     /**
      * 为单个角色生成图片

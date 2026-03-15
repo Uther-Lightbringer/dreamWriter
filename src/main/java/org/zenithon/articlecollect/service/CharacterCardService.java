@@ -31,6 +31,9 @@ public class CharacterCardService {
     
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AIPromptService aiPromptService;
     
     /**
      * 根据小说 ID 获取所有角色卡（按排序顺序）
@@ -141,15 +144,18 @@ public class CharacterCardService {
         
         if (entityOpt.isPresent()) {
             CharacterCardEntity existingEntity = entityOpt.get();
-            
+            CharacterCard characterCard = convertToDTO(existingEntity);
+            String newPrompt = aiPromptService.generateAIPrompt(characterCard);
             // 递增提示词版本号
             Integer currentVersion = existingEntity.getPromptVersion();
+            existingEntity.setAppearanceDescription(newPrompt);
             existingEntity.setPromptVersion(currentVersion == null ? 1 : currentVersion + 1);
             existingEntity.setUpdateTime(java.time.LocalDateTime.now());
             
             CharacterCardEntity savedEntity = characterCardRepository.save(existingEntity);
             logger.info("重新生成角色卡 {} 的 AI 绘画提示词，版本号：{}", characterId, savedEntity.getPromptVersion());
-            
+            logger.info("新的提示词：{}", newPrompt);
+
             return convertToDTO(savedEntity);
         }
         
