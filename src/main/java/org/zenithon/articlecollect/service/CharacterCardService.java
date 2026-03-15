@@ -62,18 +62,54 @@ public class CharacterCardService {
      * 保存角色卡列表
      */
     @Transactional
-    public void saveCharacterCards(Long novelId, List<CharacterCard> characterCards) {
-        // 删除旧的角色卡数据
-        characterCardRepository.deleteByNovelId(novelId);
-        
+    public List<CharacterCard> saveCharacterCards(Long novelId, List<CharacterCard> characterCards) {
+
+        List<CharacterCard> entities = new ArrayList<>();
         // 保存新的角色卡
         for (int i = 0; i < characterCards.size(); i++) {
             CharacterCard card = characterCards.get(i);
             CharacterCardEntity entity = convertToEntity(card, novelId, i);
-            characterCardRepository.save(entity);
+            CharacterCardEntity saved = characterCardRepository.save(entity);
+            CharacterCard newCard = convertToDTO(saved);
+            entities.add(newCard);
+        }
+        logger.info("保存了 {} 个角色卡到数据库，小说 ID: {}", characterCards.size(), novelId);
+        return entities;
+    }
+    
+    /**
+     * 保存单个角色卡（新增或更新）
+     * 如果提供了 ID 则更新，否则创建新角色卡
+     */
+    @Transactional
+    public CharacterCard saveSingleCharacterCard(Long novelId, CharacterCard characterCard) {
+        logger.info("保存单个角色卡到小说 ID: {}, 角色名：{}", novelId, characterCard.getName());
+        
+        // 如果有 ID，尝试更新现有角色卡
+        if (characterCard.getId() != null) {
+            Optional<CharacterCardEntity> existingOpt = characterCardRepository.findById(characterCard.getId());
+            if (existingOpt.isPresent()) {
+                // 验证角色卡是否属于该小说
+                CharacterCardEntity existingEntity = existingOpt.get();
+                if (!existingEntity.getNovelId().equals(novelId)) {
+                    throw new RuntimeException("角色卡不属于该小说，ID: " + characterCard.getId());
+                }
+                
+                // 更新字段
+                updateEntityFields(existingEntity, characterCard);
+                CharacterCardEntity savedEntity = characterCardRepository.save(existingEntity);
+                logger.info("更新角色卡：{} (ID: {})", characterCard.getName(), characterCard.getId());
+                return convertToDTO(savedEntity);
+            }
         }
         
-        logger.info("保存了 {} 个角色卡到数据库，小说 ID: {}", characterCards.size(), novelId);
+        // 创建新角色卡
+        int sortOrder = characterCardRepository.findByNovelIdOrderBySortOrderAsc(novelId).size();
+        CharacterCardEntity newEntity = convertToEntity(characterCard, novelId, sortOrder);
+        CharacterCardEntity savedEntity = characterCardRepository.save(newEntity);
+        logger.info("创建新角色卡：{} (ID: {})", characterCard.getName(), savedEntity.getId());
+        
+        return convertToDTO(savedEntity);
     }
     
     /**
@@ -137,6 +173,7 @@ public class CharacterCardService {
     
     /**
      * 更新角色卡的 AI 绘画提示词（带版本号）
+     * 注意：此方法假设 appearanceDescription 已经被设置好
      */
     @Transactional
     public CharacterCard regenerateAIPrompt(Long characterId) {
@@ -144,18 +181,15 @@ public class CharacterCardService {
         
         if (entityOpt.isPresent()) {
             CharacterCardEntity existingEntity = entityOpt.get();
-            CharacterCard characterCard = convertToDTO(existingEntity);
-            String newPrompt = aiPromptService.generateAIPrompt(characterCard);
+            
             // 递增提示词版本号
             Integer currentVersion = existingEntity.getPromptVersion();
-            existingEntity.setAppearanceDescription(newPrompt);
             existingEntity.setPromptVersion(currentVersion == null ? 1 : currentVersion + 1);
             existingEntity.setUpdateTime(java.time.LocalDateTime.now());
             
             CharacterCardEntity savedEntity = characterCardRepository.save(existingEntity);
             logger.info("重新生成角色卡 {} 的 AI 绘画提示词，版本号：{}", characterId, savedEntity.getPromptVersion());
-            logger.info("新的提示词：{}", newPrompt);
-
+            
             return convertToDTO(savedEntity);
         }
         

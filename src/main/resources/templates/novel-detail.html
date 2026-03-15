@@ -1870,6 +1870,31 @@
             renderCharacterCardsList();
         }
                 
+        // 保存单个角色卡（新增或更新）
+        function saveSingleCharacterCard(cardData, callback) {
+            fetch(`/api/novels/${novelId}/character-cards/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(cardData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    callback(true, data.data);
+                } else {
+                    alert('保存失败：' + data.message);
+                    callback(false, null);
+                }
+            })
+            .catch(error => {
+                console.error('保存角色卡失败:', error);
+                alert('保存失败，请稍后重试');
+                callback(false, null);
+            });
+        }
+        
         // 保存所有角色卡
         function saveAllCharacterCards() {
             fetch(`/api/novels/${novelId}/character-cards/batch`, {
@@ -2123,16 +2148,28 @@
             }
                     
             if (editIndex >= 0) {
-                // 更新现有角色卡
-                characterCardsData[editIndex] = cardData;
+                // 更新现有角色卡 - 只保存当前这一个角色卡
+                saveSingleCharacterCard(cardData, function(success, savedCard) {
+                    if (success) {
+                        // 更新本地数据（包括可能的新 ID 和版本号）
+                        characterCardsData[editIndex] = savedCard;
+                        alert('✨ 角色卡更新成功！');
+                        hideCharacterCardForm();
+                        loadCharacterCards(); // 重新加载列表以显示最新数据
+                    }
+                });
             } else {
-                // 添加新角色卡
-                characterCardsData.push(cardData);
+                // 添加新角色卡 - 保存到数据库
+                saveSingleCharacterCard(cardData, function(success, savedCard) {
+                    if (success) {
+                        // 添加到本地数据
+                        characterCardsData.push(savedCard);
+                        alert('✅ 角色卡创建成功！');
+                        hideCharacterCardForm();
+                        loadCharacterCards(); // 重新加载列表以显示最新数据
+                    }
+                });
             }
-                    
-            // 保存所有角色卡
-            saveAllCharacterCards();
-            hideCharacterCardForm();
         });
     </script>
 </body>

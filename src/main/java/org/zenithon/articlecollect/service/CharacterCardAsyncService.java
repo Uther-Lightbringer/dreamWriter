@@ -7,9 +7,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.zenithon.articlecollect.dto.CharacterCard;
+import org.zenithon.articlecollect.entity.CharacterCardEntity;
 import org.zenithon.articlecollect.repository.CharacterCardRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 角色卡异步任务服务
@@ -27,6 +29,9 @@ public class CharacterCardAsyncService {
     
     @Autowired
     private AIPromptService aiPromptService;
+    
+    @Autowired
+    private CharacterCardPromptTaskService promptTaskService;
     
     // 图片生成间隔时间（毫秒）
     private static final long IMAGE_GENERATION_INTERVAL_MS = 3000; // 3 秒
@@ -93,5 +98,66 @@ public class CharacterCardAsyncService {
         }
         
         logger.info("完成所有角色卡 AI 绘画任务处理，小说 ID: {}", novelId);
+    }
+    
+    /**
+     * 异步重新生成单个角色卡的 AI 绘画提示词（带长轮询支持）
+     * @param taskId 任务 ID
+     * @param characterId 角色卡 ID
+     * @param novelId 小说 ID
+     */
+    @Async("characterCardTaskExecutor")
+    public void regenerateAIPromptAsync(String taskId, Long characterId, Long novelId) {
+        logger.info("开始异步重新生成角色卡 AI 绘画提示词，taskId={}, characterId={}", taskId, characterId);
+        
+        try {
+            // 更新任务状态为处理中
+            logger.info("更新任务状态为处理中：taskId={}", taskId);
+            promptTaskService.updateTaskProcessing(taskId);
+            
+            // 获取角色卡信息
+            logger.info("获取角色卡信息：characterId={}", characterId);
+            CharacterCard card = characterCardService.getCharacterCardById(characterId);
+            if (card == null) {
+                logger.error("角色卡不存在：characterId={}", characterId);
+                promptTaskService.failTask(taskId, "角色卡不存在，ID: " + characterId);
+                return;
+            }
+            
+            logger.info("角色卡信息获取成功：name={}, 开始调用 AI 生成提示词", card.getName());
+            
+            // 调用 AI 生成提示词
+            String aiPrompt = aiPromptService.generateAIPrompt(card);
+            
+            if (aiPrompt != null && !aiPrompt.trim().isEmpty()) {
+                logger.info("AI 提示词生成成功，长度：{}", aiPrompt.length());
+                
+                // 先更新实体的 appearanceDescription
+                Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
+                if (entityOpt.isPresent()) {
+                    CharacterCardEntity entity = entityOpt.get();
+                    entity.setAppearanceDescription(aiPrompt);
+                    characterCardRepository.save(entity);
+                    logger.info("已更新角色卡提示词到数据库");
+                }
+                
+                // 然后递增版本号并返回 DTO
+                CharacterCard updatedCard = characterCardService.regenerateAIPrompt(characterId);
+                
+                logger.info("角色 '{}' AI 绘画提示词重新生成成功，版本号：{}", 
+                    card.getName(), updatedCard.getPromptVersion());
+                
+                // 更新任务状态为完成
+                promptTaskService.completeTask(taskId, updatedCard);
+                logger.info("任务状态已更新为完成：taskId={}", taskId);
+            } else {
+                logger.warn("角色 '{}' AI 绘画提示词生成结果为空", card.getName());
+                promptTaskService.failTask(taskId, "AI 提示词生成结果为空");
+            }
+            
+        } catch (Exception e) {
+            logger.error("重新生成角色卡 AI 绘画提示词失败，taskId={}, characterId={}", taskId, characterId, e);
+            promptTaskService.failTask(taskId, "生成失败：" + e.getMessage());
+        }
     }
 }

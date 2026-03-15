@@ -327,14 +327,22 @@ public class NovelService {
         throw new RuntimeException("小说不存在，ID: " + novelId);
     }
     
+    /**
+     * 保存单个角色卡（新增或更新）
+     */
+    @Transactional
+    public CharacterCard saveSingleCharacterCard(Long novelId, CharacterCard characterCard) {
+        return characterCardService.saveSingleCharacterCard(novelId, characterCard);
+    }
+    
 
     
     /**
      * 保存角色卡到数据库表
      */
     @Transactional
-    public void saveCharacterCardsToDatabase(Long novelId, List<CharacterCard> characterCards) {
-        characterCardService.saveCharacterCards(novelId, characterCards);
+    public List<CharacterCard> saveCharacterCardsToDatabase(Long novelId, List<CharacterCard> characterCards) {
+        return characterCardService.saveCharacterCards(novelId, characterCards);
     }
     
     /**
