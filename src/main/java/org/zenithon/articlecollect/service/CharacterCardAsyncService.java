@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.zenithon.articlecollect.dto.CharacterCard;
-import org.zenithon.articlecollect.entity.CharacterCardEntity;
 import org.zenithon.articlecollect.repository.CharacterCardRepository;
 
 import java.util.List;
@@ -22,6 +21,9 @@ public class CharacterCardAsyncService {
     
     @Autowired
     private CharacterCardRepository characterCardRepository;
+    
+    @Autowired
+    private CharacterCardService characterCardService;
     
     @Autowired
     private AIPromptService aiPromptService;
@@ -68,17 +70,22 @@ public class CharacterCardAsyncService {
                         logger.error("等待间隔被中断", e);
                     }
                     
-                    String imageUrl = new VolcEngineImageService().generateImage(card.getAppearanceDescription());
-                    if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                        card.setGeneratedImageUrl(imageUrl);
-                        logger.info("角色 '{}' AI 图片生成成功：{}", card.getName(), imageUrl);
-                    } else {
-                        logger.warn("角色 '{}' AI 图片生成结果为空", card.getName());
+                    try {
+                        String imageUrl = new VolcEngineImageService().generateImage(card.getAppearanceDescription());
+                        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                            card.setGeneratedImageUrl(imageUrl);
+                            logger.info("角色 '{}' AI 图片生成成功：{}", card.getName(), imageUrl);
+                        } else {
+                            logger.warn("角色 '{}' AI 图片生成结果为空", card.getName());
+                        }
+                    } catch (Exception e) {
+                        logger.error("生成图片失败：{}", e.getMessage(), e);
                     }
                 }
                 
-                // 3. 更新数据库中的角色卡数据（包含生成的提示词和图片 URL）
-                updateCharacterCardInDatabase(card, novelId, i);
+                // 3. 使用 CharacterCardService 更新 AI 生成的字段
+                characterCardService.updateCharacterCardAIGeneratedFields(
+                    card.getId(), card.getAppearanceDescription(), card.getGeneratedImageUrl());
                 
             } catch (Exception e) {
                 logger.error("处理角色 '{}' 的 AI 绘画任务失败：{}", card.getName(), e.getMessage(), e);
@@ -86,56 +93,5 @@ public class CharacterCardAsyncService {
         }
         
         logger.info("完成所有角色卡 AI 绘画任务处理，小说 ID: {}", novelId);
-    }
-    
-    /**
-     * 更新单个角色卡在数据库中的数据
-     */
-    private void updateCharacterCardInDatabase(CharacterCard card, Long novelId, int sortOrder) {
-        try {
-            // 查找已存在的角色卡
-            CharacterCardEntity existingEntity = characterCardRepository.findByNovelIdAndCharacterIdOrNull(
-                novelId, card.getId());
-            
-            if (existingEntity != null) {
-                // 更新现有记录
-                existingEntity.setAppearanceDescription(card.getAppearanceDescription());
-                existingEntity.setGeneratedImageUrl(card.getGeneratedImageUrl());
-                existingEntity.setUpdateTime(java.time.LocalDateTime.now());
-                characterCardRepository.save(existingEntity);
-                logger.info("角色卡 '{}' 数据库记录更新成功", card.getName());
-            } else {
-                // 如果不存在，创建新记录（正常情况下应该不会发生）
-                logger.warn("未找到角色卡 '{}' 的现有记录，创建新记录", card.getName());
-                CharacterCardEntity entity = convertToEntity(card, novelId, sortOrder);
-                characterCardRepository.save(entity);
-            }
-        } catch (Exception e) {
-            logger.error("更新角色卡 '{}' 数据库记录失败：{}", card.getName(), e.getMessage(), e);
-            throw new RuntimeException("更新角色卡数据库记录失败", e);
-        }
-    }
-    
-    /**
-     * 将 DTO 转换为实体（复用 NovelService 的逻辑）
-     */
-    private CharacterCardEntity convertToEntity(CharacterCard card, Long novelId, int sortOrder) {
-        CharacterCardEntity entity = new CharacterCardEntity();
-        entity.setCharacterId(card.getId());
-        entity.setName(card.getName());
-        entity.setNovelId(novelId);
-        entity.setSortOrder(sortOrder);
-        entity.setAge(card.getAge());
-        entity.setGender(card.getGender());
-        entity.setOccupation(card.getOccupation());
-        entity.setPersonality(card.getPersonality());
-        entity.setBackground(card.getBackground());
-        entity.setNotes(card.getNotes());
-        entity.setAppearanceDescription(card.getAppearanceDescription());
-        entity.setGeneratedImageUrl(card.getGeneratedImageUrl());
-        
-        // 其他字段省略，因为主要目的是更新 AI 生成的字段
-        
-        return entity;
     }
 }

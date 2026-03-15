@@ -50,6 +50,9 @@ public class NovelService {
     private CharacterCardRepository characterCardRepository;
     
     @Autowired
+    private CharacterCardService characterCardService;
+    
+    @Autowired
     private AIPromptService aiPromptService;
     
     @Autowired
@@ -309,19 +312,7 @@ public class NovelService {
         throw new RuntimeException("小说不存在，ID: " + novelId);
     }
     
-    /**
-     * 更新小说的角色卡
-     */
-    public Novel updateCharacterCards(Long novelId, String characterCards) {
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            Novel novel = novelOpt.get();
-            novel.setCharacterCards(characterCards);
-            return novelRepository.save(novel);
-        }
-        throw new RuntimeException("小说不存在，ID: " + novelId);
-    }
-    
+
     /**
      * 批量更新小说的角色卡（结构化数据）- 保存到数据库表
      */
@@ -329,244 +320,43 @@ public class NovelService {
     public Novel updateCharacterCardsBatch(Long novelId, List<CharacterCard> characterCards) {
         Optional<Novel> novelOpt = novelRepository.findById(novelId);
         if (novelOpt.isPresent()) {
-            try {
-                Novel novel = novelOpt.get();
-                
-                // 1. 保存到数据库表
-                saveCharacterCardsToDatabase(novelId, characterCards);
-                
-                // 2. 同时保留原有的 JSON 格式作为备份
-                objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-                String json = objectMapper.writeValueAsString(characterCards);
-                novel.setCharacterCards(json);
-                return novelRepository.save(novel);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("角色卡数据序列化失败：" + e.getMessage());
-            }
+            // 保存到数据库表
+            saveCharacterCardsToDatabase(novelId, characterCards);
+            return novelOpt.get();
         }
         throw new RuntimeException("小说不存在，ID: " + novelId);
     }
     
-    /**
-     * 更新单个角色信息（结构化数据）- 保存到数据库表
-     * @param novelId 小说 ID
-     * @param characterCard 角色卡信息
-     * @return 更新后的小说对象
-     */
-    @Transactional
-    public Novel updateSingleCharacterCard(Long novelId, CharacterCard characterCard) {
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            try {
-                Novel novel = novelOpt.get();
 
-                // 1. 获取现有的所有角色卡
-                List<CharacterCard> existingCards = getCharacterCardsList(novelId);
-
-                // 2. 找到要更新的角色位置并替换
-                boolean found = false;
-                for (int i = 0; i < existingCards.size(); i++) {
-                    if (existingCards.get(i).getId().equals(characterCard.getId())) {
-                        existingCards.set(i, characterCard);
-                        found = true;
-                        break;
-                    }
-                }
-
-                // 3. 如果没有找到，则添加到列表末尾
-                if (!found) {
-                    existingCards.add(characterCard);
-                }
-
-                // 4. 保存到数据库表
-                saveCharacterCardsToDatabase(novelId, existingCards);
-
-                // 5. 同时保留原有的 JSON 格式作为备份
-                objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-                String json = objectMapper.writeValueAsString(existingCards);
-                novel.setCharacterCards(json);
-                return novelRepository.save(novel);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("角色卡数据序列化失败：" + e.getMessage());
-            }
-        }
-        throw new RuntimeException("小说不存在，ID: " + novelId);
-    }
     
     /**
-     * 保存角色卡到数据库表（仅保存基础数据，不包含 AI 生成）
+     * 保存角色卡到数据库表
      */
     @Transactional
     public void saveCharacterCardsToDatabase(Long novelId, List<CharacterCard> characterCards) {
-        // 删除旧的角色卡数据
-        characterCardRepository.deleteByNovelId(novelId);
-        
-        // 保存新的角色卡（不包含 AI 绘画提示词和图片生成）
-        for (int i = 0; i < characterCards.size(); i++) {
-            CharacterCard card = characterCards.get(i);
-            CharacterCardEntity entity = convertToEntity(card, novelId, i);
-            characterCardRepository.save(entity);
-        }
-
+        characterCardService.saveCharacterCards(novelId, characterCards);
     }
     
     /**
      * 从数据库获取角色卡列表
      */
     public List<CharacterCard> getCharacterCardsFromDatabase(Long novelId) {
-        List<CharacterCardEntity> entities = characterCardRepository.findByNovelIdOrderBySortOrderAsc(novelId);
-        List<CharacterCard> cards = new ArrayList<>();
-        
-        for (CharacterCardEntity entity : entities) {
-            CharacterCard card = convertToDTO(entity);
-            cards.add(card);
-        }
-        
-        return cards;
+        return characterCardService.getCharacterCardsByNovelId(novelId);
     }
-    
-    /**
-     * 将 DTO 转换为实体
-     */
-    private CharacterCardEntity convertToEntity(CharacterCard card, Long novelId, int sortOrder) {
-        CharacterCardEntity entity = new CharacterCardEntity();
-        entity.setCharacterId(card.getId());
-        entity.setName(card.getName());
-        entity.setNovelId(novelId);
-        entity.setSortOrder(sortOrder);
-        
-        // 处理别名数组
-        if (card.getAlternativeNames() != null && !card.getAlternativeNames().isEmpty()) {
-            try {
-                entity.setAlternativeNames(objectMapper.writeValueAsString(card.getAlternativeNames()));
-            } catch (JsonProcessingException e) {
-                entity.setAlternativeNames("[]");
-            }
-        }
-        
-        // 处理外貌特征对象
-        if (card.getAppearance() != null) {
-            try {
-                entity.setAppearanceJson(objectMapper.writeValueAsString(card.getAppearance()));
-            } catch (JsonProcessingException e) {
-                entity.setAppearanceJson("{}");
-            }
-        }
-        
-        // 处理关系数组
-        if (card.getRelationships() != null && !card.getRelationships().isEmpty()) {
-            try {
-                entity.setRelationshipsJson(objectMapper.writeValueAsString(card.getRelationships()));
-            } catch (JsonProcessingException e) {
-                entity.setRelationshipsJson("[]");
-            }
-        }
-        
-        entity.setAge(card.getAge());
-        entity.setGender(card.getGender());
-        entity.setOccupation(card.getOccupation());
-        entity.setAppearanceJson(card.getAppearance() != null ? card.getAppearance().toString() : null);
-        entity.setAppearanceDescription(card.getAppearanceDescription());
-        entity.setPersonality(card.getPersonality());
-        entity.setBackground(card.getBackground());
-        entity.setNotes(card.getNotes());
-        
-        return entity;
-    }
-    
-    /**
-     * 将实体转换为 DTO
-     */
-    private CharacterCard convertToDTO(CharacterCardEntity entity) {
-        CharacterCard card = new CharacterCard();
-        card.setId(entity.getCharacterId());
-        card.setName(entity.getName());
-        card.setAge(entity.getAge());
-        card.setGender(entity.getGender());
-        card.setOccupation(entity.getOccupation());
-        card.setPersonality(entity.getPersonality());
-        card.setBackground(entity.getBackground());
-        card.setNotes(entity.getNotes());
-        card.setAppearanceDescription(entity.getAppearanceDescription());
-        card.setGeneratedImageUrl(entity.getGeneratedImageUrl()); // 添加图片 URL 字段
-        
-        // 解析别名字符串
-        if (entity.getAlternativeNames() != null && !entity.getAlternativeNames().isEmpty()) {
-            try {
-                List<String> names = objectMapper.readValue(
-                    entity.getAlternativeNames(), 
-                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {}
-                );
-                card.setAlternativeNames(names);
-            } catch (JsonProcessingException e) {
-                card.setAlternativeNames(new ArrayList<>());
-            }
-        }
 
-        // 解析外貌特征字符串
-        if (entity.getAppearanceJson() != null && !entity.getAppearanceJson().isEmpty()) {
-            try {
-                CharacterCardAppearance appearance = objectMapper.readValue(
-                    entity.getAppearanceJson(),
-                    CharacterCardAppearance.class
-                );
-                card.setAppearance(appearance);
-            } catch (JsonProcessingException e) {
-                card.setAppearance(null);
-            }
-        }
-        
-        // 解析关系字符串
-        if (entity.getRelationshipsJson() != null && !entity.getRelationshipsJson().isEmpty()) {
-            try {
-                List<CharacterCardRelationship> relationships = objectMapper.readValue(
-                    entity.getRelationshipsJson(), 
-                    new com.fasterxml.jackson.core.type.TypeReference<List<CharacterCardRelationship>>() {}
-                );
-                card.setRelationships(relationships);
-            } catch (JsonProcessingException e) {
-                card.setRelationships(new ArrayList<>());
-            }
-        }
-        
-        return card;
-    }
+
     
     /**
-     * 获取小说的角色卡列表（结构化数据）- 优先从数据库读取
+     * 获取小说的角色卡列表（结构化数据）- 从数据库读取
      */
     public List<CharacterCard> getCharacterCardsList(Long novelId) {
-        // 首先尝试从数据库表读取
-        try {
-            List<CharacterCard> cards = getCharacterCardsFromDatabase(novelId);
-            if (cards != null && !cards.isEmpty()) {
-                return cards;
-            }
-        } catch (Exception e) {
-            System.err.println("从数据库读取角色卡失败：" + e.getMessage());
+        // 验证小说是否存在
+        if (!novelRepository.existsById(novelId)) {
+            throw new RuntimeException("小说不存在，ID: " + novelId);
         }
         
-        // 如果数据库表没有数据，则从 JSON 字段读取（向后兼容）
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            Novel novel = novelOpt.get();
-            String characterCardsJson = novel.getCharacterCards();
-            
-            if (characterCardsJson == null || characterCardsJson.trim().isEmpty()) {
-                return new ArrayList<>();
-            }
-            
-            try {
-                // 尝试解析为角色卡数组
-                CharacterCard[] cards = objectMapper.readValue(characterCardsJson, CharacterCard[].class);
-                return Arrays.asList(cards);
-            } catch (JsonProcessingException e) {
-                // 如果不是有效的 JSON 或格式不匹配，返回空列表
-                System.err.println("解析角色卡失败：" + e.getMessage());
-                return new ArrayList<>();
-            }
-        }
-        throw new RuntimeException("小说不存在，ID: " + novelId);
+        // 从数据库表读取角色卡
+        return getCharacterCardsFromDatabase(novelId);
     }
     
     /**

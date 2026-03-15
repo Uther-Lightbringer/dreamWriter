@@ -28,9 +28,6 @@ public class Novel {
     @Column(name = "world_view", length = 50000, columnDefinition = "TEXT")
     private String worldView;
     
-    @Column(name = "character_cards", columnDefinition = "TEXT")
-    private String characterCards;
-    
     @Column(name = "create_time")
     private LocalDateTime createTime;
     
@@ -46,12 +43,7 @@ public class Novel {
     @JsonIgnore
     private List<Chapter> chapters;
     
-    // 一对多关系：一个小说对应多个角色卡
-    @OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<CharacterCardEntity> characterCardEntities;
-    
-    // 用于Thymeleaf模板的格式化时间字符串
+    // 用于 Thymeleaf 模板的格式化时间字符串
     @Transient
     private String formattedCreateTime;
 
@@ -143,16 +135,6 @@ public class Novel {
         this.formattedCreateTime = formatTime(this.updateTime);
     }
 
-    public String getCharacterCards() {
-        return characterCards;
-    }
-
-    public void setCharacterCards(String characterCards) {
-        this.characterCards = characterCards;
-        this.updateTime = LocalDateTime.now();
-        this.formattedCreateTime = formatTime(this.updateTime);
-    }
-
     public LocalDateTime getCreateTime() {
         return createTime;
     }
@@ -185,14 +167,6 @@ public class Novel {
     
     public void setChapters(List<Chapter> chapters) {
         this.chapters = chapters;
-    }
-    
-    public List<CharacterCardEntity> getCharacterCardEntities() {
-        return characterCardEntities;
-    }
-    
-    public void setCharacterCardEntities(List<CharacterCardEntity> characterCardEntities) {
-        this.characterCardEntities = characterCardEntities;
     }
     
     public String getFormattedCreateTime() {
@@ -232,12 +206,10 @@ public class Novel {
                 ", author='" + author + '\'' +
                 ", description='" + description + '\'' +
                 ", worldView='" + (worldView != null ? worldView.substring(0, Math.min(50, worldView.length())) + "..." : "null") + '\'' +
-                ", characterCards='" + (characterCards != null ? characterCards.substring(0, Math.min(50, characterCards.length())) + "..." : "null") + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", coverImage='" + getCoverImage() + '\'' +
                 ", chapters=" + (chapters != null ? chapters.size() : 0) +
-                ", characterCards=" + (characterCardEntities != null ? characterCardEntities.size() : 0) +
                 '}';
     }
 }

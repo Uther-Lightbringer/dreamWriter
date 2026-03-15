@@ -135,7 +135,7 @@
             </div>
             <div class="input-group">
                 <label for="characterId">角色卡 ID:</label>
-                <input type="text" id="characterId" placeholder="例如：char-518-xxxxx-x" />
+                <input type="number" id="characterId" placeholder="例如：1" />
             </div>
             <button class="btn" onclick="getCharacterImage()">获取角色图片</button>
             <button class="btn" onclick="loadAllCharacters()">加载所有角色</button>
@@ -267,7 +267,7 @@
             `;
         }
         
-        // 自动填充示例角色 ID
+        // 自动填充示例角色 ID（数据库自增 ID）
         document.getElementById('characterId').addEventListener('input', function(e) {
             console.log('输入的角色 ID:', e.target.value);
         });

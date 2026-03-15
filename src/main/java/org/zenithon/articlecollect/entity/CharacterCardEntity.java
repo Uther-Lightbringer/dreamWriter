@@ -16,9 +16,6 @@ public class CharacterCardEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false, length = 100)
-    private String characterId; // 角色唯一标识，如 char-001
-    
     @Column(nullable = false, length = 255)
     private String name; // 角色姓名
     
@@ -88,14 +85,7 @@ public class CharacterCardEntity {
         this.id = id;
     }
     
-    public String getCharacterId() {
-        return characterId;
-    }
-    
-    public void setCharacterId(String characterId) {
-        this.characterId = characterId;
-    }
-    
+
     public String getName() {
         return name;
     }
@@ -236,7 +226,6 @@ public class CharacterCardEntity {
     public String toString() {
         return "CharacterCardEntity{" +
                 "id=" + id +
-                ", characterId='" + characterId + '\'' +
                 ", name='" + name + '\'' +
                 ", novelId=" + novelId +
                 '}';

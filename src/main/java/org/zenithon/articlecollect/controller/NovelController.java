@@ -1,5 +1,6 @@
 package org.zenithon.articlecollect.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.zenithon.articlecollect.entity.Novel;
 import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.ChapterDetailView;
 import org.zenithon.articlecollect.service.CharacterCardAsyncService;
+import org.zenithon.articlecollect.service.CharacterCardService;
 import org.zenithon.articlecollect.service.NovelService;
 import org.zenithon.articlecollect.dto.WorldViewRequest;
 import org.zenithon.articlecollect.dto.CharacterCardRequest;
@@ -29,6 +31,12 @@ public class NovelController {
 
     @Autowired
     private CharacterCardAsyncService characterCardAsyncService;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private CharacterCardService characterCardService;
     
     /**
      * 创建新小说
@@ -384,10 +392,22 @@ public class NovelController {
             return ResponseEntity.status(404).body(response);
         }
         
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("characterCards", novel.getCharacterCards() != null ? novel.getCharacterCards() : "");
-        return ResponseEntity.ok(response);
+        try {
+            List<CharacterCard> characterCardsList = novelService.getCharacterCardsList(novelId);
+            
+            // 将列表转换为 JSON 字符串返回（保持向后兼容）
+            String json = objectMapper.writeValueAsString(characterCardsList);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("characterCards", json);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "获取角色卡失败：" + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
     
     /**
@@ -410,13 +430,7 @@ public class NovelController {
         }
         
         try {
-            // 为每个角色卡生成新的唯一 ID，忽略前端传入的 ID
-            for (int i = 0; i < characterCards.size(); i++) {
-                CharacterCard card = characterCards.get(i);
-                String newId = generateUniqueCharacterId(novelId, i);
-                card.setId(newId);
-            }
-            
+            // 直接使用前端传入的 ID（批量导入时前端不需要传 ID）
             Novel updatedNovel = novelService.updateCharacterCardsBatch(novelId, characterCards);
 
             // 启动异步任务处理 AI 绘画提示词生成和图片生成
@@ -493,18 +507,16 @@ public class NovelController {
         }
         
         try {
-            // 生成新的唯一 ID
-            String newId = generateUniqueCharacterId(novelId, 0);
-            characterCard.setId(newId);
-            
             // 获取现有角色卡列表
             List<CharacterCard> existingCards = novelService.getCharacterCardsList(novelId);
             
-            // 添加新角色卡
+            // 添加到列表
             existingCards.add(characterCard);
             
-            // 保存到数据库
-            novelService.updateCharacterCardsBatch(novelId, existingCards);
+            // 保存到数据库（ID 由数据库自动生成）
+            characterCardService.saveCharacterCards(novelId, existingCards);
+            
+            // 启动异步任务处理 AI 绘画提示词生成和图片生成
             characterCardAsyncService.processCharacterCardsAsync(novelId, existingCards);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -527,7 +539,7 @@ public class NovelController {
     @DeleteMapping("/novels/{novelId}/character-cards/{characterId}")
     public ResponseEntity<Map<String, Object>> deleteCharacterCard(
             @PathVariable Long novelId,
-            @PathVariable String characterId) {
+            @PathVariable Long characterId) {
         
         Novel novel = novelService.getNovelById(novelId);
         if (novel == null) {
@@ -538,19 +550,8 @@ public class NovelController {
         }
         
         try {
-            // 获取现有角色卡列表
-            List<CharacterCard> existingCards = novelService.getCharacterCardsList(novelId);
-            
-            // 过滤掉要删除的角色卡
-            List<CharacterCard> updatedCards = new ArrayList<>();
-            for (CharacterCard card : existingCards) {
-                if (!card.getId().equals(characterId)) {
-                    updatedCards.add(card);
-                }
-            }
-            
-            // 保存更新后的列表
-            novelService.updateCharacterCardsBatch(novelId, updatedCards);
+            // 直接删除角色卡
+            characterCardService.deleteCharacterCard(characterId);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -572,8 +573,8 @@ public class NovelController {
     @PostMapping("/novels/{novelId}/character-cards/{characterId}/generate-prompt")
     public ResponseEntity<Map<String, Object>> regenerateAIPrompt(
             @PathVariable Long novelId,
-            @PathVariable String characterId) {
-        
+            @PathVariable Long characterId) {
+            
         Novel novel = novelService.getNovelById(novelId);
         if (novel == null) {
             Map<String, Object> response = new HashMap<>();
@@ -581,36 +582,28 @@ public class NovelController {
             response.put("message", "小说不存在，ID: " + novelId);
             return ResponseEntity.status(404).body(response);
         }
-        
+        log.info("开始生成角色卡提示词");
         try {
-            // 获取现有角色卡列表
-            List<CharacterCard> existingCards = novelService.getCharacterCardsList(novelId);
-            
-            // 找到要更新的角色卡
-            CharacterCard targetCard = null;
-            for (CharacterCard card : existingCards) {
-                if (card.getId().equals(characterId)) {
-                    targetCard = card;
-                    break;
-                }
-            }
-            
+            // 获取角色卡
+            CharacterCard targetCard = characterCardService.getCharacterCardById(characterId);
+                
             if (targetCard == null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "角色卡不存在，ID: " + characterId);
                 return ResponseEntity.status(404).body(response);
             }
-            
+                
             // 调用 AI 生成提示词
             String aiPrompt = novelService.generateAIPromptForCharacter(targetCard);
-            log.info("AI,生成的角色是：{} 提示词生成结果：{}", targetCard.getName() ,aiPrompt);
+            log.info("AI，生成的角色是：{} 提示词生成结果：{}", targetCard.getName() ,aiPrompt);
             if (aiPrompt != null && !aiPrompt.trim().isEmpty()) {
                 targetCard.setAppearanceDescription(aiPrompt);
-                
-                // 保存更新后的列表
-                novelService.updateCharacterCardsBatch(novelId, existingCards);
-                
+                    
+                // 更新角色卡的 AI 生成字段
+                characterCardService.updateCharacterCardAIGeneratedFields(
+                    characterId, targetCard.getAppearanceDescription(), targetCard.getGeneratedImageUrl());
+                    
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);
                 response.put("message", "AI 绘画提示词生成成功");
@@ -638,7 +631,7 @@ public class NovelController {
     @PostMapping("/novels/{novelId}/character-cards/{characterId}/generate-image")
     public ResponseEntity<Map<String, Object>> generateCharacterImage(
             @PathVariable Long novelId,
-            @PathVariable String characterId) {
+            @PathVariable Long characterId) {
         
         Novel novel = novelService.getNovelById(novelId);
         if (novel == null) {
@@ -649,17 +642,8 @@ public class NovelController {
         }
         
         try {
-            // 获取现有角色卡列表
-            List<CharacterCard> existingCards = novelService.getCharacterCardsList(novelId);
-            
-            // 找到要更新的角色卡
-            CharacterCard targetCard = null;
-            for (CharacterCard card : existingCards) {
-                if (card.getId().equals(characterId)) {
-                    targetCard = card;
-                    break;
-                }
-            }
+            // 获取角色卡
+            CharacterCard targetCard = characterCardService.getCharacterCardById(characterId);
             
             if (targetCard == null) {
                 Map<String, Object> response = new HashMap<>();
@@ -682,8 +666,9 @@ public class NovelController {
             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
                 targetCard.setGeneratedImageUrl(imageUrl);
                 
-                // 保存更新后的列表
-                novelService.updateCharacterCardsBatch(novelId, existingCards);
+                // 更新角色卡的 AI 生成字段
+                characterCardService.updateCharacterCardAIGeneratedFields(
+                    characterId, targetCard.getAppearanceDescription(), imageUrl);
                 
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);

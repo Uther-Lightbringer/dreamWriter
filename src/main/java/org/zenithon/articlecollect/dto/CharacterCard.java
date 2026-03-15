@@ -9,7 +9,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CharacterCard {
     
-    private String id;
+    private Long id;
     private String name;
     private List<String> alternativeNames;
     private Integer age;
@@ -27,11 +27,11 @@ public class CharacterCard {
     }
     
     // Getters and Setters
-    public String getId() {
+    public Long getId() {
         return id;
     }
     
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
     
