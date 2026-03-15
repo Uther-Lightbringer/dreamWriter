@@ -133,6 +133,62 @@ public class CharacterCardService {
     }
     
     /**
+     * 更新角色卡的 AI 绘画提示词（带版本号）
+     */
+    @Transactional
+    public CharacterCard regenerateAIPrompt(Long characterId) {
+        Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
+        
+        if (entityOpt.isPresent()) {
+            CharacterCardEntity existingEntity = entityOpt.get();
+            
+            // 递增提示词版本号
+            Integer currentVersion = existingEntity.getPromptVersion();
+            existingEntity.setPromptVersion(currentVersion == null ? 1 : currentVersion + 1);
+            existingEntity.setUpdateTime(java.time.LocalDateTime.now());
+            
+            CharacterCardEntity savedEntity = characterCardRepository.save(existingEntity);
+            logger.info("重新生成角色卡 {} 的 AI 绘画提示词，版本号：{}", characterId, savedEntity.getPromptVersion());
+            
+            return convertToDTO(savedEntity);
+        }
+        
+        throw new RuntimeException("角色卡不存在，ID: " + characterId);
+    }
+    
+    /**
+     * 更新角色卡的 AI 绘画提示词和图片 URL（带版本号）
+     */
+    @Transactional
+    public CharacterCard regenerateAIImage(Long characterId, String appearanceDescription, String generatedImageUrl) {
+        Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
+        
+        if (entityOpt.isPresent()) {
+            CharacterCardEntity existingEntity = entityOpt.get();
+            
+            // 如果有新的描述，先更新描述
+            if (appearanceDescription != null && !appearanceDescription.trim().isEmpty()) {
+                existingEntity.setAppearanceDescription(appearanceDescription);
+            }
+            
+            // 更新图片 URL
+            existingEntity.setGeneratedImageUrl(generatedImageUrl);
+            
+            // 递增图片版本号
+            Integer currentVersion = existingEntity.getImageVersion();
+            existingEntity.setImageVersion(currentVersion == null ? 1 : currentVersion + 1);
+            existingEntity.setUpdateTime(java.time.LocalDateTime.now());
+            
+            CharacterCardEntity savedEntity = characterCardRepository.save(existingEntity);
+            logger.info("重新生成角色卡 {} 的 AI 图片，版本号：{}", characterId, savedEntity.getImageVersion());
+            
+            return convertToDTO(savedEntity);
+        }
+        
+        throw new RuntimeException("角色卡不存在，ID: " + characterId);
+    }
+    
+    /**
      * 更新角色卡的 AI 绘画提示词和图片 URL
      */
     @Transactional
@@ -196,6 +252,8 @@ public class CharacterCardService {
         entity.setBackground(card.getBackground());
         entity.setNotes(card.getNotes());
         entity.setGeneratedImageUrl(card.getGeneratedImageUrl());
+        entity.setPromptVersion(card.getPromptVersion());
+        entity.setImageVersion(card.getImageVersion());
         
         return entity;
     }
@@ -215,6 +273,8 @@ public class CharacterCardService {
         card.setNotes(entity.getNotes());
         card.setAppearanceDescription(entity.getAppearanceDescription());
         card.setGeneratedImageUrl(entity.getGeneratedImageUrl());
+        card.setPromptVersion(entity.getPromptVersion());
+        card.setImageVersion(entity.getImageVersion());
         
         // 解析别名字符串
         if (entity.getAlternativeNames() != null && !entity.getAlternativeNames().isEmpty()) {

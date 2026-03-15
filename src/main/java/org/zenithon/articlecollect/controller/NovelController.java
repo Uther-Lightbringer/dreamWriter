@@ -584,37 +584,14 @@ public class NovelController {
         }
         log.info("开始生成角色卡提示词");
         try {
-            // 获取角色卡
-            CharacterCard targetCard = characterCardService.getCharacterCardById(characterId);
-                
-            if (targetCard == null) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "角色卡不存在，ID: " + characterId);
-                return ResponseEntity.status(404).body(response);
-            }
-                
-            // 调用 AI 生成提示词
-            String aiPrompt = novelService.generateAIPromptForCharacter(targetCard);
-            log.info("AI，生成的角色是：{} 提示词生成结果：{}", targetCard.getName() ,aiPrompt);
-            if (aiPrompt != null && !aiPrompt.trim().isEmpty()) {
-                targetCard.setAppearanceDescription(aiPrompt);
-                    
-                // 更新角色卡的 AI 生成字段
-                characterCardService.updateCharacterCardAIGeneratedFields(
-                    characterId, targetCard.getAppearanceDescription(), targetCard.getGeneratedImageUrl());
-                    
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("message", "AI 绘画提示词生成成功");
-                response.put("data", targetCard);
-                return ResponseEntity.ok(response);
-            } else {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "AI 提示词生成失败，请检查 API 配置");
-                return ResponseEntity.badRequest().body(response);
-            }
+            // 重新生成 AI 绘画提示词（带版本号）
+            CharacterCard updatedCard = characterCardService.regenerateAIPrompt(characterId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "AI 绘画提示词生成成功");
+            response.put("data", updatedCard);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
@@ -664,16 +641,14 @@ public class NovelController {
             String imageUrl = novelService.generateImageForCharacter(targetCard);
             
             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                targetCard.setGeneratedImageUrl(imageUrl);
-                
-                // 更新角色卡的 AI 生成字段
-                characterCardService.updateCharacterCardAIGeneratedFields(
+                // 使用带版本号的更新方法
+                CharacterCard updatedCard = characterCardService.regenerateAIImage(
                     characterId, targetCard.getAppearanceDescription(), imageUrl);
                 
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);
                 response.put("message", "角色图片生成成功");
-                response.put("data", targetCard);
+                response.put("data", updatedCard);
                 return ResponseEntity.ok(response);
             } else {
                 Map<String, Object> response = new HashMap<>();
@@ -697,7 +672,7 @@ public class NovelController {
     @GetMapping("/novels/{novelId}/character-cards/{characterId}/image")
     public ResponseEntity<Map<String, Object>> getCharacterCardImage(
             @PathVariable Long novelId,
-            @PathVariable String characterId) {
+            @PathVariable Long characterId) {
         
         Novel novel = novelService.getNovelById(novelId);
         if (novel == null) {
@@ -708,17 +683,8 @@ public class NovelController {
         }
         
         try {
-            // 获取角色卡列表
-            List<CharacterCard> characterCards = novelService.getCharacterCardsList(novelId);
-            
-            // 找到对应的角色卡
-            CharacterCard targetCard = null;
-            for (CharacterCard card : characterCards) {
-                if (card.getId().equals(characterId)) {
-                    targetCard = card;
-                    break;
-                }
-            }
+            // 直接通过 ID 获取角色卡
+            CharacterCard targetCard = characterCardService.getCharacterCardById(characterId);
             
             if (targetCard == null) {
                 Map<String, Object> response = new HashMap<>();

@@ -54,6 +54,7 @@ public class ImageGeneratedUtils {
                 log.error("图片生成失败：code={}, message={}, status={}", code, message, status);
                 String errorMessage = buildErrorMessage(code, message);
                 return new AiImageGenerationResponse(false, errorMessage);
+
             }
             
             // 打印图片 URLs

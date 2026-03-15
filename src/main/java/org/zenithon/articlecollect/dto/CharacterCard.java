@@ -18,6 +18,8 @@ public class CharacterCard {
     private CharacterCardAppearance appearance;
     private String appearanceDescription; // 外貌描述文本（用于 AI 文生图）
     private String generatedImageUrl; // 生成的角色图片 URL
+    private Integer promptVersion; // AI 绘画提示词版本号
+    private Integer imageVersion; // 生成的图片版本号
     private String personality;
     private String background;
     private List<CharacterCardRelationship> relationships;
@@ -97,6 +99,22 @@ public class CharacterCard {
     
     public void setGeneratedImageUrl(String generatedImageUrl) {
         this.generatedImageUrl = generatedImageUrl;
+    }
+    
+    public Integer getPromptVersion() {
+        return promptVersion;
+    }
+    
+    public void setPromptVersion(Integer promptVersion) {
+        this.promptVersion = promptVersion;
+    }
+    
+    public Integer getImageVersion() {
+        return imageVersion;
+    }
+    
+    public void setImageVersion(Integer imageVersion) {
+        this.imageVersion = imageVersion;
     }
     
     public String getPersonality() {

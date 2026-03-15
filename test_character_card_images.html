@@ -226,6 +226,8 @@
                                         <div><strong>年龄:</strong> ${card.age || '未知'}</div>
                                         <div><strong>性别:</strong> ${card.gender || '未知'}</div>
                                         <div><strong>职业:</strong> ${card.occupation || '未知'}</div>
+                                        <div><strong>提示词版本:</strong> ${card.promptVersion || 0}（第${card.promptVersion || 0}次生成）</div>
+                                        <div><strong>图片版本:</strong> ${card.imageVersion || 0}（第${card.imageVersion || 0}次生成）</div>
                                         <div><strong>图片路径:</strong> ${imageUrl || '无'}</div>
                                         ${card.appearanceDescription ? `<div><strong>外貌描述:</strong> ${card.appearanceDescription.substring(0, 100)}...</div>` : ''}
                                     </div>

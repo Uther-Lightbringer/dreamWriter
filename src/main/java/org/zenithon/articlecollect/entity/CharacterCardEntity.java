@@ -41,6 +41,12 @@ public class CharacterCardEntity {
     @Column(name = "generated_image_url", length = 500)
     private String generatedImageUrl; // 生成的角色图片 URL
     
+    @Column(name = "prompt_version")
+    private Integer promptVersion; // AI 绘画提示词版本号
+    
+    @Column(name = "image_version")
+    private Integer imageVersion; // 生成的图片版本号
+    
     @Column(name = "personality", columnDefinition = "TEXT")
     private String personality; // 性格描述
     
@@ -148,6 +154,22 @@ public class CharacterCardEntity {
     
     public void setGeneratedImageUrl(String generatedImageUrl) {
         this.generatedImageUrl = generatedImageUrl;
+    }
+    
+    public Integer getPromptVersion() {
+        return promptVersion;
+    }
+    
+    public void setPromptVersion(Integer promptVersion) {
+        this.promptVersion = promptVersion;
+    }
+    
+    public Integer getImageVersion() {
+        return imageVersion;
+    }
+    
+    public void setImageVersion(Integer imageVersion) {
+        this.imageVersion = imageVersion;
     }
     
     public String getPersonality() {

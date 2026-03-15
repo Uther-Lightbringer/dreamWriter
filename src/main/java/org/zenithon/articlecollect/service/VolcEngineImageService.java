@@ -29,7 +29,7 @@ public class VolcEngineImageService {
             return response.getImageUrl();
         } else {
             logger.error("火山引擎图片生成失败：{}", response.getMessage());
-            return response.getMessage();
+            throw new Exception(response.getMessage());
         }
 
     }
