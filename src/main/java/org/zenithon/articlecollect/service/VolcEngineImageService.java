@@ -19,22 +19,19 @@ public class VolcEngineImageService {
      * @param prompt AI 绘画提示词
      * @return 生成的图片 URL 或 null
      */
-    public String generateImage(String prompt) {
-        try {
-            // 使用 ImageGeneratedUtils 生成图片
-            AiImageGenerationResponse response = ImageGeneratedUtils.genearateAiImage(prompt, "uploads/images/generated");
-            
-            if (response.isSuccess()) {
-                logger.info("火山引擎图片生成成功：{}", response.getImageUrl());
-                return response.getImageUrl();
-            } else {
-                logger.error("火山引擎图片生成失败：{}", response.getMessage());
-                return null;
-            }
-        } catch (Exception e) {
-            logger.error("火山引擎图片生成失败：" + e.getMessage(), e);
-            return null;
+    public String generateImage(String prompt) throws Exception {
+
+        // 使用 ImageGeneratedUtils 生成图片
+        AiImageGenerationResponse response = ImageGeneratedUtils.genearateAiImage(prompt, "uploads/images/generated");
+
+        if (response.isSuccess()) {
+            logger.info("火山引擎图片生成成功：{}", response.getImageUrl());
+            return response.getImageUrl();
+        } else {
+            logger.error("火山引擎图片生成失败：{}", response.getMessage());
+            return response.getMessage();
         }
+
     }
     
 

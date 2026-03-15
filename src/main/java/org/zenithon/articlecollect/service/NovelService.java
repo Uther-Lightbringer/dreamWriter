@@ -348,6 +348,52 @@ public class NovelService {
     }
     
     /**
+     * 更新单个角色信息（结构化数据）- 保存到数据库表
+     * @param novelId 小说 ID
+     * @param characterCard 角色卡信息
+     * @return 更新后的小说对象
+     */
+    @Transactional
+    public Novel updateSingleCharacterCard(Long novelId, CharacterCard characterCard) {
+        Optional<Novel> novelOpt = novelRepository.findById(novelId);
+        if (novelOpt.isPresent()) {
+            try {
+                Novel novel = novelOpt.get();
+
+                // 1. 获取现有的所有角色卡
+                List<CharacterCard> existingCards = getCharacterCardsList(novelId);
+
+                // 2. 找到要更新的角色位置并替换
+                boolean found = false;
+                for (int i = 0; i < existingCards.size(); i++) {
+                    if (existingCards.get(i).getId().equals(characterCard.getId())) {
+                        existingCards.set(i, characterCard);
+                        found = true;
+                        break;
+                    }
+                }
+
+                // 3. 如果没有找到，则添加到列表末尾
+                if (!found) {
+                    existingCards.add(characterCard);
+                }
+
+                // 4. 保存到数据库表
+                saveCharacterCardsToDatabase(novelId, existingCards);
+
+                // 5. 同时保留原有的 JSON 格式作为备份
+                objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+                String json = objectMapper.writeValueAsString(existingCards);
+                novel.setCharacterCards(json);
+                return novelRepository.save(novel);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("角色卡数据序列化失败：" + e.getMessage());
+            }
+        }
+        throw new RuntimeException("小说不存在，ID: " + novelId);
+    }
+    
+    /**
      * 保存角色卡到数据库表（仅保存基础数据，不包含 AI 生成）
      */
     @Transactional
@@ -533,7 +579,7 @@ public class NovelService {
     /**
      * 为单个角色生成图片
      */
-    public String generateImageForCharacter(CharacterCard characterCard) {
+    public String generateImageForCharacter(CharacterCard characterCard) throws Exception {
         return new VolcEngineImageService().generateImage(characterCard.getAppearanceDescription());
     }
 }

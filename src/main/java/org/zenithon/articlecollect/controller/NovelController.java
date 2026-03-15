@@ -1,5 +1,6 @@
 package org.zenithon.articlecollect.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.*;
  * 小说管理REST控制器
  */
 @RestController
+@Slf4j
 @RequestMapping("/api")
 public class NovelController {
     
@@ -602,7 +604,7 @@ public class NovelController {
             
             // 调用 AI 生成提示词
             String aiPrompt = novelService.generateAIPromptForCharacter(targetCard);
-            
+            log.info("AI,生成的角色是：{} 提示词生成结果：{}", targetCard.getName() ,aiPrompt);
             if (aiPrompt != null && !aiPrompt.trim().isEmpty()) {
                 targetCard.setAppearanceDescription(aiPrompt);
                 
