@@ -5,6 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${novel.title} + ' - 小说详情'">小说详情</title>
     <link rel="stylesheet" href="/css/chapter-tags.css">
+    <!-- 引入 Marked.js 用于 Markdown 渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 备用本地引入 -->
+    <script>
+        // 检查 marked 是否加载成功，如果没有则使用备用方案
+        if (typeof marked === 'undefined') {
+            console.warn('Marked.js CDN 加载失败，使用备用方案');
+            // 简单的 Markdown 解析替代方案
+            window.marked = {
+                setOptions: function(options) {
+                    // 简单配置，实际使用中可以扩展
+                    this.options = options;
+                },
+                parse: function(markdown) {
+                    // 基本的 Markdown 转换
+                    if (!markdown) return '';
+                    
+                    // 基本的 Markdown 转换
+                    let html = markdown
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // 粗体
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')              // 斜体
+                        .replace(/~~(.*?)~~/g, '<del>$1</del>')            // 删除线
+                        .replace(/### (.*?)/g, '<h3>$1</h3>')              // H3
+                        .replace(/## (.*?)/g, '<h2>$1</h2>')                // H2
+                        .replace(/# (.*?)/g, '<h1>$1</h1>')                 // H1
+                        .replace(/^- (.*?)/gm, '<li>$1</li>')               // 列表
+                        .replace(/^\d+\. (.*?)/gm, '<li>$1</li>')          // 有序列表
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>') // 链接
+                        .replace(/`([^`]+)`/g, '<code>$1</code>')           // 行内代码
+                        .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') // 代码块
+                        .replace(/\n/g, '<br>');                             // 换行
+                    
+                    return html;
+                }
+            };
+        }
+    </script>
     <style>
         :root {
             --primary-color: #3498db;
@@ -882,6 +919,132 @@
             border-radius: 6px;
             margin: 16px 0;
         }
+        
+        /* 角色卡列表样式 */
+        .character-cards-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .character-card-item {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            background-color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .character-card-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .character-card-name {
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .character-card-id {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        
+        .character-card-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        
+        .character-card-occupation {
+            font-size: 13px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        
+        .character-card-preview {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .character-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .character-card-item:hover .character-card-actions {
+            opacity: 1;
+        }
+        
+        .character-card-actions button {
+            flex: 1;
+            padding: 6px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-view {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-view:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-delete-character {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-delete-character:hover {
+            background-color: #c0392b;
+        }
+        
+        /* 角色卡详情视图 */
+        .character-detail-section {
+            margin-bottom: 20px;
+        }
+        
+        .character-detail-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .character-detail-content {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+            padding: 10px;
+            background-color: var(--light-bg);
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -1025,51 +1188,145 @@
         <div class="modal-content modal-large">
             <span class="close" onclick="closeCharacterCardsModal()">&times;</span>
             <h2 style="margin-top: 0;">👥 小说角色卡</h2>
-            <div class="character-cards-toolbar">
-                <button type="button" class="btn btn-primary" onclick="enableEditCharacterCards()">
-                    ✏️ 编辑角色卡
-                </button>
+            
+            <!-- 角色卡列表视图 -->
+            <div id="characterCardsListContainer">
+                <div class="character-cards-toolbar">
+                    <button type="button" class="btn btn-primary" onclick="showAddCharacterCardForm()">
+                        ➕ 新增角色卡
+                    </button>
+                    <button type="button" class="btn" onclick="toggleEditMode()" style="margin-left: 10px;">
+                        ✏️ 编辑模式
+                    </button>
+                </div>
+                
+                <!-- 角色卡列表 -->
+                <div id="characterCardsList"  style="margin-top: 20px;">
+                    <!-- 动态加载角色卡 -->
+                </div>
             </div>
-            <div id="characterCardsView" class="markdown-content"></div>
-            <div id="characterCardsEdit" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label" for="characterCardsContent">角色卡内容 (支持 Markdown 格式):</label>
-                    <textarea id="characterCardsContent" name="characterCards" 
-                              placeholder="请输入角色卡内容，建议使用 Markdown 格式&#10;&#10;示例：&#10;## 主角&#10;**姓名：**张三&#10;**年龄：**18&#10;**简介：**一个普通的少年..." 
-                              rows="20"></textarea>
-                </div>
-                <div class="character-cards-actions">
-                    <button type="button" class="btn btn-primary" onclick="saveCharacterCards()">
-                        💾 保存
-                    </button>
-                    <button type="button" class="btn" onclick="disableEditCharacterCards()">
-                        ❌ 取消
-                    </button>
-                </div>
+            
+            <!-- 添加/编辑角色卡表单 -->
+            <div id="characterCardFormContainer" style="display: none;">
+                <h3 id="formTitle" style="margin-top: 20px;">➕ 新增角色卡</h3>
+                <form id="characterCardForm">
+                    <input type="hidden" id="editIndex" value="-1">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="cardId">角色 ID:</label>
+                            <input type="text" id="cardId" name="id" required placeholder="例如：char-001">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="cardName">角色姓名:</label>
+                            <input type="text" id="cardName" name="name" required placeholder="请输入角色姓名">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="alternativeNames">别名 (多个用逗号分隔):</label>
+                        <input type="text" id="alternativeNames" name="alternativeNames" placeholder="例如：小明，阿明">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="cardAge">年龄:</label>
+                            <input type="number" id="cardAge" name="age" placeholder="0">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="cardGender">性别:</label>
+                            <input type="text" id="cardGender" name="gender" placeholder="男/女">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="cardOccupation">职业:</label>
+                            <input type="text" id="cardOccupation" name="occupation" placeholder="请输入职业">
+                        </div>
+                    </div>
+                    
+                    <fieldset style="border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+                        <legend style="font-weight: 600; color: var(--secondary-color); padding: 0 10px;">🎨 外貌特征</legend>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="appearanceHeight">身高:</label>
+                                <input type="text" id="appearanceHeight" name="height" placeholder="例如：175cm">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="appearanceHair">发色:</label>
+                                <input type="text" id="appearanceHair" name="hair" placeholder="例如：黑色">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="appearanceEyes">瞳色:</label>
+                                <input type="text" id="appearanceEyes" name="eyes" placeholder="例如：棕色">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="appearanceBuild">体型:</label>
+                                <input type="text" id="appearanceBuild" name="build" placeholder="例如：匀称">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="appearanceFeatures">显著特征:</label>
+                            <textarea id="appearanceFeatures" name="distinguishingFeatures" rows="2" placeholder="例如：左眉有一道疤痕..."></textarea>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="cardPersonality">性格描述:</label>
+                        <textarea id="cardPersonality" name="personality" rows="3" placeholder="请输入性格描述..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="cardBackground">背景故事:</label>
+                        <textarea id="cardBackground" name="background" rows="4" placeholder="请输入背景故事..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="cardNotes">备注:</label>
+                        <textarea id="cardNotes" name="notes" rows="2" placeholder="其他需要说明的信息..."></textarea>
+                    </div>
+                    
+                    <!-- AI 绘画提示词移到最后 -->
+                    <div class="form-group">
+                        <label class="form-label" for="appearanceDescription">🤖 AI 绘画提示词 (外貌描述):</label>
+                        <textarea id="appearanceDescription" name="appearanceDescription" rows="4" 
+                                  placeholder="请输入用于 AI 文生图的外貌描述，例如：一位黑发棕瞳的少年，身穿蓝色校服，面容清秀，左眉有一道明显的疤痕，身材匀称..."></textarea>
+                        <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+                            <small style="color: #6c757d; font-size: 12px; flex: 1;">
+                                💡 提示：这个字段将用于提供给 AI 进行角色图像生成，建议详细描述外貌特征
+                            </small>
+                            <button type="button" class="btn" style="padding: 4px 12px; font-size: 12px;" onclick="generateAIPromptFromAppearance()">
+                                ✨ 从外貌特征自动生成
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="character-cards-actions">
+                        <button type="submit" class="btn btn-primary">
+                            💾 保存
+                        </button>
+                        <button type="button" class="btn" onclick="hideCharacterCardForm()">
+                            ❌ 取消
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-        // 获取小说ID（使用 Thymeleaf 内联语法）
+        // 获取小说 ID（使用 Thymeleaf 内联语法）
         var novelId = /*[[${novel.id}]]*/ null;
-        
-        // 验证小说ID
+                
+        // 验证小说 ID
         if (!novelId) {
-            console.error('警告：小说ID 为 null，请检查页面是否正确传递了 novel 对象');
+            console.error('警告：小说 ID 为 null，请检查页面是否正确传递了 novel 对象');
         } else {
-            console.log('小说ID:', novelId);
+            console.log('小说 ID:', novelId);
         }
         
-        // 动态加载 Marked.js（如果未加载）
-        if (typeof marked === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.bootcdn.net/ajax/libs/marked/9.1.2/marked.min.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-        //]]>
+        // 全局变量存储角色卡数据
+        var characterCardsData = [];
+        var isEditMode = false;
         
         // 封面图片上传处理
         document.getElementById('coverImageInput').addEventListener('change', function(event) {
@@ -1281,11 +1538,7 @@
                     if (data.success) {
                         if (data.worldView && data.worldView.trim()) {
                             // 使用 marked.js 渲染 Markdown
-                            if (typeof marked !== 'undefined') {
-                                contentDiv.innerHTML = marked.parse(data.worldView);
-                            } else {
-                                contentDiv.innerHTML = '<pre>' + data.worldView + '</pre>';
-                            }
+                            contentDiv.innerHTML = marked.parse(data.worldView);
                         } else {
                             contentDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无世界观内容</p>';
                         }
@@ -1308,124 +1561,329 @@
         }
         
         // ========== 角色卡相关功能 ==========
-        
+                
         // 显示角色卡弹窗
         function showCharacterCardsModal() {
             const modal = document.getElementById('characterCardsModal');
-            const viewDiv = document.getElementById('characterCardsView');
-            
-            // 重置为查看模式
-            disableEditCharacterCards();
-            
-            // 显示加载状态
-            viewDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">正在加载角色卡内容...</p>';
             modal.style.display = 'block';
-            
-            // 获取角色卡数据
-            fetch(`/api/novels/${novelId}/character-cards`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.characterCards && data.characterCards.trim()) {
-                            // 使用 marked.js 渲染 Markdown
-                            if (typeof marked !== 'undefined') {
-                                viewDiv.innerHTML = marked.parse(data.characterCards);
-                            } else {
-                                viewDiv.innerHTML = '<pre>' + data.characterCards + '</pre>';
-                            }
-                        } else {
-                            viewDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无角色卡内容，点击“编辑角色卡”按钮添加</p>';
-                        }
-                    } else {
-                        viewDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败：' + (data.message || '未知错误') + '</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('获取角色卡失败:', error);
-                    viewDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
-                });
+                    
+            // 加载角色卡列表
+            loadCharacterCards();
         }
-        
+                
         // 关闭角色卡弹窗
         function closeCharacterCardsModal() {
             const modal = document.getElementById('characterCardsModal');
             modal.style.display = 'none';
+            // 重置为列表视图
+            hideCharacterCardForm();
         }
-        
-        // 启用编辑模式
-        function enableEditCharacterCards() {
-            const viewDiv = document.getElementById('characterCardsView');
-            const editDiv = document.getElementById('characterCardsEdit');
-            const textarea = document.getElementById('characterCardsContent');
+                
+        // 加载角色卡列表
+        function loadCharacterCards() {
+            const listDiv = document.getElementById('characterCardsList');
+            listDiv.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 40px;">正在加载角色卡...</p>';
+                    
+            fetch(`/api/novels/${novelId}/character-cards/list`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        characterCardsData = data.characterCards || [];
+                        renderCharacterCardsList();
+                    } else {
+                        listDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败：' + (data.message || '未知错误') + '</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取角色卡失败:', error);
+                    listDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                });
+        }
+                
+        // 转换图片路径为 Web URL
+        function convertImageUrlToWebUrl(url) {
+            if (!url) return null;
             
-            // 获取当前查看的内容
-            const currentContent = viewDiv.innerHTML;
-            
-            // 如果是默认提示文字，则清空
-            if (currentContent.includes('暂无角色卡内容')) {
-                textarea.value = '';
-            } else {
-                // 否则尝试从 HTML 中提取原始文本（简化处理，直接使用 innerHTML）
-                // 更好的做法是保存原始 Markdown 内容
-                fetch(`/api/novels/${novelId}/character-cards`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.characterCards) {
-                            textarea.value = data.characterCards;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('获取角色卡原始内容失败:', error);
-                    });
+            // 如果已经是完整的 http/https URL，直接返回
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return url;
             }
             
-            // 切换显示
-            viewDiv.style.display = 'none';
-            editDiv.style.display = 'block';
+            // 处理路径：将 /uploads/images/xxx 转换为 /images/xxx
+            // 因为 WebConfig 配置了 /images/** 映射到 file:uploads/images/
+            if (url.startsWith('/uploads/images/')) {
+                return url.replace('/uploads/images/', '/images/');
+            }
+            
+            // 如果没有前缀，尝试添加
+            if (url.startsWith('uploads/images/')) {
+                return url.replace('uploads/images/', '/images/');
+            }
+            
+            // 其他情况，直接返回
+            return url;
         }
         
-        // 禁用编辑模式（返回查看模式）
-        function disableEditCharacterCards() {
-            const viewDiv = document.getElementById('characterCardsView');
-            const editDiv = document.getElementById('characterCardsEdit');
-            
-            editDiv.style.display = 'none';
-            viewDiv.style.display = 'block';
+        // 渲染角色卡列表
+        function renderCharacterCardsList() {
+            const listDiv = document.getElementById('characterCardsList');
+                    
+            if (characterCardsData.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 40px; grid-column: 1/-1;">暂无角色卡，点击“新增角色卡”按钮添加</p>';
+                return;
+            }
+                    
+            let html = '';
+            characterCardsData.forEach((card, index) => {
+                const imageUrl = convertImageUrlToWebUrl(card.generatedImageUrl);
+                html += `
+                    <div class="character-card-item" onclick="viewCharacterCard(${index})">
+                        ${imageUrl ? `
+                            <div style="width: 80px; height: 80px; flex-shrink: 0; overflow: hidden; border-radius: 6px; margin-right: 15px;">
+                                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.name)}" 
+                                     style="width: 100%; height: 100%; object-fit: cover;" 
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f0f0f0; color: #999; font-size: 12px;'>暂无图片</div>';" />
+                            </div>
+                        ` : ''}
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="character-card-name">${escapeHtml(card.name || '无名')}</div>
+                            <div class="character-card-id">ID: ${escapeHtml(card.id || 'N/A')}</div>
+                            <div class="character-card-meta">
+                                <span>${card.age !== undefined ? card.age + '岁' : '?'}</span>
+                                <span>${escapeHtml(card.gender || '')}</span>
+                            </div>
+                            ${card.occupation ? `<div class="character-card-occupation">${escapeHtml(card.occupation)}</div>` : ''}
+                            ${card.personality ? `<div class="character-card-preview">${escapeHtml(card.personality)}</div>` : ''}
+                        </div>
+                        ${isEditMode ? `
+                            <div class="character-card-actions">
+                                <button type="button" class="btn-view" onclick="event.stopPropagation(); editCharacterCard(${index})">✏️ 编辑</button>
+                                <button type="button" class="btn-delete-character" onclick="event.stopPropagation(); deleteCharacterCard(${index})">🗑️ 删除</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+                    
+            listDiv.innerHTML = html;
         }
-        
-        // 保存角色卡
-        function saveCharacterCards() {
-            const textarea = document.getElementById('characterCardsContent');
-            const content = textarea.value;
-            const viewDiv = document.getElementById('characterCardsView');
-            
-            // 显示保存状态
-            const saveBtn = document.querySelector('.character-cards-actions .btn-primary');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '🔄 保存中...';
-            saveBtn.disabled = true;
-            
-            // 发送 POST 请求更新角色卡
-            fetch(`/api/novels/${novelId}/character-cards`, {
+                
+        // 显示添加角色卡表单
+        function showAddCharacterCardForm() {
+            document.getElementById('characterCardsListContainer').style.display = 'none';
+            document.getElementById('characterCardFormContainer').style.display = 'block';
+            document.getElementById('formTitle').textContent = '➕ 新增角色卡';
+            document.getElementById('characterCardForm').reset();
+            document.getElementById('editIndex').value = '-1';
+        }
+                
+        // 隐藏表单，返回列表视图
+        function hideCharacterCardForm() {
+            document.getElementById('characterCardFormContainer').style.display = 'none';
+            document.getElementById('characterCardsListContainer').style.display = 'block';
+        }
+                
+        // 查看角色卡详情
+        function viewCharacterCard(index) {
+            if (isEditMode) return; // 编辑模式下不响应点击查看
+                    
+            const card = characterCardsData[index];
+            const listDiv = document.getElementById('characterCardsList');
+            const imageUrl = convertImageUrlToWebUrl(card.generatedImageUrl);
+                    
+            let html = `
+                <div style="padding: 20px;">
+                    <h3 style="margin-top: 0; color: var(--secondary-color);">${escapeHtml(card.name)}</h3>
+                    <div style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">ID: ${escapeHtml(card.id)}</div>
+                            
+                    ${card.alternativeNames && card.alternativeNames.length > 0 ? `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">别名</div>
+                            <div class="character-detail-content">${card.alternativeNames.map(n => escapeHtml(n)).join(', ')}</div>
+                        </div>
+                    ` : ''}
+                            
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">年龄</div>
+                            <div class="character-detail-content">${card.age !== undefined ? card.age + '岁' : '未知'}</div>
+                        </div>
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">性别</div>
+                            <div class="character-detail-content">${escapeHtml(card.gender || '未知')}</div>
+                        </div>
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">职业</div>
+                            <div class="character-detail-content">${escapeHtml(card.occupation || '无')}</div>
+                        </div>
+                    </div>
+                            
+                    ${card.appearance ? `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">🎨 外貌特征</div>
+                            <div class="character-detail-content">
+                                ${card.appearance.height ? `<div><strong>身高:</strong>${escapeHtml(card.appearance.height)}</div>` : ''}
+                                ${card.appearance.hair ? `<div><strong>发色:</strong>${escapeHtml(card.appearance.hair)}</div>` : ''}
+                                ${card.appearance.eyes ? `<div><strong>瞳色:</strong>${escapeHtml(card.appearance.eyes)}</div>` : ''}
+                                ${card.appearance.build ? `<div><strong>体型:</strong>${escapeHtml(card.appearance.build)}</div>` : ''}
+                                ${card.appearance.distinguishingFeatures ? `<div><strong>显著特征:</strong>${escapeHtml(card.appearance.distinguishingFeatures)}</div>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${imageUrl ? `
+                        <div class="character-detail-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div class="character-detail-title" style="margin: 0;">🖼️ 角色图片</div>
+                                <button type="button" class="btn" style="padding: 4px 12px; font-size: 12px;" onclick="regenerateCharacterImage(${index})">
+                                    🔄 重新生成图片
+                                </button>
+                            </div>
+                            <div class="character-detail-content">
+                                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.name)}" 
+                                     style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" 
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'padding: 20px; text-align: center; background-color: #f0f0f0; border-radius: 8px; color: #999;\'>图片加载失败，请重试</div>';" />
+                                <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                                    💡 图片有效期 24 小时，可重新生成
+                                </div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">🖼️ 角色图片</div>
+                            <div class="character-detail-content" style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                                <div style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">暂无图片</div>
+                                ${card.appearanceDescription ? `
+                                    <button type="button" class="btn btn-primary" style="padding: 6px 16px; font-size: 13px;" onclick="generateCharacterImage(${index})">
+                                        ✨ 生成角色图片
+                                    </button>
+                                ` : `
+                                    <div style="font-size: 12px; color: #ffc107;">
+                                        ⚠️ 请先填写 AI 绘画提示词再生成图片
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    `}
+                            
+                    ${card.personality ? `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">💖 性格描述</div>
+                            <div class="character-detail-content">${escapeHtml(card.personality)}</div>
+                        </div>
+                    ` : ''}
+                            
+                    ${card.background ? `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">📜 背景故事</div>
+                            <div class="character-detail-content" style="white-space: pre-wrap;">${escapeHtml(card.background)}</div>
+                        </div>
+                    ` : ''}
+                            
+                    ${card.relationships && card.relationships.length > 0 ? `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">🔗 人际关系</div>
+                            <div class="character-detail-content">
+                                ${card.relationships.map(rel => 
+                                    `<div>${escapeHtml(rel.targetName)} - ${escapeHtml(rel.relationship)}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                            
+                    ${card.notes ? `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">📝 备注</div>
+                            <div class="character-detail-content">${escapeHtml(card.notes)}</div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- AI 绘画提示词移到最后 -->
+                    ${card.appearanceDescription ? `
+                        <div class="character-detail-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div class="character-detail-title" style="margin: 0;">🤖 AI 绘画提示词</div>
+                                <button type="button" class="btn" style="padding: 4px 12px; font-size: 12px;" onclick="regenerateAIPrompt(${index})">
+                                    🔄 重新生成提示词
+                                </button>
+                            </div>
+                            <div class="character-detail-content" style="white-space: pre-wrap; background-color: #f8f9fa; border-left: 3px solid var(--primary-color); padding: 10px;">
+                                ${escapeHtml(card.appearanceDescription)}
+                            </div>
+                            <div style="margin-top: 8px; font-size: 12px; color: #6c757d;">
+                                💡 这是用于 AI 生成角色图片的描述词，可以在编辑时修改
+                            </div>
+                        </div>
+                    ` : ''}
+                            
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button type="button" class="btn btn-primary" onclick="loadCharacterCards()">返回</button>
+                    </div>
+                </div>
+            `;
+                    
+            listDiv.innerHTML = html;
+        }
+                
+        // 编辑角色卡
+        function editCharacterCard(index) {
+            const card = characterCardsData[index];
+                    
+            document.getElementById('characterCardsListContainer').style.display = 'none';
+            document.getElementById('characterCardFormContainer').style.display = 'block';
+            document.getElementById('formTitle').textContent = '✏️ 编辑角色卡';
+            document.getElementById('editIndex').value = index;
+                    
+            // 填充表单数据
+            document.getElementById('cardId').value = card.id || '';
+            document.getElementById('cardName').value = card.name || '';
+            document.getElementById('alternativeNames').value = card.alternativeNames ? card.alternativeNames.join(',') : '';
+            document.getElementById('cardAge').value = card.age || '';
+            document.getElementById('cardGender').value = card.gender || '';
+            document.getElementById('cardOccupation').value = card.occupation || '';
+                    
+            if (card.appearance) {
+                document.getElementById('appearanceHeight').value = card.appearance.height || '';
+                document.getElementById('appearanceHair').value = card.appearance.hair || '';
+                document.getElementById('appearanceEyes').value = card.appearance.eyes || '';
+                document.getElementById('appearanceBuild').value = card.appearance.build || '';
+                document.getElementById('appearanceFeatures').value = card.appearance.distinguishingFeatures || '';
+            }
+                    
+            document.getElementById('cardPersonality').value = card.personality || '';
+            document.getElementById('cardBackground').value = card.background || '';
+            document.getElementById('cardNotes').value = card.notes || '';
+            document.getElementById('appearanceDescription').value = card.appearanceDescription || '';
+        }
+                
+        // 删除角色卡
+        function deleteCharacterCard(index) {
+            if (confirm('确定要删除这个角色卡吗？')) {
+                characterCardsData.splice(index, 1);
+                saveAllCharacterCards();
+            }
+        }
+                
+        // 切换编辑模式
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            renderCharacterCardsList();
+        }
+                
+        // 保存所有角色卡
+        function saveAllCharacterCards() {
+            fetch(`/api/novels/${novelId}/character-cards/batch`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    characterCards: content
-                })
+                body: JSON.stringify(characterCardsData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 更新成功后重新加载内容
-                    if (typeof marked !== 'undefined') {
-                        viewDiv.innerHTML = marked.parse(content);
-                    } else {
-                        viewDiv.innerHTML = '<pre>' + content + '</pre>';
-                    }
-                    disableEditCharacterCards();
                     alert('角色卡保存成功！');
+                    loadCharacterCards();
                 } else {
                     alert('保存失败：' + data.message);
                 }
@@ -1433,13 +1891,249 @@
             .catch(error => {
                 console.error('保存角色卡失败:', error);
                 alert('保存失败，请稍后重试');
-            })
-            .finally(() => {
-                // 恢复按钮状态
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
             });
         }
+                
+        // HTML 转义辅助函数
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 从外貌特征自动生成 AI 绘画提示词
+        function generateAIPromptFromAppearance() {
+            const height = document.getElementById('appearanceHeight').value || '';
+            const hair = document.getElementById('appearanceHair').value || '';
+            const eyes = document.getElementById('appearanceEyes').value || '';
+            const build = document.getElementById('appearanceBuild').value || '';
+            const features = document.getElementById('appearanceFeatures').value || '';
+            const gender = document.getElementById('cardGender').value || '';
+            const age = document.getElementById('cardAge').value || '';
+            
+            // 构建提示词
+            let prompt = '一位';
+            
+            // 年龄和性别
+            if (age && gender) {
+                prompt += `${age}岁的${gender}`;
+            } else if (gender) {
+                prompt += gender;
+            } else {
+                prompt += '人物';
+            }
+            
+            // 外貌特征
+            let featuresList = [];
+            if (hair) featuresList.push(hair + '发');
+            if (eyes) featuresList.push(eyes + '瞳');
+            if (height) featuresList.push('身高' + height);
+            if (build) featuresList.push(build + '身材');
+            
+            if (featuresList.length > 0) {
+                prompt += '，' + featuresList.join('，');
+            }
+            
+            // 显著特征
+            if (features) {
+                prompt += '，' + features;
+            }
+            
+            prompt += '。详细的外貌描写，高清，精致。';
+            
+            // 去除前后空格并填充到输入框
+            const trimmedPrompt = prompt.trim();
+            document.getElementById('appearanceDescription').value = trimmedPrompt;
+            
+            console.log('生成的 AI 绘画提示词:', trimmedPrompt);
+            console.log('提示词长度:', trimmedPrompt.length);
+            
+            // 显示提示
+            alert('✨ 已根据外貌特征生成 AI 绘画提示词，您可以继续修改完善');
+        }
+        
+        // 重新生成 AI 绘画提示词（调用后端 API）
+        function regenerateAIPrompt(index) {
+            const card = characterCardsData[index];
+            if (!card.id) {
+                alert('角色卡 ID 不存在');
+                return;
+            }
+            
+            if (!confirm('确定要重新生成 AI 绘画提示词吗？这将覆盖当前的提示词。')) {
+                return;
+            }
+            
+            fetch(`/api/novels/${novelId}/character-cards/${card.id}/generate-prompt`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新本地数据
+                    const updatedCard = data.data;
+                    characterCardsData[index] = updatedCard;
+                    
+                    // 重新渲染详情视图
+                    viewCharacterCard(index);
+                    
+                    alert('✨ AI 绘画提示词重新生成成功！');
+                } else {
+                    alert('生成失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('重新生成提示词失败:', error);
+                alert('重新生成失败，请稍后重试');
+            });
+        }
+        
+        // 生成角色图片
+        function generateCharacterImage(index) {
+            const card = characterCardsData[index];
+            if (!card.id) {
+                alert('角色卡 ID 不存在');
+                return;
+            }
+            
+            if (!card.appearanceDescription) {
+                alert('请先为角色卡生成 AI 绘画提示词');
+                return;
+            }
+            
+            // 显示加载状态
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ 生成中...';
+            button.disabled = true;
+            
+            fetch(`/api/novels/${novelId}/character-cards/${card.id}/generate-image`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新本地数据
+                    const updatedCard = data.data;
+                    characterCardsData[index] = updatedCard;
+                    
+                    // 重新渲染详情视图
+                    viewCharacterCard(index);
+                    
+                    alert('🎨 角色图片生成成功！');
+                } else {
+                    alert('生成失败：' + data.message);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('生成图片失败:', error);
+                alert('生成失败，请稍后重试');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+        
+        // 重新生成角色图片
+        function regenerateCharacterImage(index) {
+            const card = characterCardsData[index];
+            if (!card.id) {
+                alert('角色卡 ID 不存在');
+                return;
+            }
+            
+            if (!confirm('确定要重新生成角色图片吗？这将覆盖当前的图片。')) {
+                return;
+            }
+            
+            if (!card.appearanceDescription) {
+                alert('请先为角色卡生成 AI 绘画提示词');
+                return;
+            }
+            
+            // 显示加载状态
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ 生成中...';
+            button.disabled = true;
+            
+            fetch(`/api/novels/${novelId}/character-cards/${card.id}/generate-image`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新本地数据
+                    const updatedCard = data.data;
+                    characterCardsData[index] = updatedCard;
+                    
+                    // 重新渲染详情视图
+                    viewCharacterCard(index);
+                    
+                    alert('🎨 角色图片重新生成成功！');
+                } else {
+                    alert('重新生成失败：' + data.message);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('重新生成图片失败:', error);
+                alert('重新生成失败，请稍后重试');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+                
+        // 表单提交处理
+        document.getElementById('characterCardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+                    
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+                    
+            // 构建角色卡对象
+            const cardData = {
+                id: document.getElementById('cardId').value,
+                name: document.getElementById('cardName').value,
+                alternativeNames: document.getElementById('alternativeNames').value ? 
+                    document.getElementById('alternativeNames').value.split(/[,]/).map(s => s.trim()).filter(s => s) : [],
+                age: document.getElementById('cardAge').value ? parseInt(document.getElementById('cardAge').value) : undefined,
+                gender: document.getElementById('cardGender').value,
+                occupation: document.getElementById('cardOccupation').value,
+                appearance: {
+                    height: document.getElementById('appearanceHeight').value,
+                    hair: document.getElementById('appearanceHair').value,
+                    eyes: document.getElementById('appearanceEyes').value,
+                    build: document.getElementById('appearanceBuild').value,
+                    distinguishingFeatures: document.getElementById('appearanceFeatures').value
+                },
+                appearanceDescription: document.getElementById('appearanceDescription').value,
+                personality: document.getElementById('cardPersonality').value,
+                background: document.getElementById('cardBackground').value,
+                notes: document.getElementById('cardNotes').value
+            };
+                    
+            // 清理空字段
+            if (!cardData.appearance.height && !cardData.appearance.hair && 
+                !cardData.appearance.eyes && !cardData.appearance.build && 
+                !cardData.appearance.distinguishingFeatures) {
+                cardData.appearance = undefined;
+            }
+                    
+            if (editIndex >= 0) {
+                // 更新现有角色卡
+                characterCardsData[editIndex] = cardData;
+            } else {
+                // 添加新角色卡
+                characterCardsData.push(cardData);
+            }
+                    
+            // 保存所有角色卡
+            saveAllCharacterCards();
+            hideCharacterCardForm();
+        });
     </script>
 </body>
 </html>

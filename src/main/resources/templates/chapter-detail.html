@@ -853,6 +853,13 @@
                         下一章
                     </button>
                 </div>
+                
+                <!-- 键盘快捷键提示 -->
+                <div class="keyboard-hints">
+                    <span class="hint-item">⬅️ 左方向键：上一章</span>
+                    <span class="hint-divider">|</span>
+                    <span class="hint-item">右方向键：下一章 ➡️</span>
+                </div>
             </div>
         </div>
     </div>
@@ -910,6 +917,7 @@
             loadReadingSettings();
             loadChapterDetail();
             setupImageUploadListeners();
+            setupKeyboardNavigation(); // 设置键盘导航
         });
         
         // 设置图片上传监听器
@@ -933,6 +941,94 @@
             } else {
                 console.error('文件输入框未找到');
             }
+        }
+        
+        // 设置键盘导航
+        function setupKeyboardNavigation() {
+            document.addEventListener('keydown', function(event) {
+                // 检查是否在输入框中（避免在输入时触发）
+                const activeElement = document.activeElement;
+                if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable) {
+                    return; // 在输入框中时不触发快捷键
+                }
+                
+                // 左方向键 - 上一章
+                if (event.key === 'ArrowLeft') {
+                    event.preventDefault(); // 阻止默认行为
+                    const prevButton = document.getElementById('prevButton');
+                    if (!prevButton.disabled) {
+                        showKeyboardHint('上一章节', 'left');
+                        setTimeout(() => goToPrevious(), 300); // 延迟 300ms 执行，给用户看到提示
+                    } else {
+                        showKeyboardHint('已经是第一章了', 'none');
+                    }
+                }
+                
+                // 右方向键 - 下一章
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault(); // 阻止默认行为
+                    const nextButton = document.getElementById('nextButton');
+                    if (!nextButton.disabled) {
+                        showKeyboardHint('下一章节', 'right');
+                        setTimeout(() => goToNext(), 300); // 延迟 300ms 执行
+                    } else {
+                        showKeyboardHint('已经是最后一章了', 'none');
+                    }
+                }
+            });
+        }
+        
+        // 显示键盘操作提示
+        function showKeyboardHint(text, direction) {
+            // 创建或获取提示元素
+            let hintElement = document.getElementById('keyboard-hint');
+            if (!hintElement) {
+                hintElement = document.createElement('div');
+                hintElement.id = 'keyboard-hint';
+                hintElement.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 20px 40px;
+                    border-radius: 12px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    z-index: 9999;
+                    pointer-events: none;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                    text-align: center;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                `;
+                document.body.appendChild(hintElement);
+            }
+            
+            // 设置提示内容
+            let icon = '';
+            if (direction === 'left') icon = '⬅️ ';
+            else if (direction === 'right') icon = ' ➡️';
+            else icon = '⚠️ ';
+            
+            hintElement.innerHTML = `${icon}${text}`;
+            hintElement.style.opacity = '1';
+            
+            // 清除之前的定时器
+            if (window.keyboardHintTimeout) {
+                clearTimeout(window.keyboardHintTimeout);
+            }
+            
+            // 1.5 秒后隐藏
+            window.keyboardHintTimeout = setTimeout(() => {
+                hintElement.style.opacity = '0';
+                setTimeout(() => {
+                    if (hintElement && hintElement.parentNode) {
+                        hintElement.remove();
+                    }
+                }, 300);
+            }, 1500);
         }
 
         // 加载阅读设置
@@ -1088,15 +1184,21 @@
             if (detailView.hasPrevious && detailView.previousChapterId) {
                 prevButton.disabled = false;
                 prevButton.onclick = () => goToChapter(detailView.previousChapterId);
+                // 同时更新全局的 goToPrevious 函数
+                window.goToPrevious = () => goToChapter(detailView.previousChapterId);
             } else {
                 prevButton.disabled = true;
+                window.goToPrevious = null; // 禁用时设置为 null
             }
             
             if (detailView.hasNext && detailView.nextChapterId) {
                 nextButton.disabled = false;
                 nextButton.onclick = () => goToChapter(detailView.nextChapterId);
+                // 同时更新全局的 goToNext 函数
+                window.goToNext = () => goToChapter(detailView.nextChapterId);
             } else {
                 nextButton.disabled = true;
+                window.goToNext = null; // 禁用时设置为 null
             }
             
             // 隐藏加载状态，显示内容
@@ -1153,12 +1255,24 @@
 
         // 跳转到上一章
         function goToPrevious() {
-            // 这个函数会在displayChapter中被重新绑定
+            // 检查是否已绑定实际的跳转函数
+            if (window.goToPrevious && typeof window.goToPrevious === 'function') {
+                window.goToPrevious();
+            } else {
+                console.log('已经是第一章，无法跳转到上一章');
+                showKeyboardHint('已经是第一章了', 'none');
+            }
         }
-
+        
         // 跳转到下一章
         function goToNext() {
-            // 这个函数会在displayChapter中被重新绑定
+            // 检查是否已绑定实际的跳转函数
+            if (window.goToNext && typeof window.goToNext === 'function') {
+                window.goToNext();
+            } else {
+                console.log('已经是最后一章，无法跳转到下一章');
+                showKeyboardHint('已经是最后一章了', 'none');
+            }
         }
 
         // 跳转到章节列表

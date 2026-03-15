@@ -46,6 +46,11 @@ public class Novel {
     @JsonIgnore
     private List<Chapter> chapters;
     
+    // 一对多关系：一个小说对应多个角色卡
+    @OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<CharacterCardEntity> characterCardEntities;
+    
     // 用于Thymeleaf模板的格式化时间字符串
     @Transient
     private String formattedCreateTime;
@@ -182,6 +187,14 @@ public class Novel {
         this.chapters = chapters;
     }
     
+    public List<CharacterCardEntity> getCharacterCardEntities() {
+        return characterCardEntities;
+    }
+    
+    public void setCharacterCardEntities(List<CharacterCardEntity> characterCardEntities) {
+        this.characterCardEntities = characterCardEntities;
+    }
+    
     public String getFormattedCreateTime() {
         return formattedCreateTime;
     }
@@ -224,6 +237,7 @@ public class Novel {
                 ", updateTime=" + updateTime +
                 ", coverImage='" + getCoverImage() + '\'' +
                 ", chapters=" + (chapters != null ? chapters.size() : 0) +
+                ", characterCards=" + (characterCardEntities != null ? characterCardEntities.size() : 0) +
                 '}';
     }
 }
