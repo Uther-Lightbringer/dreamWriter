@@ -1282,9 +1282,6 @@
                             <small style="color: #6c757d; font-size: 12px; flex: 1;">
                                 💡 提示：这个字段将用于提供给 AI 进行角色图像生成，建议详细描述外貌特征
                             </small>
-                            <button type="button" class="btn" style="padding: 4px 12px; font-size: 12px;" onclick="generateAIPromptFromAppearance()">
-                                ✨ 从外貌特征自动生成
-                            </button>
                         </div>
                     </div>
                     
@@ -1831,7 +1828,7 @@
                                     <button type="button" class="btn" style="padding: 4px 12px; font-size: 12px;" onclick="regenerateAIPrompt(${index})">
                                         🔄 重新生成
                                     </button>
-                                    <button type="button" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;" onclick="generateAIPromptFromAppearance()">
+                                    <button type="button" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;" onclick="regenerateAIPrompt(${index})">
                                         ✨ 自动生成
                                     </button>
                                 </div>
@@ -1848,7 +1845,7 @@
                             <div class="character-detail-title">🤖 AI 绘画提示词</div>
                             <div class="character-detail-content" style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
                                 <div style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">暂无 AI 绘画提示词</div>
-                                <button type="button" class="btn btn-primary" style="padding: 8px 20px; font-size: 13px;" onclick="generateAIPromptFromAppearance()">
+                                <button type="button" class="btn btn-primary" style="padding: 8px 20px; font-size: 13px;" onclick="regenerateAIPrompt(${index})">
                                     ✨ 根据外貌特征生成
                                 </button>
                                 <div style="margin-top: 10px; font-size: 12px; color: #999;">
@@ -2104,93 +2101,122 @@
             });
         }
         
-        // ========== AI 绘画提示词相关函数 ==========
-        
-        // 从外貌特征自动生成 AI 绘画提示词
-        function generateAIPromptFromAppearance() {
-            const height = document.getElementById('appearanceHeight').value || '';
-            const hair = document.getElementById('appearanceHair').value || '';
-            const eyes = document.getElementById('appearanceEyes').value || '';
-            const build = document.getElementById('appearanceBuild').value || '';
-            const features = document.getElementById('appearanceFeatures').value || '';
-            const gender = document.getElementById('cardGender').value || '';
-            const age = document.getElementById('cardAge').value || '';
-            
-            // 构建提示词
-            let prompt = '一位';
-            
-            // 年龄和性别
-            if (age && gender) {
-                prompt += `${age}岁的${gender}`;
-            } else if (gender) {
-                prompt += gender;
-            } else {
-                prompt += '人物';
-            }
-            
-            // 外貌特征
-            let featuresList = [];
-            if (hair) featuresList.push(hair + '发');
-            if (eyes) featuresList.push(eyes + '瞳');
-            if (height) featuresList.push('身高' + height);
-            if (build) featuresList.push(build + '身材');
-            
-            if (featuresList.length > 0) {
-                prompt += '，' + featuresList.join('，');
-            }
-            
-            // 显著特征
-            if (features) {
-                prompt += '，' + features;
-            }
-            
-            prompt += '。详细的外貌描写，高清，精致。';
-            
-            // 去除前后空格并填充到输入框
-            const trimmedPrompt = prompt.trim();
-            document.getElementById('appearanceDescription').value = trimmedPrompt;
-            
-            console.log('生成的 AI 绘画提示词:', trimmedPrompt);
-            console.log('提示词长度:', trimmedPrompt.length);
-            
-            // 显示提示
-            alert('✨ 已根据外貌特征生成 AI 绘画提示词，您可以继续修改完善');
-        }
+
         
         // 重新生成 AI 绘画提示词（调用后端 API）
         function regenerateAIPrompt(index) {
             const card = characterCardsData[index];
             if (!card.id) {
-                alert('角色卡 ID 不存在');
+                alert('⚠️ 角色卡 ID 不存在');
                 return;
             }
             
-            if (!confirm('确定要重新生成 AI 绘画提示词吗？这将覆盖当前的提示词。')) {
-                return;
+            // 获取当前按钮并设置加载状态
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ 生成中...';
+            button.disabled = true;
+            
+            // 立即更新页面显示，提示正在生成
+            const promptSection = document.querySelector('.character-detail-section:nth-last-child(2)');
+            if (promptSection) {
+                const contentDiv = promptSection.querySelector('.character-detail-content');
+                if (contentDiv) {
+                    contentDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;">⏳ 正在为角色生成提示词，请稍候...</div>';
+                }
             }
             
+            // 第一步：发送生成请求
             fetch(`/api/novels/${novelId}/character-cards/${card.id}/generate-prompt`, {
                 method: 'POST'
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    // 更新本地数据
-                    const updatedCard = data.data;
-                    characterCardsData[index] = updatedCard;
-                    
-                    // 重新渲染详情视图
-                    viewCharacterCard(index);
-                    
-                    alert('✨ AI 绘画提示词重新生成成功！');
+                if (data.success && data.taskId) {
+                    console.log('已创建任务，taskId:', data.taskId);
+                    // 第二步：轮询查询任务状态
+                    pollTaskStatus(data.taskId, index, button, originalText);
                 } else {
-                    alert('生成失败：' + data.message);
+                    throw new Error(data.message || '创建任务失败');
                 }
             })
             .catch(error => {
-                console.error('重新生成提示词失败:', error);
-                alert('重新生成失败，请稍后重试');
+                console.error('创建任务失败:', error);
+                alert('❌ 创建任务失败：' + error.message);
+                // 恢复原始视图
+                viewCharacterCard(index);
+                button.innerHTML = originalText;
+                button.disabled = false;
             });
+        }
+        
+        // 轮询任务状态
+        function pollTaskStatus(taskId, index, button, originalText) {
+            const startTime = Date.now();
+            const maxWaitTime = 120000; // 最多等待 2 分钟
+            
+            function checkStatus() {
+                // 检查是否超时
+                if (Date.now() - startTime > maxWaitTime) {
+                    alert('⏰ 生成超时，请稍后重试');
+                    viewCharacterCard(index);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    return;
+                }
+                
+                // 查询任务状态（长轮询，阻塞 30 秒）
+                fetch(`/api/novels/${novelId}/character-cards/tasks/${taskId}/status?timeout=30`, {
+                    method: 'GET'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('任务状态:', data.state, data.message);
+                        
+                        if (data.state === 'COMPLETED' && data.data) {
+                            // 任务完成，更新数据
+                            const updatedCard = data.data;
+                            characterCardsData[index] = updatedCard;
+                            
+                            // 重新渲染详情视图
+                            viewCharacterCard(index);
+                            
+                            // 显示成功提示
+                            alert('✨ AI 绘画提示词重新生成成功！\n新提示词已应用到角色卡');
+                            
+                            // 恢复按钮状态
+                            button.innerHTML = originalText;
+                            button.disabled = false;
+                        } else if (data.state === 'FAILED') {
+                            // 任务失败
+                            alert('❌ 生成失败：' + (data.message || '未知错误'));
+                            viewCharacterCard(index);
+                            button.innerHTML = originalText;
+                            button.disabled = false;
+                        } else if (data.state === 'RUNNING' || data.state === 'PENDING') {
+                            // 任务还在进行中，继续轮询
+                            console.log('任务仍在执行，继续等待...');
+                            setTimeout(checkStatus, 100); // 短暂延迟后继续
+                        } else {
+                            // 其他状态，继续等待
+                            setTimeout(checkStatus, 100);
+                        }
+                    } else {
+                        throw new Error(data.message || '查询任务状态失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('查询任务状态失败:', error);
+                    alert('❌ 查询任务状态失败：' + error.message);
+                    viewCharacterCard(index);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                });
+            }
+            
+            // 开始第一次检查
+            checkStatus();
         }
         
         // 生成角色图片
