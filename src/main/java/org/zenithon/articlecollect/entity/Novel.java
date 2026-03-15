@@ -28,6 +28,9 @@ public class Novel {
     @Column(name = "world_view", length = 50000, columnDefinition = "TEXT")
     private String worldView;
     
+    @Column(name = "character_cards", columnDefinition = "TEXT")
+    private String characterCards;
+    
     @Column(name = "create_time")
     private LocalDateTime createTime;
     
@@ -135,6 +138,16 @@ public class Novel {
         this.formattedCreateTime = formatTime(this.updateTime);
     }
 
+    public String getCharacterCards() {
+        return characterCards;
+    }
+
+    public void setCharacterCards(String characterCards) {
+        this.characterCards = characterCards;
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.updateTime);
+    }
+
     public LocalDateTime getCreateTime() {
         return createTime;
     }
@@ -206,6 +219,7 @@ public class Novel {
                 ", author='" + author + '\'' +
                 ", description='" + description + '\'' +
                 ", worldView='" + (worldView != null ? worldView.substring(0, Math.min(50, worldView.length())) + "..." : "null") + '\'' +
+                ", characterCards='" + (characterCards != null ? characterCards.substring(0, Math.min(50, characterCards.length())) + "..." : "null") + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", coverImage='" + getCoverImage() + '\'' +

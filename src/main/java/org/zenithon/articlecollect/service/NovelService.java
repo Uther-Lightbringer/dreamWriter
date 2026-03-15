@@ -280,4 +280,17 @@ public class NovelService {
         }
         throw new RuntimeException("小说不存在，ID: " + novelId);
     }
+    
+    /**
+     * 更新小说的角色卡
+     */
+    public Novel updateCharacterCards(Long novelId, String characterCards) {
+        Optional<Novel> novelOpt = novelRepository.findById(novelId);
+        if (novelOpt.isPresent()) {
+            Novel novel = novelOpt.get();
+            novel.setCharacterCards(characterCards);
+            return novelRepository.save(novel);
+        }
+        throw new RuntimeException("小说不存在，ID: " + novelId);
+    }
 }

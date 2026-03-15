@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${novel.title} + ' - 小说详情'">小说详情</title>
-    <!-- 引入 Marked.js 用于 Markdown 渲染 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="/css/chapter-tags.css">
     <style>
         :root {
@@ -60,25 +58,77 @@
             text-decoration: none;
         }
         
-        /* 世界观按钮样式 */
         .worldview-btn {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 8px 16px;
             background-color: rgba(255,255,255,0.2);
             color: white;
             border: 1px solid rgba(255,255,255,0.5);
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             text-decoration: none;
             transition: all 0.3s ease;
-            margin-left: 10px;
+            margin-left: 8px;
         }
         
         .worldview-btn:hover {
             background-color: rgba(255,255,255,0.3);
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        /* 章节列表操作按钮组样式 */
+        .section-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background-color: var(--light-bg);
+            color: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .add-chapter-btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+            border: none;
+        }
+        
+        .add-chapter-btn:hover {
+            background-color: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
         }
         
         .novel-header {
@@ -258,16 +308,17 @@
         .add-chapter-btn {
             background-color: var(--success-color);
             color: white;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 6px;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 25px;
+            gap: 6px;
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+            border: none;
+            margin-left: 15px;
         }
         
         .add-chapter-btn:hover {
@@ -422,6 +473,21 @@
                 margin: 10% auto;
                 width: 95%;
                 padding: 20px;
+            }
+            
+            /* 移动端按钮组适配 */
+            .section-actions {
+                flex-wrap: wrap;
+                margin-top: 10px;
+                width: 100%;
+            }
+            
+            .action-btn,
+            .add-chapter-btn {
+                flex: 1 1 calc(50% - 5px);
+                min-width: calc(50% - 5px);
+                justify-content: center;
+                text-align: center;
             }
         }
         
@@ -607,6 +673,215 @@
         .loading {
             animation: pulse 1.5s ease-in-out infinite;
         }
+        
+        /* 世界观弹窗样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .modal-ok-btn {
+            padding: 8px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-ok-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        /* 角色卡相关样式 */
+        .modal-large {
+            max-width: 900px;
+        }
+        
+        .character-cards-toolbar {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .character-cards-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .markdown-content {
+            line-height: 1.8;
+            color: var(--secondary-color);
+        }
+        
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--secondary-color);
+        }
+        
+        .markdown-content h1 {
+            font-size: 24px;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .markdown-content h2 {
+            font-size: 20px;
+            padding-bottom: 0.25em;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .markdown-content h3 {
+            font-size: 18px;
+        }
+        
+        .markdown-content p {
+            margin-bottom: 16px;
+        }
+        
+        .markdown-content strong {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .markdown-content ul,
+        .markdown-content ol {
+            padding-left: 2em;
+            margin-bottom: 16px;
+        }
+        
+        .markdown-content li {
+            margin-bottom: 8px;
+        }
+        
+        .markdown-content blockquote {
+            padding: 0 1em;
+            color: #6a737d;
+            border-left: 0.25em solid var(--border-color);
+            margin: 16px 0;
+        }
+        
+        .markdown-content pre {
+            background-color: var(--light-bg);
+            padding: 16px;
+            border-radius: 6px;
+            overflow: auto;
+            margin: 16px 0;
+        }
+        
+        .markdown-content code {
+            background-color: rgba(27,31,35,0.05);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 85%;
+        }
+        
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+        
+        .markdown-content th,
+        .markdown-content td {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+        
+        .markdown-content th {
+            background-color: var(--light-bg);
+            font-weight: 600;
+        }
+        
+        .markdown-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
     </style>
 </head>
 <body>
@@ -614,9 +889,6 @@
         <div class="header">
             <a href="/" class="back-link">← 返回首页</a>
             <h1 th:text="${novel.title}" style="display: inline;">小说标题</h1>
-            <button class="worldview-btn" onclick="showWorldViewModal()">
-                📖 查看世界观
-            </button>
         </div>
         
         <div class="novel-header">
@@ -649,10 +921,20 @@
         </div>
         
         <div class="content">
-            <h2 class="section-title">📖 章节列表</h2>
-            <a th:href="@{/novel/{novelId}/chapter/add(novelId=${novel.id})}" class="add-chapter-btn">
-                ➕ 添加章节
-            </a>
+            <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                <h2 class="section-title" style="margin: 0;">📖 章节列表</h2>
+                <div class="section-actions">
+                    <button type="button" class="action-btn" onclick="showWorldViewModal()">
+                        📖 世界观
+                    </button>
+                    <button type="button" class="action-btn" onclick="showCharacterCardsModal()">
+                        👥 角色卡
+                    </button>
+                    <a th:href="@{/novel/{novelId}/chapter/add(novelId=${novel.id})}" class="add-chapter-btn">
+                        ➕ 添加章节
+                    </a>
+                </div>
+            </div>
             
             <div th:if="${#lists.isEmpty(novel.chapters)}" class="empty-state">
                 <div class="empty-state-icon">📚</div>
@@ -720,7 +1002,75 @@
         </div>
     </div>
 
-    <script>
+    <!-- 世界观模态框 -->
+    <div id="worldViewModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📖 小说世界观</h3>
+                <button class="modal-close" onclick="closeWorldViewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="worldViewContent" class="worldview-content markdown-content">
+                    <p style="text-align: center; color: #6c757d;">暂无世界观内容</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-ok-btn" onclick="closeWorldViewModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色卡模态框 -->
+    <div id="characterCardsModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeCharacterCardsModal()">&times;</span>
+            <h2 style="margin-top: 0;">👥 小说角色卡</h2>
+            <div class="character-cards-toolbar">
+                <button type="button" class="btn btn-primary" onclick="enableEditCharacterCards()">
+                    ✏️ 编辑角色卡
+                </button>
+            </div>
+            <div id="characterCardsView" class="markdown-content"></div>
+            <div id="characterCardsEdit" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="characterCardsContent">角色卡内容 (支持 Markdown 格式):</label>
+                    <textarea id="characterCardsContent" name="characterCards" 
+                              placeholder="请输入角色卡内容，建议使用 Markdown 格式&#10;&#10;示例：&#10;## 主角&#10;**姓名：**张三&#10;**年龄：**18&#10;**简介：**一个普通的少年..." 
+                              rows="20"></textarea>
+                </div>
+                <div class="character-cards-actions">
+                    <button type="button" class="btn btn-primary" onclick="saveCharacterCards()">
+                        💾 保存
+                    </button>
+                    <button type="button" class="btn" onclick="disableEditCharacterCards()">
+                        ❌ 取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 获取小说ID（使用 Thymeleaf 内联语法）
+        var novelId = /*[[${novel.id}]]*/ null;
+        
+        // 验证小说ID
+        if (!novelId) {
+            console.error('警告：小说ID 为 null，请检查页面是否正确传递了 novel 对象');
+        } else {
+            console.log('小说ID:', novelId);
+        }
+        
+        // 动态加载 Marked.js（如果未加载）
+        if (typeof marked === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.bootcdn.net/ajax/libs/marked/9.1.2/marked.min.js';
+            script.async = false;
+            document.head.appendChild(script);
+        }
+        //]]>
+        
         // 封面图片上传处理
         document.getElementById('coverImageInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -790,14 +1140,6 @@
                     deleteBtn.disabled = false;
                 });
             }
-        }
-        
-        // 获取小说ID
-        const novelId = /*[[${novel.id}]]*/ null;
-        
-        // 验证小说ID
-        if (!novelId) {
-            console.error('小说ID获取失败');
         }
         
         // 获取模态框元素
@@ -914,6 +1256,189 @@
                     });
                 });
             }
+        }
+        
+        // ========== 世界观相关功能 ==========
+        
+        // 显示世界观弹窗
+        function showWorldViewModal() {
+            const modal = document.getElementById('worldViewModal');
+            if (!modal) {
+                console.error('世界观弹窗未找到');
+                return;
+            }
+            
+            const contentDiv = document.getElementById('worldViewContent');
+            
+            // 显示加载状态
+            contentDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">正在加载世界观内容...</p>';
+            modal.classList.add('active');
+            
+            // 获取世界观数据
+            fetch(`/api/novels/${novelId}/worldview`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.worldView && data.worldView.trim()) {
+                            // 使用 marked.js 渲染 Markdown
+                            if (typeof marked !== 'undefined') {
+                                contentDiv.innerHTML = marked.parse(data.worldView);
+                            } else {
+                                contentDiv.innerHTML = '<pre>' + data.worldView + '</pre>';
+                            }
+                        } else {
+                            contentDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无世界观内容</p>';
+                        }
+                    } else {
+                        contentDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败：' + (data.message || '未知错误') + '</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取世界观失败:', error);
+                    contentDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                });
+        }
+        
+        // 关闭世界观弹窗
+        function closeWorldViewModal() {
+            const modal = document.getElementById('worldViewModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+        
+        // ========== 角色卡相关功能 ==========
+        
+        // 显示角色卡弹窗
+        function showCharacterCardsModal() {
+            const modal = document.getElementById('characterCardsModal');
+            const viewDiv = document.getElementById('characterCardsView');
+            
+            // 重置为查看模式
+            disableEditCharacterCards();
+            
+            // 显示加载状态
+            viewDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">正在加载角色卡内容...</p>';
+            modal.style.display = 'block';
+            
+            // 获取角色卡数据
+            fetch(`/api/novels/${novelId}/character-cards`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.characterCards && data.characterCards.trim()) {
+                            // 使用 marked.js 渲染 Markdown
+                            if (typeof marked !== 'undefined') {
+                                viewDiv.innerHTML = marked.parse(data.characterCards);
+                            } else {
+                                viewDiv.innerHTML = '<pre>' + data.characterCards + '</pre>';
+                            }
+                        } else {
+                            viewDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无角色卡内容，点击“编辑角色卡”按钮添加</p>';
+                        }
+                    } else {
+                        viewDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败：' + (data.message || '未知错误') + '</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取角色卡失败:', error);
+                    viewDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                });
+        }
+        
+        // 关闭角色卡弹窗
+        function closeCharacterCardsModal() {
+            const modal = document.getElementById('characterCardsModal');
+            modal.style.display = 'none';
+        }
+        
+        // 启用编辑模式
+        function enableEditCharacterCards() {
+            const viewDiv = document.getElementById('characterCardsView');
+            const editDiv = document.getElementById('characterCardsEdit');
+            const textarea = document.getElementById('characterCardsContent');
+            
+            // 获取当前查看的内容
+            const currentContent = viewDiv.innerHTML;
+            
+            // 如果是默认提示文字，则清空
+            if (currentContent.includes('暂无角色卡内容')) {
+                textarea.value = '';
+            } else {
+                // 否则尝试从 HTML 中提取原始文本（简化处理，直接使用 innerHTML）
+                // 更好的做法是保存原始 Markdown 内容
+                fetch(`/api/novels/${novelId}/character-cards`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.characterCards) {
+                            textarea.value = data.characterCards;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取角色卡原始内容失败:', error);
+                    });
+            }
+            
+            // 切换显示
+            viewDiv.style.display = 'none';
+            editDiv.style.display = 'block';
+        }
+        
+        // 禁用编辑模式（返回查看模式）
+        function disableEditCharacterCards() {
+            const viewDiv = document.getElementById('characterCardsView');
+            const editDiv = document.getElementById('characterCardsEdit');
+            
+            editDiv.style.display = 'none';
+            viewDiv.style.display = 'block';
+        }
+        
+        // 保存角色卡
+        function saveCharacterCards() {
+            const textarea = document.getElementById('characterCardsContent');
+            const content = textarea.value;
+            const viewDiv = document.getElementById('characterCardsView');
+            
+            // 显示保存状态
+            const saveBtn = document.querySelector('.character-cards-actions .btn-primary');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '🔄 保存中...';
+            saveBtn.disabled = true;
+            
+            // 发送 POST 请求更新角色卡
+            fetch(`/api/novels/${novelId}/character-cards`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    characterCards: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新成功后重新加载内容
+                    if (typeof marked !== 'undefined') {
+                        viewDiv.innerHTML = marked.parse(content);
+                    } else {
+                        viewDiv.innerHTML = '<pre>' + content + '</pre>';
+                    }
+                    disableEditCharacterCards();
+                    alert('角色卡保存成功！');
+                } else {
+                    alert('保存失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存角色卡失败:', error);
+                alert('保存失败，请稍后重试');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
         }
     </script>
 </body>

@@ -8,6 +8,7 @@ import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.ChapterDetailView;
 import org.zenithon.articlecollect.service.NovelService;
 import org.zenithon.articlecollect.dto.WorldViewRequest;
+import org.zenithon.articlecollect.dto.CharacterCardRequest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -359,6 +360,63 @@ public class NovelController {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("worldView", novel.getWorldView() != null ? novel.getWorldView() : "");
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * 更新小说的角色卡
+     * POST /api/novels/{novelId}/character-cards
+     * 请求体：{"characterCards": "角色卡内容（支持 Markdown 格式）"}
+     * 返回：{"success": true, "message": "...", "data": {更新后的小说对象}}
+     */
+    @PostMapping("/novels/{novelId}/character-cards")
+    public ResponseEntity<Map<String, Object>> updateCharacterCards(
+            @PathVariable Long novelId,
+            @RequestBody CharacterCardRequest request) {
+        
+        Novel novel = novelService.getNovelById(novelId);
+        if (novel == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "小说不存在，ID: " + novelId);
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        try {
+            String characterCards = request.getCharacterCards();
+            Novel updatedNovel = novelService.updateCharacterCards(novelId, characterCards);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "角色卡更新成功");
+            response.put("data", updatedNovel);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "角色卡更新失败：" + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    /**
+     * 获取小说的角色卡
+     * GET /api/novels/{novelId}/character-cards
+     * 返回：{"success": true, "characterCards": "角色卡内容"}
+     */
+    @GetMapping("/novels/{novelId}/character-cards")
+    public ResponseEntity<Map<String, Object>> getCharacterCards(@PathVariable Long novelId) {
+        Novel novel = novelService.getNovelById(novelId);
+        if (novel == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "小说不存在，ID: " + novelId);
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("characterCards", novel.getCharacterCards() != null ? novel.getCharacterCards() : "");
         return ResponseEntity.ok(response);
     }
 }
