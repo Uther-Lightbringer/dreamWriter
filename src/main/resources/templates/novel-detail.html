@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${novel.title} + ' - 小说详情'">小说详情</title>
+    <!-- 引入 Marked.js 用于 Markdown 渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="/css/chapter-tags.css">
     <style>
         :root {
@@ -56,6 +58,27 @@
         .back-link:hover {
             background-color: rgba(255,255,255,0.2);
             text-decoration: none;
+        }
+        
+        /* 世界观按钮样式 */
+        .worldview-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        
+        .worldview-btn:hover {
+            background-color: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         
         .novel-header {
@@ -590,7 +613,10 @@
     <div class="container">
         <div class="header">
             <a href="/" class="back-link">← 返回首页</a>
-            <h1 th:text="${novel.title}">小说标题</h1>
+            <h1 th:text="${novel.title}" style="display: inline;">小说标题</h1>
+            <button class="worldview-btn" onclick="showWorldViewModal()">
+                📖 查看世界观
+            </button>
         </div>
         
         <div class="novel-header">

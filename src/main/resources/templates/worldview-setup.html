@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界观设置测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        textarea {
+            min-height: 300px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .info code {
+            background-color: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 小说世界观设置工具</h1>
+        
+        <div class="info">
+            <h3>使用说明：</h3>
+            <ul>
+                <li>本工具用于为小说设置世界观内容</li>
+                <li>世界观内容支持 <strong>Markdown 格式</strong></li>
+                <li>可以在章节详情页点击"查看世界观"按钮查看</li>
+                <li>API 接口：<code>PUT /api/novels/{novelId}/worldview</code></li>
+            </ul>
+        </div>
+        
+        <div class="form-group">
+            <label for="novelId">小说 ID：</label>
+            <input type="number" id="novelId" placeholder="输入小说的 ID，例如：1">
+        </div>
+        
+        <div class="form-group">
+            <label for="worldView">世界观内容（支持 Markdown）：</label>
+            <textarea id="worldView" placeholder="输入世界观内容，例如：&#10;&#10;# 世界观设定&#10;&#10;## 地理环境&#10;这是一个充满魔法的世界...&#10;&#10;## 势力分布&#10;- 东方帝国&#10;- 西方联盟&#10;- 南方部落"></textarea>
+        </div>
+        
+        <button onclick="updateWorldView()">💾 更新世界观</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+    
+    <script>
+        function updateWorldView() {
+            const novelId = document.getElementById('novelId').value;
+            const worldView = document.getElementById('worldView').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!novelId) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ 请输入小说 ID';
+                return;
+            }
+            
+            if (!worldView.trim()) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ 请输入世界观内容';
+                return;
+            }
+            
+            // 发送请求到后端 API
+            fetch(`/api/novels/${novelId}/worldview`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    worldView: worldView
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('请求失败');
+            })
+            .then(data => {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>世界观更新成功！</strong><br>
+                        小说 ID: ${novelId}<br>
+                        更新时间：${new Date().toLocaleString('zh-CN')}<br><br>
+                        <a href="/novel/${novelId}" target="_blank">前往章节详情页查看</a>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ 更新失败：${data.message}`;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ 请求失败：${error.message}`;
+            });
+        }
+    </script>
+</body>
+</html>

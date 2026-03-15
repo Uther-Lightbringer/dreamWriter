@@ -105,4 +105,12 @@ public class PageController {
             return "add-chapter";
         }
     }
+    
+    /**
+     * 世界观设置页面
+     */
+    @GetMapping("/worldview/setup")
+    public String worldviewSetup() {
+        return "worldview-setup";
+    }
 }
