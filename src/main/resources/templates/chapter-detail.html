@@ -98,6 +98,28 @@
             background-color: var(--card-bg);
             border-bottom: 1px solid var(--border-color);
             transition: background-color 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .chapter-number-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: auto;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .chapter-number-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
         .breadcrumb a {
             color: #007bff;
@@ -753,6 +775,7 @@
             <a href="/">首页</a> &gt; 
             <a href="" id="novelLink">小说列表</a> &gt; 
             <span id="currentChapter">章节详情</span>
+            <span class="chapter-number-badge" id="chapterNumberBadge" style="display: none;"></span>
         </div>
         
         <!-- 阅读设置栏 -->
@@ -1022,6 +1045,11 @@
             document.getElementById('novelLink').href = `/novel/${novelId}`;
             document.getElementById('novelLink').textContent = detailView.novelTitle;
             document.getElementById('currentChapter').textContent = chapter.title;
+            
+            // 显示章节序号标识
+            const chapterNumberBadge = document.getElementById('chapterNumberBadge');
+            chapterNumberBadge.textContent = `第${chapter.chapterNumber}章`;
+            chapterNumberBadge.style.display = 'inline-block';
             
             // 显示章节信息
             document.getElementById('chapterTitle').textContent = chapter.title;
