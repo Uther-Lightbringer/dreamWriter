@@ -113,4 +113,20 @@ public class PageController {
     public String worldviewSetup() {
         return "worldview-setup";
     }
+    
+    /**
+     * AI 对话页面
+     */
+    @GetMapping("/ai-chat")
+    public String aiChat() {
+        return "ai-chat";
+    }
+    
+    /**
+     * AI 绘画创作页面
+     */
+    @GetMapping("/image-generator")
+    public String imageGenerator() {
+        return "image-generator";
+    }
 }

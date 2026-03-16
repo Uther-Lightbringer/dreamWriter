@@ -130,7 +130,7 @@ public class CharacterCardAsyncService {
             String aiPrompt = aiPromptService.generateAIPrompt(card);
             
             if (aiPrompt != null && !aiPrompt.trim().isEmpty()) {
-                logger.info("AI 提示词生成成功，长度：{}", aiPrompt.length());
+                logger.info("AI 提示词生成成功，长度：{},新提示词：{}", aiPrompt.length(), aiPrompt);
                 
                 // 先更新实体的 appearanceDescription
                 Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);

@@ -617,6 +617,290 @@
             }
         }
         
+        /* 阅读模式切换按钮样式 */
+        .mode-toggle-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #28a745;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .mode-toggle-btn:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+        
+        /* 卡片阅读模式样式 */
+        .card-reading-container {
+            padding: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-color);
+            z-index: 9998;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .card-reading-container.active {
+            display: flex;
+        }
+        
+        .card-navigation-top,
+        .card-navigation-bottom {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 0;
+            padding: 15px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card-navigation-bottom {
+            border-top: 1px solid var(--border-color);
+            border-bottom: none;
+        }
+        
+        .nav-card-btn {
+            padding: 12px 25px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .nav-card-btn:hover:not(:disabled) {
+            background-color: #545b62;
+            transform: translateY(-2px);
+        }
+        
+        .nav-card-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .nav-card-btn-primary {
+            background-color: #007bff;
+        }
+        
+        .nav-card-btn-primary:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        
+        .card-progress-indicator {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 16px;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .card-display-area {
+            margin: 0;
+            padding: 0 25%;  /* 左右各 50% 的内边距 */
+            flex: 1;  /* 占满剩余空间 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
+        
+        .content-card {
+            background-color: var(--card-bg);
+            border-radius: 0;  /* 全屏模式下移除圆角 */
+            padding: 40px;
+            box-shadow: none;  /* 移除阴影 */
+            min-height: calc(100vh - 200px);  /* 减去导航栏高度 */
+            max-height: calc(100vh - 200px);
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            border: none;  /* 移除边框 */
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .dark-theme .content-card {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-content-text {
+            font-size: calc(var(--font-size-base) * 1.1);
+            line-height: 2;
+            color: var(--text-color);
+            text-align: justify;
+            word-wrap: break-word;  /* 长单词自动换行 */
+            overflow-wrap: break-word;  /* 兼容新浏览器 */
+        }
+        
+        .card-content-text p {
+            margin: 20px 0;
+            text-indent: 2em;
+            page-break-inside: avoid;  /* 避免段落内部分页 */
+        }
+        
+        .card-content-text p:first-child {
+            text-indent: 0;
+        }
+        
+        /* 边界提示框样式 */
+        .boundary-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            display: none;
+            max-width: 400px;
+            width: 90%;
+            border: 2px solid var(--border-color);
+            animation: hintPopIn 0.3s ease-out forwards;
+        }
+        
+        @keyframes hintPopIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .boundary-hint.active {
+            display: block;
+        }
+        
+        .hint-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .hint-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .hint-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .hint-cancel-btn,
+        .hint-confirm-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .hint-cancel-btn {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .hint-cancel-btn:hover {
+            background-color: #dee2e6;
+        }
+        
+        .hint-confirm-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .hint-confirm-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .card-display-area {
+                margin: 0;
+            }
+            
+            .content-card {
+                padding: 25px 20px;
+                min-height: calc(100vh - 160px);  /* 移动端导航栏较矮 */
+                max-height: calc(100vh - 160px);
+            }
+            
+            .card-content-text {
+                font-size: var(--font-size-base);
+                line-height: 1.8;
+            }
+            
+            .nav-card-btn {
+                padding: 10px 15px;
+                font-size: 13px;
+                min-width: 90px;
+            }
+            
+            .card-navigation-top,
+            .card-navigation-bottom {
+                gap: 10px;
+                padding: 12px 15px;
+            }
+            
+            #exitFullscreenBtn {
+                min-width: 80px;
+            }
+            
+            .boundary-hint {
+                padding: 20px 15px;
+            }
+            
+            .hint-text {
+                font-size: 16px;
+            }
+            
+            .hint-actions {
+                flex-direction: column;
+            }
+            
+            .hint-cancel-btn,
+            .hint-confirm-btn {
+                width: 100%;
+            }
+        }
+        
         /* 世界观按钮样式 */
         .worldview-btn {
             padding: 8px 15px;
@@ -807,6 +1091,13 @@
                     📖 查看世界观
                 </button>
             </div>
+            
+            <div class="setting-group">
+                <span class="setting-label">阅读模式:</span>
+                <button class="mode-toggle-btn" onclick="toggleReadingMode()" id="modeToggleBtn">
+                    📱 卡片模式
+                </button>
+            </div>
         </div>
 
         <div class="content">
@@ -836,8 +1127,54 @@
                     </div>
                 </div>
                 
-                <div class="chapter-content">
+                <div class="chapter-content" id="traditionalContent">
                     <div class="markdown-content" id="chapterText"></div>
+                </div>
+                
+                <!-- 卡片式阅读模式容器 -->
+                <div class="card-reading-container" id="cardReadingContainer">
+                    <!-- 顶部导航栏 -->
+                    <div class="card-navigation-top">
+                        <button class="nav-card-btn" id="exitFullscreenBtn" onclick="exitFullscreenMode()" title="退出全屏 (ESC)">
+                            ✕ 退出
+                        </button>
+                        <button class="nav-card-btn" id="cardPrevBtnTop" onclick="previousCard()">
+                            ⬆️ 上一部分
+                        </button>
+                        <div class="card-progress-indicator" id="cardProgressTop">
+                            <span id="currentCardNum">1</span> / <span id="totalCards">10</span>
+                        </div>
+                        <button class="nav-card-btn nav-card-btn-primary" id="cardNextBtnTop" onclick="nextCard()">
+                            下一部分 ⬇️
+                        </button>
+                    </div>
+                    
+                    <!-- 内容显示区域 -->
+                    <div class="card-display-area">
+                        <div class="content-card" id="contentCard">
+                            <div class="card-content-text" id="cardContent"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 底部导航栏 -->
+                    <div class="card-navigation-bottom">
+                        <button class="nav-card-btn" id="cardPrevBtnBottom" onclick="previousCard()">
+                            ⬆️ 上一部分
+                        </button>
+                        <button class="nav-card-btn nav-card-btn-primary" id="cardNextBtnBottom" onclick="nextCard()">
+                            下一部分 ⬇️
+                        </button>
+                    </div>
+                    
+                    <!-- 边界提示框 -->
+                    <div class="boundary-hint" id="boundaryHint">
+                        <div class="hint-icon">⚠️</div>
+                        <div class="hint-text" id="boundaryHintText"></div>
+                        <div class="hint-actions">
+                            <button class="hint-cancel-btn" onclick="hideBoundaryHint()">继续阅读</button>
+                            <button class="hint-confirm-btn" id="boundaryActionBtn" onclick="executeBoundaryAction()">跳转</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="navigation">
@@ -899,6 +1236,13 @@
         let currentFontSize = 16; // 默认字体大小
         let isDarkMode = false;   // 默认亮色主题
         
+        // 卡片阅读模式相关变量
+        let isCardMode = true;            // 默认为卡片模式
+        let cardContents = [];            // 分割后的卡片内容数组
+        let currentCardIndex = 0;         // 当前显示的卡片索引
+        let boundaryAction = null;        // 边界操作（上一张/下一章）
+        let cardResizeObserver = null;    // 窗口大小变化监听器
+        
         // 配置marked.js
         marked.setOptions({
             highlight: function(code, lang) {
@@ -918,6 +1262,8 @@
             loadChapterDetail();
             setupImageUploadListeners();
             setupKeyboardNavigation(); // 设置键盘导航
+            loadCardModeSettings(); // 加载卡片模式设置
+            setupResizeObserver(); // 设置窗口大小监听
         });
         
         // 设置图片上传监听器
@@ -952,6 +1298,30 @@
                     return; // 在输入框中时不触发快捷键
                 }
                 
+                // 如果在卡片模式下
+                if (isCardMode) {
+                    // ESC 键 - 退出全屏模式
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        console.log('检测到 ESC 键，退出卡片模式');
+                        exitFullscreenMode();
+                        return;
+                    }
+                    
+                    // 上方向键或 Page Up - 上一部分
+                    if (event.key === 'ArrowUp' || event.key === 'PageUp') {
+                        event.preventDefault();
+                        previousCard();
+                    }
+                    // 下方向键或 Page Down - 下一部分
+                    if (event.key === 'ArrowDown' || event.key === 'PageDown') {
+                        event.preventDefault();
+                        nextCard();
+                    }
+                    return;
+                }
+                
+                // 传统阅读模式下的键盘导航
                 // 左方向键 - 上一章
                 if (event.key === 'ArrowLeft') {
                     event.preventDefault(); // 阻止默认行为
@@ -1205,6 +1575,17 @@
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').style.display = 'none';
             document.getElementById('chapterContent').style.display = 'block';
+            
+            // 如果当前是卡片模式，需要重新分割内容并激活全屏模式
+            if (isCardMode) {
+                console.log('检测到卡片模式，准备激活...');
+                const cardContainer = document.getElementById('cardReadingContainer');
+                console.log('卡片容器元素:', cardContainer);
+                cardContainer.classList.add('active');  // 激活全屏模式
+                document.body.style.overflow = 'hidden';  // 禁止背景滚动
+                console.log('已添加 active 类，调用 initializeCardMode');
+                initializeCardMode();
+            }
         }
 
         // 显示章节标签
@@ -1415,6 +1796,358 @@
                 closeWorldViewModal();
             }
         });
+        
+        // ==================== 卡片阅读模式功能 ====================
+        
+        // 加载卡片模式设置
+        function loadCardModeSettings() {
+            const savedCardMode = localStorage.getItem('cardMode');
+            // 默认为卡片模式，除非用户手动切换到传统模式
+            if (savedCardMode === 'false') {
+                isCardMode = false;
+                updateModeToggleButton();
+            }
+            // 注意：不立即切换，等章节内容加载后再处理
+        }
+        
+        // 设置窗口大小变化监听
+        function setupResizeObserver() {
+            // 使用 ResizeObserver 监听窗口大小变化
+            let resizeTimeout;
+            
+            window.addEventListener('resize', function() {
+                // 防抖处理，避免频繁触发
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (isCardMode) {
+                        adjustCardToWindow();
+                    }
+                }, 250);
+            });
+        }
+        
+        // 根据窗口大小调整卡片尺寸
+        function adjustCardToWindow() {
+            const cardDisplayArea = document.querySelector('.card-display-area');
+            const contentCard = document.getElementById('contentCard');
+            
+            if (!cardDisplayArea || !contentCard) return;
+            
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            
+            // 计算合适的卡片高度（视口的 50%-75%）
+            const idealHeight = Math.floor(windowHeight * 0.65);
+            
+            // 设置最小和最大高度限制
+            const minHeight = Math.max(300, windowHeight * 0.4);
+            const maxHeight = Math.min(idealHeight, windowHeight * 0.75 - 100);
+            
+            contentCard.style.minHeight = minHeight + 'px';
+            contentCard.style.maxHeight = maxHeight + 'px';
+            
+            // 根据窗口宽度调整内边距
+            if (windowWidth < 480) {
+                contentCard.style.padding = '20px 15px';
+            } else if (windowWidth < 768) {
+                contentCard.style.padding = '30px 25px';
+            } else {
+                contentCard.style.padding = '40px';
+            }
+            
+            console.log(`窗口调整：宽${windowWidth}px, 高${windowHeight}px, 卡片高度：${minHeight}-${maxHeight}px`);
+        }
+        
+        // 切换阅读模式
+        function toggleReadingMode() {
+            isCardMode = !isCardMode;
+            localStorage.setItem('cardMode', isCardMode.toString());
+            updateModeToggleButton();
+            
+            const traditionalContent = document.getElementById('traditionalContent');
+            const cardContainer = document.getElementById('cardReadingContainer');
+            
+            if (isCardMode) {
+                // 切换到卡片模式
+                traditionalContent.style.display = 'none';
+                cardContainer.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                initializeCardMode();
+            } else {
+                // 切换到传统模式
+                traditionalContent.style.display = 'block';
+                cardContainer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // 退出全屏模式
+        function exitFullscreenMode() {
+            toggleReadingMode();  // 切换回传统模式
+        }
+        
+        // 更新模式切换按钮文字
+        function updateModeToggleButton() {
+            const btn = document.getElementById('modeToggleBtn');
+            btn.innerHTML = isCardMode ? '📖 传统模式' : '📱 卡片模式';
+        }
+        
+        // 初始化卡片模式
+        function initializeCardMode() {
+            const chapterText = document.getElementById('chapterText');
+            if (!chapterText || !chapterText.innerHTML) {
+                return;
+            }
+            
+            // 获取章节内容并分割
+            const content = chapterText.innerHTML;
+            cardContents = splitContentIntoCards(content);
+            
+            if (cardContents.length === 0) {
+                cardContents = ['暂无内容'];
+            }
+            
+            currentCardIndex = 0;
+            displayCurrentCard();
+            
+            // 初次加载时调整卡片大小
+            setTimeout(() => {
+                adjustCardToWindow();
+            }, 100);
+        }
+        
+        // 智能分割内容为多个卡片
+        function splitContentIntoCards(htmlContent) {
+            const cards = [];
+            
+            // 创建临时 div 来解析 HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            
+            // 获取所有段落和块级元素
+            const paragraphs = Array.from(tempDiv.children);
+            
+            if (paragraphs.length === 0) {
+                // 如果没有段落，尝试按句号分割
+                const text = tempDiv.textContent || htmlContent;
+                return splitBySentence(text);
+            }
+            
+            // 根据窗口大小动态调整每卡片的字符数（减少行数）
+            const windowHeight = window.innerHeight;
+            let targetLengthPerCard = 400; // 默认值（从 600 减少到 400）
+            
+            // 根据视口高度调整目标长度
+            if (windowHeight < 600) {
+                targetLengthPerCard = 300; // 小屏幕进一步减少字数
+            } else if (windowHeight > 900) {
+                targetLengthPerCard = 500; // 大屏幕稍微增加，但也不超过 500
+            }
+            
+            let currentCard = '';
+            let currentLength = 0;
+            
+            for (let i = 0; i < paragraphs.length; i++) {
+                const paragraph = paragraphs[i];
+                const paragraphHtml = paragraph.outerHTML;
+                const paragraphText = paragraph.textContent || '';
+                const paragraphLength = paragraphText.length;
+                
+                // 如果单个段落就超过目标长度，需要进一步分割
+                if (paragraphLength > targetLengthPerCard * 1.2) {  // 降低阈值到 1.2 倍
+                    // 如果当前卡片已有内容，先保存
+                    if (currentCard.trim()) {
+                        cards.push(currentCard);
+                        currentCard = '';
+                        currentLength = 0;
+                    }
+                    
+                    // 分割长段落
+                    const subCards = splitLongParagraph(paragraphHtml, paragraphText, targetLengthPerCard);
+                    cards.push(...subCards);
+                } else {
+                    // 检查添加到当前卡片是否会超出（降低阈值）
+                    if (currentLength + paragraphLength > targetLengthPerCard && currentCard.trim()) {
+                        // 保存当前卡片
+                        cards.push(currentCard);
+                        currentCard = paragraphHtml;
+                        currentLength = paragraphLength;
+                    } else {
+                        // 添加到当前卡片
+                        currentCard += paragraphHtml;
+                        currentLength += paragraphLength;
+                    }
+                }
+            }
+            
+            // 添加最后一个卡片
+            if (currentCard.trim()) {
+                cards.push(currentCard);
+            }
+            
+            console.log(`内容分割完成：共${cards.length}张卡片，每卡片约${targetLengthPerCard}字`);
+            return cards;
+        }
+        
+        // 按句子分割长段落
+        function splitLongParagraph(paragraphHtml, paragraphText, maxLength) {
+            const result = [];
+            
+            // 尝试按中文句号、问号、感叹号分割
+            const sentences = paragraphText.split(/([.!?.])/g);
+            
+            let currentPart = '';
+            let currentLength = 0;
+            
+            for (let i = 0; i < sentences.length; i += 2) {
+                const sentence = sentences[i] + (sentences[i+1] || '');
+                const sentenceLength = sentence.length;
+                
+                if (currentLength + sentenceLength > maxLength && currentPart.trim()) {
+                    // 包装为段落 HTML
+                    result.push('<p>' + currentPart.trim() + '</p>');
+                    currentPart = sentence;
+                    currentLength = sentenceLength;
+                } else {
+                    currentPart += sentence;
+                    currentLength += sentenceLength;
+                }
+            }
+            
+            if (currentPart.trim()) {
+                result.push('<p>' + currentPart.trim() + '</p>');
+            }
+            
+            return result.length > 0 ? result : ['<p>' + paragraphText.substring(0, maxLength) + '...</p>'];
+        }
+        
+        // 按句子分割文本
+        function splitBySentence(text) {
+            const sentences = text.split(/([.!?.\n])/g).filter(s => s.trim());
+            const cards = [];
+            let currentPart = '';
+            const maxLength = 500;
+            
+            for (let i = 0; i < sentences.length; i += 2) {
+                const sentence = sentences[i] + (sentences[i+1] || '');
+                if ((currentPart + sentence).length > maxLength && currentPart.trim()) {
+                    cards.push(currentPart.trim());
+                    currentPart = sentence;
+                } else {
+                    currentPart += sentence;
+                }
+            }
+            
+            if (currentPart.trim()) {
+                cards.push(currentPart.trim());
+            }
+            
+            return cards.length > 0 ? cards : [text.substring(0, 1000)];
+        }
+        
+        // 显示当前卡片
+        function displayCurrentCard() {
+            if (cardContents.length === 0) return;
+            
+            const cardContent = document.getElementById('cardContent');
+            const currentCardNum = document.getElementById('currentCardNum');
+            const totalCards = document.getElementById('totalCards');
+            
+            // 显示内容
+            cardContent.innerHTML = cardContents[currentCardIndex];
+            
+            // 更新进度
+            currentCardNum.textContent = currentCardIndex + 1;
+            totalCards.textContent = cardContents.length;
+            
+            // 更新按钮状态
+            updateCardButtons();
+        }
+        
+        // 更新卡片导航按钮状态
+        function updateCardButtons() {
+            const prevBtnTop = document.getElementById('cardPrevBtnTop');
+            const nextBtnTop = document.getElementById('cardNextBtnTop');
+            const prevBtnBottom = document.getElementById('cardPrevBtnBottom');
+            const nextBtnBottom = document.getElementById('cardNextBtnBottom');
+            
+            const isFirstCard = currentCardIndex === 0;
+            const isLastCard = currentCardIndex === cardContents.length - 1;
+            
+            // 顶部按钮
+            prevBtnTop.disabled = isFirstCard;
+            nextBtnTop.disabled = isLastCard;
+            
+            // 底部按钮
+            prevBtnBottom.disabled = isFirstCard;
+            nextBtnBottom.disabled = isLastCard;
+        }
+        
+        // 上一张卡片
+        function previousCard() {
+            hideBoundaryHint();
+            
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCurrentCard();
+                scrollToTop();
+            } else {
+                // 已经是第一张卡片，直接切换到上一章
+                console.log('已经是第一张卡片，自动切换到上一章');
+                if (window.goToPrevious && typeof window.goToPrevious === 'function') {
+                    window.goToPrevious();
+                } else {
+                    console.log('没有上一章了');
+                }
+            }
+        }
+        
+        // 下一张卡片
+        function nextCard() {
+            hideBoundaryHint();
+            
+            if (currentCardIndex < cardContents.length - 1) {
+                currentCardIndex++;
+                displayCurrentCard();
+                scrollToTop();
+            } else {
+                // 已经是最后一张卡片，直接切换到下一章
+                console.log('已经是最后一张卡片，自动切换到下一章');
+                if (window.goToNext && typeof window.goToNext === 'function') {
+                    window.goToNext();
+                } else {
+                    console.log('没有下一章了');
+                }
+            }
+        }
+        
+        // 滚动到顶部
+        function scrollToTop() {
+            const cardDisplayArea = document.querySelector('.card-display-area');
+            if (cardDisplayArea) {
+                cardDisplayArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+
+        
+        // 隐藏边界提示
+        function hideBoundaryHint() {
+            const hint = document.getElementById('boundaryHint');
+            hint.classList.remove('active');
+            boundaryAction = null;
+        }
+        
+        // 执行边界操作
+        function executeBoundaryAction() {
+            hideBoundaryHint();
+            
+            if (boundaryAction === 'previous' && window.goToPrevious) {
+                window.goToPrevious();
+            } else if (boundaryAction === 'next' && window.goToNext) {
+                window.goToNext();
+            }
+        }
     </script>
 </body>
 </html>

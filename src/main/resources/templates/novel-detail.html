@@ -1085,6 +1085,9 @@
                     <button type="button" class="action-btn" onclick="showCharacterCardsModal()">
                         👥 角色卡
                     </button>
+                    <button type="button" class="action-btn" onclick="showImageGenerationPanel()">
+                        🎨 AI 绘画
+                    </button>
                     <a th:href="@{/novel/{novelId}/chapter/add(novelId=${novel.id})}" class="add-chapter-btn">
                         ➕ 添加章节
                     </a>
@@ -2376,6 +2379,277 @@
                 });
             }
         });
+    </script>
+
+    <!-- AI 绘画面板 -->
+    <div id="imageGenerationPanel" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🎨 AI 图片生成</h3>
+                <button class="modal-close" onclick="closeImageGenerationPanel()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">提示词:</label>
+                    <textarea id="imagePrompt" rows="4" placeholder="请描述你想生成的图片内容，例如：一只可爱的猫咪在阳光下玩耍..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">图片尺寸:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 13px; color: #666;">预设比例:</label>
+                            <select id="sizeRatio" onchange="onSizeRatioChange()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="16:9">16:9 (宽屏)</option>
+                                <option value="9:16">9:16 (竖屏)</option>
+                                <option value="1:1">1:1 (正方形)</option>
+                                <option value="4:3">4:3 (标准)</option>
+                                <option value="3:4">3:4 (纵向)</option>
+                                <option value="3:2">3:2 (风景)</option>
+                                <option value="2:3">2:3 (人像)</option>
+                                <option value="1:2">1:2 (长竖屏)</option>
+                                <option value="2:1">2:1 (超宽屏)</option>
+                                <option value="custom">自定义尺寸</option>
+                            </select>
+                        </div>
+                        <div id="customSizeDiv" style="display: none;">
+                            <label style="font-size: 13px; color: #666;">自定义尺寸 (宽 x 高):</label>
+                            <input type="text" id="customSize" placeholder="1024x768" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                            <div style="font-size: 12px; color: #999; margin-top: 4px;">范围：376-1536 像素</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="generationStatus" style="display: none; margin-top: 20px;">
+                    <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <div class="spinner" style="width: 20px; height: 20px; border: 3px solid #3498db; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <span id="statusText" style="color: #2c3e50; font-weight: 600;">正在生成图片...</span>
+                        </div>
+                        <div style="background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div id="progressBar" style="background: linear-gradient(90deg, #3498db, #2ecc71); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div id="progressText" style="text-align: center; margin-top: 8px; font-size: 13px; color: #666;">进度：0%</div>
+                    </div>
+                </div>
+                
+                <div id="imageResult" style="display: none; margin-top: 20px; text-align: center;">
+                    <img id="generatedImage" src="" alt="Generated Image" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="margin-top: 15px;">
+                        <a id="downloadLink" href="" download class="btn btn-primary" style="display: inline-block; padding: 10px 20px;">⬇️ 下载图片</a>
+                        <button onclick="generateImage()" class="btn btn-primary" style="margin-left: 10px;">🔄 重新生成</button>
+                    </div>
+                </div>
+                
+                <div id="errorMessage" style="display: none; margin-top: 20px; background: #fee; padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c; color: #c0392b;"></div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="modal-cancel-btn" onclick="closeImageGenerationPanel()" style="padding: 10px 20px;">关闭</button>
+                <button id="generateBtn" class="modal-ok-btn" onclick="generateImage()" style="padding: 10px 30px;">✨ 开始生成</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .modal-cancel-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .modal-cancel-btn:hover {
+            background: #7f8c8d;
+        }
+        .modal-ok-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .modal-ok-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .modal-ok-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+
+    <script>
+        let currentTaskId = null;
+        let pollInterval = null;
+        
+        function showImageGenerationPanel() {
+            document.getElementById('imageGenerationPanel').style.display = 'block';
+            resetImageGenerationPanel();
+        }
+        
+        function closeImageGenerationPanel() {
+            document.getElementById('imageGenerationPanel').style.display = 'none';
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+        
+        function resetImageGenerationPanel() {
+            document.getElementById('imagePrompt').value = '';
+            document.getElementById('sizeRatio').value = '16:9';
+            document.getElementById('customSizeDiv').style.display = 'none';
+            document.getElementById('generationStatus').style.display = 'none';
+            document.getElementById('imageResult').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('generateBtn').disabled = false;
+            currentTaskId = null;
+        }
+        
+        function onSizeRatioChange() {
+            const ratio = document.getElementById('sizeRatio').value;
+            const customDiv = document.getElementById('customSizeDiv');
+            customDiv.style.display = (ratio === 'custom') ? 'block' : 'none';
+        }
+        
+        function getSizeValue() {
+            const ratio = document.getElementById('sizeRatio').value;
+            if (ratio === 'custom') {
+                return document.getElementById('customSize').value.trim();
+            }
+            return ratio;
+        }
+        
+        async function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            if (!prompt) {
+                alert('请输入提示词！');
+                return;
+            }
+            
+            const size = getSizeValue();
+            if (size && !validateSize(size)) {
+                alert('无效的尺寸格式！请使用预设比例或输入有效的自定义尺寸 (如 1024x768)');
+                return;
+            }
+            
+            // 禁用按钮
+            document.getElementById('generateBtn').disabled = true;
+            
+            try {
+                // 创建任务
+                const response = await fetch('/api/image/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, size })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentTaskId = data.taskId;
+                    startPolling(currentTaskId);
+                } else {
+                    showError(data.error || '创建任务失败');
+                    document.getElementById('generateBtn').disabled = false;
+                }
+            } catch (error) {
+                showError('网络错误：' + error.message);
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+        
+        function startPolling(taskId) {
+            document.getElementById('generationStatus').style.display = 'block';
+            document.getElementById('imageResult').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/image/status/${taskId}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        updateProgress(data.status, data.progress);
+                        
+                        if (data.status === 'completed') {
+                            clearInterval(pollInterval);
+                            showImage(data.imageUrl);
+                            document.getElementById('generateBtn').disabled = false;
+                        } else if (data.status === 'failed') {
+                            clearInterval(pollInterval);
+                            showError(data.error || '生成失败');
+                            document.getElementById('generateBtn').disabled = false;
+                        }
+                    } else {
+                        clearInterval(pollInterval);
+                        showError(data.error || '查询状态失败');
+                        document.getElementById('generateBtn').disabled = false;
+                    }
+                } catch (error) {
+                    clearInterval(pollInterval);
+                    showError('查询状态失败：' + error.message);
+                    document.getElementById('generateBtn').disabled = false;
+                }
+            }, 5000); // 每 5 秒查询一次
+        }
+        
+        function updateProgress(status, progress) {
+            const statusMap = {
+                'pending': '准备中...',
+                'processing': '正在绘制中...',
+                'completed': '生成完成!',
+                'failed': '生成失败'
+            };
+            document.getElementById('statusText').textContent = statusMap[status] || status;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = '进度：' + progress + '%';
+        }
+        
+        function showImage(imageUrl) {
+            document.getElementById('generationStatus').style.display = 'none';
+            document.getElementById('imageResult').style.display = 'block';
+            document.getElementById('generatedImage').src = imageUrl;
+            document.getElementById('downloadLink').href = imageUrl;
+        }
+        
+        function showError(message) {
+            document.getElementById('generationStatus').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorMessage').textContent = '❌ ' + message;
+        }
+        
+        function validateSize(size) {
+            if (!size) return false;
+            
+            // 检查比例格式
+            if (size.includes(':')) {
+                const validRatios = ['1:1', '2:3', '3:2', '3:4', '4:3', '9:16', '16:9', '1:2', '2:1'];
+                return validRatios.includes(size);
+            }
+            
+            // 检查自定义尺寸
+            if (size.includes('x')) {
+                const parts = size.split('x');
+                if (parts.length !== 2) return false;
+                
+                try {
+                    const width = parseInt(parts[0]);
+                    const height = parseInt(parts[1]);
+                    return width >= 376 && width <= 1536 && height >= 376 && height <= 1536;
+                } catch (e) {
+                    return false;
+                }
+            }
+            
+            return false;
+        }
     </script>
 </body>
 </html>

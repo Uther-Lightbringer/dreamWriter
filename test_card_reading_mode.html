@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片阅读模式演示</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+        }
+        
+        .dark-theme {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --card-bg: #2d2d2d;
+            --border-color: #404040;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .demo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .demo-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        
+        .demo-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .control-panel {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .mode-toggle-btn {
+            padding: 12px 25px;
+            border-radius: 25px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .mode-toggle-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .theme-toggle {
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        /* 传统阅读模式 */
+        .traditional-content {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            line-height: 2;
+        }
+        
+        /* 卡片阅读模式 */
+        .card-reading-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-color);
+            z-index: 9998;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .card-reading-container.active {
+            display: flex;
+        }
+        
+        .card-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 0;
+            padding: 15px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .card-navigation-bottom {
+            border-top: 1px solid var(--border-color);
+            border-bottom: none;
+        }
+        
+        .nav-card-btn {
+            padding: 12px 25px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-card-btn:hover:not(:disabled) {
+            background-color: #545b62;
+            transform: translateY(-2px);
+        }
+        
+        .nav-card-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .nav-card-btn-primary {
+            background-color: #007bff;
+        }
+        
+        .nav-card-btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .card-progress {
+            font-weight: 600;
+            font-size: 16px;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .content-card {
+            background-color: var(--card-bg);
+            border-radius: 0;
+            padding: 40px;
+            box-shadow: none;
+            min-height: calc(100vh - 200px);
+            max-height: calc(100vh - 200px);
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            border: none;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .card-content-text {
+            font-size: 18px;
+            line-height: 2;
+            text-align: justify;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .card-content-text p {
+            margin: 20px 0;
+            text-indent: 2em;
+            page-break-inside: avoid;
+        }
+        
+        /* 边界提示框 */
+        .boundary-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            display: none;
+            max-width: 400px;
+            width: 90%;
+            border: 2px solid var(--border-color);
+            animation: hintPopIn 0.3s ease-out forwards;
+        }
+        
+        @keyframes hintPopIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .boundary-hint.active {
+            display: block;
+        }
+        
+        .hint-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .hint-text {
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .hint-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .hint-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .hint-cancel-btn {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .hint-confirm-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .feature-list {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .feature-list h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        
+        .feature-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .feature-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="demo-header">
+            <h1>📱 卡片阅读模式演示</h1>
+            <p>体验全新的小说阅读方式，将长章节分割成多个卡片，每次专注阅读一个部分</p>
+        </div>
+        
+        <div class="control-panel">
+            <button class="mode-toggle-btn" onclick="toggleReadingMode()" id="modeToggleBtn">
+                📱 切换到卡片模式
+            </button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+                🌙 暗黑模式
+            </button>
+        </div>
+        
+        <!-- 传统阅读模式 -->
+        <div class="traditional-content" id="traditionalContent">
+            <h2>第一章：故事的开始</h2>
+            <p>清晨的阳光透过窗帘的缝隙洒进房间，李明缓缓睁开眼睛。今天是个特别的日子，他将开始人生的新篇章。</p>
+            <p>起床后，他像往常一样来到窗前，望着外面熙熙攘攘的街道。这座城市总是如此繁忙，每个人都在为自己的梦想奔波。</p>
+            <p>"今天会是什么样的呢？"他自言自语道。书桌上放着一本厚厚的笔记本，里面记录着他这些年的心血——一部关于勇气与成长的小说。</p>
+            <p>李明坐下来，翻开笔记本的第一页。那些熟悉的文字仿佛在向他诉说着什么。他拿起笔，在新的空白页上写下了今天的日期。</p>
+            <p>窗外的鸟儿在枝头欢快地歌唱，似乎在为这个美好的早晨伴奏。李明深吸一口气，开始了他新一天的创作。</p>
+            <p>故事的主人公是一个普通的年轻人，却有着不普通的梦想。他相信，只要坚持不懈，总有一天能够实现自己的理想。</p>
+            <p>时间一分一秒地过去，李明完全沉浸在了创作的世界中。他忘记了时间的流逝，忘记了周围的喧嚣，只有笔下的世界是真实的。</p>
+            <p>当夕阳的余晖再次照进房间时，他终于完成了这一章的创作。看着满满几页的文字，李明的脸上露出了满足的笑容。</p>
+            <p>这就是写作的魅力，他想。能够将心中的想法变成文字，能够创造一个属于自己的世界，这是多么美妙的事情啊。</p>
+            <p>夜幕降临，城市的灯火逐渐亮起。李明合上笔记本，期待着明天的到来。明天，又会有新的故事等待着他去书写。</p>
+        </div>
+        
+        <!-- 卡片阅读模式 -->
+        <div class="card-reading-container" id="cardReadingContainer">
+            <!-- 顶部导航栏 -->
+            <div class="card-navigation">
+                <button class="nav-card-btn" onclick="exitFullscreenMode()" title="退出全屏 (ESC)">
+                    ✕ 退出
+                </button>
+                <button class="nav-card-btn" id="cardPrevBtn" onclick="previousCard()">⬆️ 上一部分</button>
+                <div class="card-progress" id="cardProgress">
+                    <span id="currentCardNum">1</span> / <span id="totalCards">0</span>
+                </div>
+                <button class="nav-card-btn nav-card-btn-primary" id="cardNextBtn" onclick="nextCard()">下一部分 ⬇️</button>
+            </div>
+            
+            <!-- 内容显示区域 -->
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <div class="content-card">
+                    <div class="card-content-text" id="cardContent"></div>
+                </div>
+            </div>
+            
+            <!-- 底部导航栏 -->
+            <div class="card-navigation card-navigation-bottom">
+                <button class="nav-card-btn" id="cardPrevBtnBottom" onclick="previousCard()">⬆️ 上一部分</button>
+                <button class="nav-card-btn nav-card-btn-primary" id="cardNextBtnBottom" onclick="nextCard()">下一部分 ⬇️</button>
+            </div>
+        </div>
+        
+        <!-- 边界提示框 -->
+        <div class="boundary-hint" id="boundaryHint">
+            <div class="hint-icon">⚠️</div>
+            <div class="hint-text" id="boundaryHintText"></div>
+            <div class="hint-actions">
+                <button class="hint-btn hint-cancel-btn" onclick="hideBoundaryHint()">继续阅读</button>
+                <button class="hint-btn hint-confirm-btn" id="boundaryActionBtn" onclick="executeBoundaryAction()">跳转</button>
+            </div>
+        </div>
+        
+        <div class="feature-list">
+            <h3>✨ 功能特点</h3>
+            <ul>
+                <li><strong>智能分割：</strong>自动将长章节按段落和语义分割成多个卡片</li>
+                <li><strong>两种模式：</strong>传统模式和卡片模式可自由切换</li>
+                <li><strong>键盘快捷键：</strong>支持上下方向键或 PageUp/PageDown 键快速导航</li>
+                <li><strong>边界提示：</strong>到达首尾时智能提示是否切换章节</li>
+                <li><strong>进度显示：</strong>实时显示当前阅读进度（第 X 部分/总共 Y 部分）</li>
+                <li><strong>主题切换：</strong>支持亮色和暗黑两种主题</li>
+                <li><strong>记忆功能：</strong>自动保存阅读模式偏好设置</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // 变量定义
+        let isCardMode = true;            // 默认为卡片模式
+        let cardContents = [];
+        let currentCardIndex = 0;
+        let boundaryAction = null;
+        let isDarkMode = false;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            initializeCardMode();
+            setupKeyboardNavigation();
+            adjustCardToWindow(); // 初始调整卡片大小
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', function() {
+                if (isCardMode) {
+                    adjustCardToWindow();
+                }
+            });
+        });
+        
+        // 根据窗口大小调整卡片
+        function adjustCardToWindow() {
+            const contentCard = document.querySelector('.content-card');
+            if (!contentCard) return;
+            
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            
+            // 计算合适的卡片高度
+            const minHeight = Math.max(300, windowHeight * 0.45);
+            const maxHeight = Math.min(windowHeight * 0.65, windowHeight * 0.7 - 80);
+            
+            contentCard.style.minHeight = minHeight + 'px';
+            contentCard.style.maxHeight = maxHeight + 'px';
+            
+            // 根据窗口宽度调整内边距
+            if (windowWidth < 480) {
+                contentCard.style.padding = '20px 15px';
+            } else if (windowWidth < 768) {
+                contentCard.style.padding = '30px 25px';
+            } else {
+                contentCard.style.padding = '40px';
+            }
+        }
+        
+        // 加载设置
+        function loadSettings() {
+            const savedCardMode = localStorage.getItem('cardMode');
+            const savedTheme = localStorage.getItem('darkMode');
+            
+            // 默认为卡片模式，除非用户明确切换到传统模式
+            if (savedCardMode === 'false') {
+                toggleReadingMode();
+            }
+            
+            if (savedTheme === 'true') {
+                toggleTheme();
+            }
+        }
+        
+        // 切换阅读模式
+        function toggleReadingMode() {
+            isCardMode = !isCardMode;
+            localStorage.setItem('cardMode', isCardMode.toString());
+            
+            const traditionalContent = document.getElementById('traditionalContent');
+            const cardContainer = document.getElementById('cardReadingContainer');
+            const modeBtn = document.getElementById('modeToggleBtn');
+            
+            if (isCardMode) {
+                traditionalContent.style.display = 'none';
+                cardContainer.classList.add('active');
+                modeBtn.innerHTML = '📖 切换到传统模式';
+                initializeCardMode();
+                adjustCardToWindow();
+                document.body.style.overflow = 'hidden';  // 禁止背景滚动
+            } else {
+                traditionalContent.style.display = 'block';
+                cardContainer.classList.remove('active');
+                modeBtn.innerHTML = '📱 切换到卡片模式';
+                document.body.style.overflow = '';  // 恢复滚动
+            }
+        }
+        
+        // 退出全屏模式
+        function exitFullscreenMode() {
+            toggleReadingMode();
+        }
+        
+        // 切换主题
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('darkMode', isDarkMode.toString());
+            
+            const body = document.body;
+            const themeBtn = document.getElementById('themeToggle');
+            
+            if (isDarkMode) {
+                body.classList.add('dark-theme');
+                themeBtn.innerHTML = '☀️ 亮色模式';
+            } else {
+                body.classList.remove('dark-theme');
+                themeBtn.innerHTML = '🌙 暗黑模式';
+            }
+        }
+        
+        // 初始化卡片模式
+        function initializeCardMode() {
+            const content = document.getElementById('traditionalContent').innerHTML;
+            cardContents = splitContentIntoCards(content);
+            
+            if (cardContents.length === 0) {
+                cardContents = ['暂无内容'];
+            }
+            
+            currentCardIndex = 0;
+            displayCurrentCard();
+        }
+        
+        // 智能分割内容
+        function splitContentIntoCards(htmlContent) {
+            const cards = [];
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            
+            const paragraphs = Array.from(tempDiv.querySelectorAll('p'));
+            
+            if (paragraphs.length === 0) {
+                return [htmlContent];
+            }
+            
+            // 根据窗口大小动态调整每卡片的字符数（减少行数）
+            const windowHeight = window.innerHeight;
+            let targetLengthPerCard = 350; // 默认值（从 500 减少到 350）
+            
+            if (windowHeight < 600) {
+                targetLengthPerCard = 250; // 小屏幕进一步减少字数
+            } else if (windowHeight > 900) {
+                targetLengthPerCard = 450; // 大屏幕稍微增加，但也不超过 450
+            }
+            
+            let currentCard = '';
+            let currentLength = 0;
+            
+            for (let i = 0; i < paragraphs.length; i++) {
+                const paragraph = paragraphs[i].outerHTML;
+                const paragraphText = paragraphs[i].textContent;
+                const paragraphLength = paragraphText.length;
+                
+                if (currentLength + paragraphLength > targetLengthPerCard && currentCard.trim()) {
+                    cards.push(currentCard);
+                    currentCard = paragraph;
+                    currentLength = paragraphLength;
+                } else {
+                    currentCard += paragraph;
+                    currentLength += paragraphLength;
+                }
+            }
+            
+            if (currentCard.trim()) {
+                cards.push(currentCard);
+            }
+            
+            console.log(`内容分割完成：共${cards.length}张卡片，每卡片约${targetLengthPerCard}字`);
+            return cards;
+        }
+        
+        // 显示当前卡片
+        function displayCurrentCard() {
+            const cardContent = document.getElementById('cardContent');
+            const currentCardNum = document.getElementById('currentCardNum');
+            const totalCards = document.getElementById('totalCards');
+            
+            cardContent.innerHTML = cardContents[currentCardIndex];
+            currentCardNum.textContent = currentCardIndex + 1;
+            totalCards.textContent = cardContents.length;
+            
+            updateCardButtons();
+        }
+        
+        // 更新按钮状态
+        function updateCardButtons() {
+            const isFirstCard = currentCardIndex === 0;
+            const isLastCard = currentCardIndex === cardContents.length - 1;
+            
+            document.getElementById('cardPrevBtn').disabled = isFirstCard;
+            document.getElementById('cardNextBtn').disabled = isLastCard;
+            document.getElementById('cardPrevBtnBottom').disabled = isFirstCard;
+            document.getElementById('cardNextBtnBottom').disabled = isLastCard;
+        }
+        
+        // 上一张卡片
+        function previousCard() {
+            hideBoundaryHint();
+            
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCurrentCard();
+            } else {
+                // 已经是第一张卡片，直接切换到上一章
+                console.log('已经是第一张卡片，自动切换到上一章');
+                alert('已经是第一章了，无法切换到上一章');
+            }
+        }
+        
+        // 下一张卡片
+        function nextCard() {
+            hideBoundaryHint();
+            
+            if (currentCardIndex < cardContents.length - 1) {
+                currentCardIndex++;
+                displayCurrentCard();
+            } else {
+                // 已经是最后一张卡片，直接切换到下一章
+                console.log('已经是最后一张卡片，自动切换到下一章');
+                alert('已经是最后一章了，无法切换到下一章');
+            }
+        }
+        
+        // 显示边界提示
+        function showBoundaryHint(position) {
+            const hint = document.getElementById('boundaryHint');
+            const hintText = document.getElementById('boundaryHintText');
+            const actionBtn = document.getElementById('boundaryActionBtn');
+            
+            if (position === 'top') {
+                hintText.textContent = '已经是最上面了，是否需要切换到上一章？';
+                boundaryAction = 'top';
+                actionBtn.textContent = '上一章';
+            } else {
+                hintText.textContent = '已经是最下面了，是否需要切换到下一章？';
+                boundaryAction = 'bottom';
+                actionBtn.textContent = '下一章';
+            }
+            
+            hint.classList.add('active');
+        }
+        
+        // 隐藏边界提示
+        function hideBoundaryHint() {
+            document.getElementById('boundaryHint').classList.remove('active');
+        }
+        
+        // 执行边界操作
+        function executeBoundaryAction() {
+            hideBoundaryHint();
+            alert('演示版本：这里应该跳转到' + (boundaryAction === 'top' ? '上一章' : '下一章'));
+        }
+        
+        // 键盘导航
+        function setupKeyboardNavigation() {
+            document.addEventListener('keydown', function(event) {
+                if (!isCardMode) return;
+                
+                // ESC 键 - 退出全屏
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    exitFullscreenMode();
+                    return;
+                }
+                
+                if (event.key === 'ArrowUp' || event.key === 'PageUp') {
+                    event.preventDefault();
+                    previousCard();
+                }
+                if (event.key === 'ArrowDown' || event.key === 'PageDown') {
+                    event.preventDefault();
+                    nextCard();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -10,9 +10,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.zenithon.articlecollect.config.DeepSeekConfig;
 import org.zenithon.articlecollect.dto.CharacterCard;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -184,5 +186,96 @@ public class AIPromptService {
         }
         
         return null;
+    }
+    
+    /**
+     * 流式 AI 对话
+     * @param prompt 用户输入的提示词
+     * @param emitter SSE 发射器
+     * @throws Exception 可能抛出的异常
+     */
+    public void chatStream(String prompt, SseEmitter emitter) throws Exception {
+        // 检查 API Key 是否配置
+        if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().trim().isEmpty()) {
+            logger.warn("DeepSeek API Key 未配置");
+            emitter.send(SseEmitter.event()
+                .name("error")
+                .data("{\"error\": \"DeepSeek API Key 未配置，请在 application.properties 中配置 deepseek.api.key\"}"));
+            return;
+        }
+        
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
+            
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("model", deepSeekConfig.getModel());
+            requestBody.put("stream", true); // 启用流式响应
+            
+            Map<String, String> message = new HashMap<>();
+            message.put("role", "user");
+            message.put("content", prompt);
+            requestBody.put("messages", new Object[]{message});
+            
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+            
+            // 使用 RestTemplate 执行流式请求
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                deepSeekConfig.getApiUrl(), 
+                request, 
+                String.class
+            );
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                // 处理流式响应
+                String responseBody = response.getBody();
+                String[] lines = responseBody.split("\\n");
+                
+                StringBuilder fullContent = new StringBuilder();
+                
+                for (String line : lines) {
+                    if (line.trim().isEmpty() || line.startsWith(":")) {
+                        continue;
+                    }
+                    
+                    if (line.startsWith("data: ")) {
+                        String data = line.substring(6).trim();
+                        
+                        if ("[DONE]".equals(data)) {
+                            break;
+                        }
+                        
+                        try {
+                            JsonNode jsonNode = objectMapper.readTree(data);
+                            JsonNode choices = jsonNode.path("choices");
+                            
+                            if (choices.isArray() && choices.size() > 0) {
+                                JsonNode delta = choices.get(0).path("delta");
+                                String content = delta.path("content").asText();
+                                
+                                if (content != null && !content.isEmpty()) {
+                                    fullContent.append(content);
+                                    
+                                    // 发送数据块到前端
+                                    emitter.send(SseEmitter.event()
+                                        .name("message")
+                                        .data(content));
+                                }
+                            }
+                        } catch (Exception e) {
+                            logger.warn("解析 SSE 数据块失败：" + e.getMessage());
+                        }
+                    }
+                }
+                
+                logger.info("流式对话完成，总内容长度：{}", fullContent.length());
+            } else {
+                throw new RuntimeException("API 调用失败：" + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("流式对话失败：" + e.getMessage(), e);
+            throw e;
+        }
     }
 }
