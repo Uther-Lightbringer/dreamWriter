@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 对话 - 小说收藏系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 8px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .back-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            flex: 1;
+            max-width: 900px;
+            width: 90%;
+            margin: 30px auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        
+        .user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            order: 1;
+        }
+        
+        .ai .message-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            order: 0;
+        }
+        
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .input-field {
+            flex: 1;
+            position: relative;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            transition: border-color 0.3s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .send-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-end;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: #667eea;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #c33;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .welcome-message h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-message p {
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                margin: 15px auto;
+            }
+            
+            .message-content {
+                max-width: 80%;
+            }
+            
+            .input-wrapper {
+                flex-direction: column;
+            }
+            
+            textarea {
+                min-height: 100px;
+            }
+            
+            .send-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 AI 对话助手</h1>
+        <a href="/" class="back-btn">← 返回首页</a>
+    </div>
+    
+    <div class="container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>欢迎来到 AI 对话空间！</h2>
+                <p>我可以帮助你：</p>
+                <p>✨ 生成小说创意和情节</p>
+                <p>📝 优化文章表达和文案</p>
+                <p>💡 提供灵感和建议</p>
+                <p>❓ 回答各种问题</p>
+                <p style="margin-top: 20px; color: #999;">在下方输入你的问题，让我们开始对话吧！</p>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <div class="input-wrapper">
+                <div class="input-field">
+                    <textarea 
+                        id="promptInput" 
+                        placeholder="请输入你的问题或需求..."
+                        rows="3"
+                    ></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                    <span>📤</span> 发送
+                </button>
+            </div>
+            <div class="loading-indicator" id="loadingIndicator">
+                <div class="spinner"></div>
+                <span>AI 正在思考中...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEventSource = null;
+        
+        // 支持按 Enter 发送消息（Shift+Enter 换行）
+        document.getElementById('promptInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        async function sendMessage() {
+            const promptInput = document.getElementById('promptInput');
+            const prompt = promptInput.value.trim();
+            
+            if (!prompt) {
+                alert('请输入内容！');
+                return;
+            }
+            
+            // 隐藏欢迎消息
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+            
+            // 添加用户消息
+            addMessage(prompt, 'user');
+            
+            // 清空输入框
+            promptInput.value = '';
+            
+            // 禁用发送按钮
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            
+            // 显示加载指示器
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.style.display = 'flex';
+            
+            // 滚动到底部
+            scrollToBottom();
+            
+            try {
+                // 创建 SSE 连接
+                const eventSource = new EventSource('/api/ai/chat/stream', {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                currentEventSource = eventSource;
+                
+                // 创建 AI 消息容器
+                const aiMessageDiv = document.createElement('div');
+                aiMessageDiv.className = 'message ai';
+                aiMessageDiv.innerHTML = `
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content"></div>
+                `;
+                document.getElementById('chatMessages').appendChild(aiMessageDiv);
+                
+                const aiContentDiv = aiMessageDiv.querySelector('.message-content');
+                let fullContent = '';
+                
+                // 监听消息事件
+                eventSource.addEventListener('message', (event) => {
+                    fullContent += event.data;
+                    aiContentDiv.textContent = fullContent;
+                    scrollToBottom();
+                });
+                
+                // 监听错误事件
+                eventSource.addEventListener('error', (event) => {
+                    const errorData = JSON.parse(event.data);
+                    showError(errorData.error || '发生未知错误');
+                    closeEventSource();
+                });
+                
+                // 监听完成事件
+                eventSource.addEventListener('done', () => {
+                    closeEventSource();
+                });
+                
+                // 监听连接打开
+                eventSource.onopen = () => {
+                    console.log('SSE 连接已建立');
+                };
+                
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                showError('发送失败：' + error.message);
+                closeEventSource();
+            }
+        }
+        
+        function addMessage(content, type) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const avatar = type === 'user' ? '👤' : '🤖';
+            
+            messageDiv.innerHTML = `
+                ${type === 'ai' ? '<div class="message-avatar">' + avatar + '</div>' : ''}
+                <div class="message-content">${escapeHtml(content)}</div>
+                ${type === 'user' ? '<div class="message-avatar">' + avatar + '</div>' : ''}
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function showError(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = '❌ ' + message;
+            
+            chatMessages.appendChild(errorDiv);
+            scrollToBottom();
+        }
+        
+        function closeEventSource() {
+            if (currentEventSource) {
+                currentEventSource.close();
+                currentEventSource = null;
+            }
+            
+            // 恢复发送按钮
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = false;
+            
+            // 隐藏加载指示器
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.style.display = 'none';
+        }
+        
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

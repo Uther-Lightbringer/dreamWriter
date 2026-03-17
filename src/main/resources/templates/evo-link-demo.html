@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvoLink 图片生成 - 使用示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .example-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .example-section h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            display: none;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .image-result {
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        .image-result img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .error-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fee;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+            display: none;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 EvoLink 图片生成 - 使用示例</h1>
+        
+        <div class="example-section">
+            <h2>示例 1: 简单使用 (推荐)</h2>
+            <p>在任何 HTML 页面中引入 <code>&lt;script src="/js/evo-link-image.js"&gt;&lt;/script&gt;</code>，然后:</p>
+            <textarea id="prompt1" placeholder="请输入图片描述...">一只可爱的猫咪在阳光下玩耍</textarea>
+            <br>
+            <button onclick="simpleGenerate()">✨ 开始生成</button>
+            
+            <div id="status1" class="status-box" style="display: none;">
+                <div id="statusText1">正在生成...</div>
+                <div class="progress-bar">
+                    <div id="progressBar1" class="progress-fill"></div>
+                </div>
+                <div id="progressText1">进度：0%</div>
+            </div>
+            
+            <div id="result1" class="image-result">
+                <img id="generatedImage1" src="" alt="Generated Image">
+                <br>
+                <a id="downloadLink1" href="" download class="btn" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 6px;">⬇️ 下载图片</a>
+            </div>
+            
+            <div id="error1" class="error-box"></div>
+        </div>
+        
+        <div class="example-section">
+            <h2>示例 2: 自定义回调</h2>
+            <p>使用自定义回调函数处理进度、完成和错误:</p>
+            <textarea id="prompt2" placeholder="请输入图片描述...">未来科技风格的城市夜景</textarea>
+            <br>
+            <button onclick="customCallbackGenerate()">🚀 自定义回调生成</button>
+            
+            <div id="log2" style="margin-top: 15px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 6px; max-height: 200px; overflow-y: auto; font-size: 13px; display: none;"></div>
+        </div>
+        
+        <div class="example-section">
+            <h2>示例 3: 后端 Java 调用</h2>
+            <p>在 Java 代码中使用工具类:</p>
+            <pre style="background: #f4f4f4; padding: 15px; border-radius: 6px; overflow-x: auto;"><code>// 方式 1: 异步模式 (推荐)
+String taskId = EvoLinkImageUtil.generateImageAsync(
+    "一只可爱的小狗", 
+    "16:9"
+);
+
+// 轮询查询状态
+TaskStatus status = EvoLinkImageUtil.getTaskStatus(taskId);
+if (status.isCompleted()) {
+    String imageUrl = status.getImageUrl();
+}
+
+// 方式 2: 同步阻塞模式
+TaskStatus status = EvoLinkImageUtil.waitForCompletion(
+    taskId, 
+    5000,  // 每 5 秒查询一次
+    300000 // 最多等待 5 分钟
+);</code></pre>
+        </div>
+    </div>
+
+    <!-- 引入工具类 -->
+    <script src="/js/evo-link-image.js"></script>
+    
+    <script>
+        // 示例 1: 简单使用
+        let generator1 = null;
+        
+        function simpleGenerate() {
+            const prompt = document.getElementById('prompt1').value.trim();
+            if (!prompt) {
+                alert('请输入提示词！');
+                return;
+            }
+            
+            // 重置界面
+            document.getElementById('status1').style.display = 'block';
+            document.getElementById('result1').style.display = 'none';
+            document.getElementById('error1').style.display = 'none';
+            
+            // 创建生成器实例
+            generator1 = new EvoLinkImageGenerator({
+                onProgress: (progress, status) => {
+                    const statusMap = {
+                        'pending': '准备中...',
+                        'processing': '绘制中...',
+                        'completed': '完成!'
+                    };
+                    document.getElementById('statusText1').textContent = statusMap[status] || status;
+                    document.getElementById('progressBar1').style.width = progress + '%';
+                    document.getElementById('progressText1').textContent = '进度：' + progress + '%';
+                },
+                onComplete: (imageUrl) => {
+                    document.getElementById('status1').style.display = 'none';
+                    document.getElementById('result1').style.display = 'block';
+                    document.getElementById('generatedImage1').src = imageUrl;
+                    document.getElementById('downloadLink1').href = imageUrl;
+                },
+                onError: (error) => {
+                    document.getElementById('status1').style.display = 'none';
+                    document.getElementById('error1').style.display = 'block';
+                    document.getElementById('error1').textContent = '❌ ' + error.message;
+                }
+            });
+            
+            generator1.generate(prompt, "16:9");
+        }
+        
+        // 示例 2: 自定义回调
+        function customCallbackGenerate() {
+            const prompt = document.getElementById('prompt2').value.trim();
+            if (!prompt) {
+                alert('请输入提示词！');
+                return;
+            }
+            
+            const logDiv = document.getElementById('log2');
+            logDiv.style.display = 'block';
+            logDiv.innerHTML = '';
+            
+            const log = (message) => {
+                const time = new Date().toLocaleTimeString();
+                logDiv.innerHTML += `<div>[${time}] ${message}</div>`;
+                logDiv.scrollTop = logDiv.scrollHeight;
+            };
+            
+            const generator2 = new EvoLinkImageGenerator({
+                onProgress: (progress, status) => {
+                    log(`📊 进度：${progress}% - ${status}`);
+                },
+                onComplete: (imageUrl) => {
+                    log(`✅ 完成！图片 URL: ${imageUrl}`);
+                    log(`🖼️ 图片已生成，可以下载查看`);
+                },
+                onError: (error) => {
+                    log(`❌ 错误：${error.message}`);
+                },
+                pollInterval: 3000, // 自定义轮询间隔
+                timeout: 180000     // 自定义超时时间
+            });
+            
+            log('🚀 开始生成图片...');
+            generator2.generate(prompt, "9:16");
+        }
+    </script>
+</body>
+</html>
