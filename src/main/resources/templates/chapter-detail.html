@@ -3350,8 +3350,8 @@
                 const file = new File([blob], 'ai-generated.png', { type: 'image/png' });
                 formData.append('file', file);  // 确保参数名为 'file'
                 
-                // 上传到章节
-                const uploadResponse = await fetch(`/api/images/chapter/${chapterId}/image`, {
+                // 上传到章节内容
+                const uploadResponse = await fetch(`/api/images/chapter/${chapterId}/content-image`, {
                     method: 'POST',
                     body: formData
                 });
@@ -3847,7 +3847,7 @@
                 const file = new File([blob], 'ai-generated.png', { type: 'image/png' });
                 formData.append('file', file);
 
-                const uploadResponse = await fetch(`/api/images/chapter/${chapterId}/image`, { method: 'POST', body: formData });
+                const uploadResponse = await fetch(`/api/images/chapter/${chapterId}/content-image`, { method: 'POST', body: formData });
                 if (uploadResponse.ok) {
                     const result = await uploadResponse.json();
                     const imageUrl = result.imageUrl;

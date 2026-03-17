@@ -109,4 +109,17 @@ public class ImageController {
         ImageUploadResponse response = imageService.uploadCharacterImage(characterId, file);
         return ResponseEntity.ok(response);
     }
+    
+    /**
+     * 上传图片到章节内容（不更新章节封面，仅保存文件并返回 URL）
+     * 用于将 AI 生成的图片插入到章节正文中
+     */
+    @PostMapping("/chapter/{chapterId}/content-image")
+    public ResponseEntity<ImageUploadResponse> uploadChapterContentImage(
+            @PathVariable Long chapterId,
+            @RequestParam("file") MultipartFile file) {
+        
+        ImageUploadResponse response = imageService.uploadChapterContentImage(chapterId, file);
+        return ResponseEntity.ok(response);
+    }
 }

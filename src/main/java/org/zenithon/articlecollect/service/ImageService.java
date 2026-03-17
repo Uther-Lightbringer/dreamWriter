@@ -223,6 +223,54 @@ public class ImageService {
     }
     
     /**
+     * 上传图片到章节内容（不更新章节封面，仅保存文件并返回 URL）
+     * 用于将 AI 生成的图片插入到章节正文中
+     */
+    @Transactional
+    public ImageUploadResponse uploadChapterContentImage(Long chapterId, MultipartFile file) {
+        try {
+            // 验证章节是否存在
+            Optional<Chapter> chapterOpt = chapterRepository.findById(chapterId);
+            if (!chapterOpt.isPresent()) {
+                return new ImageUploadResponse(false, "章节不存在");
+            }
+            
+            Chapter chapter = chapterOpt.get();
+            
+            // 获取小说信息用于生成文件名
+            String novelName = "Unknown";
+            String chapterName = "Unknown";
+            
+            if (chapter.getNovel() != null && chapter.getNovel().getTitle() != null) {
+                novelName = sanitizeFileName(chapter.getNovel().getTitle());
+            }
+            if (chapter.getTitle() != null) {
+                chapterName = sanitizeFileName(chapter.getTitle());
+            }
+            
+            // 保存文件（使用自定义命名规则，但不更新章节的 chapterImage 字段）
+            String imagePath = FileUploadUtil.saveImageWithCustomName(
+                file, 
+                novelName, 
+                chapterName,
+                chapterId
+            );
+            
+            // 注意：这里不更新 chapter.setChapterImage()，只返回图片路径
+            // 这样图片不会被当作章节封面，而是作为章节内容中的插图
+            
+            return new ImageUploadResponse(true, "章节内容图片上传成功", imagePath, chapterId);
+            
+        } catch (IllegalArgumentException e) {
+            return new ImageUploadResponse(false, e.getMessage());
+        } catch (IOException e) {
+            return new ImageUploadResponse(false, "文件保存失败：" + e.getMessage());
+        } catch (Exception e) {
+            return new ImageUploadResponse(false, "上传失败：" + e.getMessage());
+        }
+    }
+    
+    /**
      * 清理文件名，移除特殊字符和空格
      */
     private String sanitizeFileName(String fileName) {
