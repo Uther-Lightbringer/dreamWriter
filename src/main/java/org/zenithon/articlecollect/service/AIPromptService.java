@@ -147,9 +147,12 @@ public class AIPromptService {
     }
     
     /**
-     * 调用 DeepSeek API
+     * 调用 DeepSeek API (同步模式)
+     * @param prompt 提示词
+     * @return AI 返回的内容
+     * @throws Exception 调用异常
      */
-    private String callDeepSeekAPI(String prompt) throws Exception {
+    public String callDeepSeekAPI(String prompt) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
@@ -240,9 +243,9 @@ public class AIPromptService {
                     }
                     
                     if (line.startsWith("data: ")) {
-                        String data = line.substring(6).trim();
+                        String data = line.substring(6);
                         
-                        if ("[DONE]".equals(data)) {
+                        if ("[DONE]".equals(data.trim())) {
                             break;
                         }
                         
@@ -257,7 +260,7 @@ public class AIPromptService {
                                 if (content != null && !content.isEmpty()) {
                                     fullContent.append(content);
                                     
-                                    // 发送数据块到前端
+                                    // 发送数据块到前端（保留原始空格）
                                     emitter.send(SseEmitter.event()
                                         .name("message")
                                         .data(content));

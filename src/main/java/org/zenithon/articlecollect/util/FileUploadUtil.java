@@ -133,4 +133,62 @@ public class FileUploadUtil {
     public static String getUploadDirectory() {
         return UPLOAD_DIR;
     }
+    
+    /**
+     * 保存章节图片（使用自定义命名规则）
+     * @param file 上传的文件
+     * @param novelName 小说名称
+     * @param chapterName 章节名称
+     * @param chapterId 章节 ID
+     * @return 保存的文件相对路径
+     * @throws IOException 文件操作异常
+     * @throws IllegalArgumentException 参数验证异常
+     */
+    public static String saveChapterImageWithCustomName(MultipartFile file, String novelName, String chapterName, Long chapterId) throws IOException {
+        // 参数验证
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("文件不能为空");
+        }
+        
+        if (novelName == null || chapterName == null || chapterId == null) {
+            throw new IllegalArgumentException("小说名、章节名和 ID 不能为空");
+        }
+        
+        // 文件大小检查
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("文件大小不能超过 10MB");
+        }
+        
+        // 文件类型检查
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || !isValidImageExtension(fileName)) {
+            throw new IllegalArgumentException("只支持图片文件格式：jpg, jpeg, png, gif, bmp, webp");
+        }
+        
+        // 创建目录结构：uploads/images/chapter/{chapterId}/
+        Path uploadPath = Paths.get(UPLOAD_DIR + "chapter/" + chapterId);
+        
+        // 确保目录存在
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        
+        // 生成文件名：{novelName}-{chapterName}-{4 位数字 id}.{extension}
+        String extension = getFileExtension(fileName);
+        String fourDigitId = String.valueOf(Math.random() * 10000);
+        String customFileName = novelName + "-" + chapterName + "-" + fourDigitId + extension;
+        
+        // 限制文件名长度（可选）
+        if (customFileName.length() > 200) {
+            customFileName = customFileName.substring(0, 200) + extension;
+        }
+        
+        Path filePath = uploadPath.resolve(customFileName);
+        
+        // 保存文件
+        Files.write(filePath, file.getBytes());
+        
+        // 返回相对路径用于 Web 访问
+        return "/images/chapter/" + chapterId + "/" + customFileName;
+    }
 }

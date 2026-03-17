@@ -75,24 +75,40 @@ public class ImageService {
             if (!chapterOpt.isPresent()) {
                 return new ImageUploadResponse(false, "章节不存在");
             }
-            
+                
             Chapter chapter = chapterOpt.get();
-            
-            // 保存文件
-            String imagePath = FileUploadUtil.saveImage(file, "chapter", chapterId);
-            
+                
+            // 获取小说信息用于生成文件名
+            String novelName = "Unknown";
+            String chapterName = "Unknown";
+                
+            if (chapter.getNovel() != null && chapter.getNovel().getTitle() != null) {
+                novelName = sanitizeFileName(chapter.getNovel().getTitle());
+            }
+            if (chapter.getTitle() != null) {
+                chapterName = sanitizeFileName(chapter.getTitle());
+            }
+                
+            // 保存文件（使用自定义命名规则）
+            String imagePath = FileUploadUtil.saveChapterImageWithCustomName(
+                file, 
+                novelName, 
+                chapterName,
+                chapterId
+            );
+                
             // 更新章节实体
             chapter.setChapterImage(imagePath);
             chapterRepository.save(chapter);
-            
+                
             return new ImageUploadResponse(true, "章节图片上传成功", imagePath, chapterId);
-            
+                
         } catch (IllegalArgumentException e) {
             return new ImageUploadResponse(false, e.getMessage());
         } catch (IOException e) {
-            return new ImageUploadResponse(false, "文件保存失败: " + e.getMessage());
+            return new ImageUploadResponse(false, "文件保存失败：" + e.getMessage());
         } catch (Exception e) {
-            return new ImageUploadResponse(false, "上传失败: " + e.getMessage());
+            return new ImageUploadResponse(false, "上传失败：" + e.getMessage());
         }
     }
     
@@ -204,5 +220,16 @@ public class ImageService {
         } catch (Exception e) {
             return new ImageUploadResponse(false, "上传失败：" + e.getMessage());
         }
+    }
+    
+    /**
+     * 清理文件名，移除特殊字符和空格
+     */
+    private String sanitizeFileName(String fileName) {
+        if (fileName == null || fileName.trim().isEmpty()) {
+            return "Unknown";
+        }
+        // 替换特殊字符为下划线，保留中文、英文、数字
+        return fileName.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9]", "_");
     }
 }

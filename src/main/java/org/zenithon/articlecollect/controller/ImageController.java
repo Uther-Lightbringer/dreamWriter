@@ -42,6 +42,19 @@ public class ImageController {
     }
     
     /**
+     * 自动保存 AI 生成的图片到章节目录
+     */
+    @PostMapping("/chapter/{chapterId}/auto-save")
+    public ResponseEntity<ImageUploadResponse> autoSaveAIImage(
+            @PathVariable Long chapterId,
+            @RequestParam("file") MultipartFile file) {
+        
+        // 使用通用的章节图片保存逻辑
+        ImageUploadResponse response = imageService.uploadChapterImage(chapterId, file);
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
      * 删除小说封面图片
      */
     @DeleteMapping("/novel/{novelId}/cover")

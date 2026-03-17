@@ -4,45 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>章节详情 - 小说管理平台</title>
-    <!-- 引入Marked.js用于Markdown渲染 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- 备用本地引入 -->
-    <script>
-        // 检查marked是否加载成功，如果没有则使用备用方案
-        if (typeof marked === 'undefined') {
-            console.warn('Marked.js CDN加载失败，使用备用方案');
-            // 简单的Markdown解析替代方案
-            window.marked = {
-                setOptions: function(options) {
-                    // 简单配置，实际使用中可以扩展
-                    this.options = options;
-                },
-                parse: function(markdown) {
-                    // 简单的Markdown转HTML转换
-                    if (!markdown) return '';
-                    
-                    // 基本的Markdown转换
-                    let html = markdown
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // 粗体
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')              // 斜体
-                        .replace(/~~(.*?)~~/g, '<del>$1</del>')            // 删除线
-                        .replace(/`(.*?)`/g, '<code>$1</code>')            // 行内代码
-                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')  // 链接
-                        .replace(/^#{1,6}\s+(.*?)$/gm, function(match, p1, offset, string) {
-                            const level = match.match(/^#+/)[0].length;
-                            return `<h${level}>${p1}</h${level}>`;
-                        })  // 标题
-                        .replace(/^\*\s+(.*?)$/gm, '<li>$1</li>')         // 无序列表项
-                        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')         // 包装无序列表
-                        .replace(/^\d+\.\s+(.*?)$/gm, '<li>$1</li>')     // 有序列表项
-                        .replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>')         // 包装有序列表
-                        .replace(/\n/g, '<br>');                          // 换行
-                    
-                    return html;
-                }
-            };
-        }
-    </script>
+
+    <!-- 引入 marked.js Markdown 解析库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    
+    <!-- 引入 EvoLink 图片生成工具类 -->
+    <script src="/js/evo-link-image.js"></script>
     <!-- 引入highlight.js用于代码高亮 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" id="hljs-theme">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
@@ -80,7 +47,7 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         .container {
-            max-width: 800px;
+            max-width: 70%;
             margin: 0 auto;
             background-color: var(--card-bg);
             box-shadow: 0 0 20px var(--shadow-color);
@@ -228,7 +195,600 @@
         }
         
         .content {
-            padding: 30px 40px;
+            padding: 40px;
+            min-height: 600px;
+        }
+        
+        /* AI 绘画面板区域样式 */
+        .ai-painting-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 30px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .ai-panel {
+            background: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            max-height: 650px;
+            overflow-y: auto;
+        }
+        
+        .ai-panel:hover {
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .ai-panel-header {
+            padding: 18px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ai-panel-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .ai-panel-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .ai-panel-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+        
+        .ai-panel-content {
+            padding: 20px;
+        }
+        
+        .ai-panel-content .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .ai-panel-content .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .ai-panel-content .form-group textarea,
+        .ai-panel-content .size-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .ai-panel-content .form-group textarea:focus,
+        .ai-panel-content .size-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .generate-prompt-btn,
+        .use-prompt-btn,
+        .generate-image-btn,
+        .save-image-btn,
+        .regenerate-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .generate-prompt-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .generate-prompt-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .use-prompt-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .use-prompt-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+        }
+        
+        .generate-image-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .generate-image-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+        }
+        
+        .save-image-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .save-image-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
+        }
+        
+        .regenerate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .regenerate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .loading-section {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-container {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: var(--text-color);
+            font-size: 13px;
+        }
+        
+        .image-result-section img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 15px;
+        }
+        
+        .image-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .error-section {
+            padding: 15px;
+            background: #fee;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+        }
+        
+        .result-section {
+            margin-top: 15px;
+        }
+        
+        /* 全屏查看图片样式 */
+        .image-fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+        
+        .image-fullscreen-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .image-fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+            z-index: 10001;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-fullscreen-close:hover {
+            transform: scale(1.2);
+        }
+        
+        /* 选中文字浮动提示样式 */
+        .selection-toolbar {
+            position: absolute;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            display: none;
+            z-index: 10000;
+            animation: toolbar-fade-in 0.3s ease;
+        }
+        
+        @keyframes toolbar-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .selection-toolbar button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .selection-toolbar button:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+        
+        .selection-toolbar .toolbar-text {
+            color: white;
+            font-size: 13px;
+            margin-right: 10px;
+        }
+        
+        /* 生成图片弹窗样式 */
+        .image-generation-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 85vh;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .image-generation-modal .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .image-generation-modal .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .image-generation-modal .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .image-generation-modal .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+        
+        .image-generation-modal .modal-body {
+            padding: 25px;
+        }
+        
+        .image-generation-modal .dual-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .image-generation-modal .panel {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+        }
+        
+        .image-generation-modal .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .image-generation-modal textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .image-generation-modal .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .image-generation-modal .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .image-generation-modal .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .image-generation-modal .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .image-generation-modal .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .image-generation-modal .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .image-generation-modal .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .image-generation-modal .loading-section {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .image-generation-modal .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .image-generation-modal .progress-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+            height: 10px;
+        }
+        
+        .image-generation-modal .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .image-generation-modal .progress-text {
+            font-size: 14px;
+            color: var(--text-color);
+            margin-top: 10px;
+        }
+        
+        .image-generation-modal .image-result {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .image-generation-modal .image-result img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .image-generation-modal .error-section {
+            padding: 15px;
+            background: #fee;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+            margin-top: 15px;
+        }
+        
+        .image-generation-modal .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            display: none;
+        }
+        
+        /* 图片全屏显示样式 */
+        .image-fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .image-fullscreen-modal img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            animation: zoomIn 0.3s ease;
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .image-fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+            z-index: 100001;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .ai-painting-panels {
+                grid-template-columns: 1fr;
+            }
         }
         .chapter-header {
             text-align: center;
@@ -364,8 +924,21 @@
         
         .markdown-content img {
             max-width: 100%;
+            width: auto;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
             box-sizing: content-box;
             background-color: var(--card-bg);
+        }
+        
+        .markdown-content img:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            transform: translateY(-2px);
         }
         
         .markdown-content table {
@@ -636,6 +1209,28 @@
         .mode-toggle-btn:hover {
             background-color: #218838;
             transform: translateY(-1px);
+        }
+        
+        /* AI 绘画按钮样式 */
+        .ai-painting-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .ai-painting-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
         
         /* 卡片阅读模式样式 */
@@ -1047,6 +1642,255 @@
                 padding: 20px 15px;
             }
         }
+        
+        /* ========== 侧边栏样式 ========== */
+        .side-panel {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 320px;
+            background: var(--card-bg);
+            box-shadow: 0 0 20px var(--shadow-color);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .side-panel-left {
+            left: 0;
+            transform: translateX(-100%);
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .side-panel-right {
+            right: 0;
+            transform: translateX(100%);
+            border-left: 1px solid var(--border-color);
+        }
+        
+        .side-panel.show {
+            transform: translateX(0);
+        }
+        
+        .side-panel-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .side-panel-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .side-panel-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .side-panel-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        
+        .side-panel-content {
+            padding: 20px;
+            flex: 1;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea,
+        .size-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea:focus,
+        .size-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .generate-prompt-btn,
+        .use-prompt-btn,
+        .generate-image-btn,
+        .save-image-btn,
+        .regenerate-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .generate-prompt-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .generate-prompt-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .use-prompt-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .use-prompt-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+        }
+        
+        .generate-image-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .generate-image-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+        }
+        
+        .save-image-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .save-image-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
+        }
+        
+        .regenerate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .regenerate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .loading-section {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-container {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: var(--text-color);
+            font-size: 13px;
+        }
+        
+        .image-result-section img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 15px;
+        }
+        
+        .image-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .error-section {
+            padding: 15px;
+            background: #fee;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+        }
+        
+        .result-section {
+            margin-top: 20px;
+        }
+        
+        /* 响应式：小屏幕隐藏侧边栏 */
+        @media (max-width: 1200px) {
+            .side-panel {
+                width: 280px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .side-panel {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1098,6 +1942,12 @@
                     📱 卡片模式
                 </button>
             </div>
+            
+            <div class="setting-group">
+                <button class="ai-painting-btn" onclick="openAIPanels()">
+                    🎨 AI 绘画
+                </button>
+            </div>
         </div>
 
         <div class="content">
@@ -1105,6 +1955,93 @@
             
             <div id="error" class="error-message" style="display: none;">
                 加载失败，请稍后重试
+            </div>
+            
+            <!-- AI 绘画面板区域 -->
+            <div class="ai-painting-panels" id="aiPaintingPanels" style="display: none;">
+                <!-- 左侧面板：AI 绘画提示词助手 -->
+                <div class="ai-panel ai-panel-left">
+                    <div class="ai-panel-header">
+                        <h3>🎨 AI 绘画提示词助手</h3>
+                        <button class="ai-panel-close" onclick="closeAIPanels()">×</button>
+                    </div>
+                    <div class="ai-panel-content">
+                        <div class="form-group">
+                            <label for="aiPromptInput2">描述画面内容:</label>
+                            <textarea id="aiPromptInput2" placeholder="简单描述你想要的画面，例如：一个穿着古装的女子站在桃花树下..." rows="3"></textarea>
+                        </div>
+                        <button class="generate-prompt-btn" onclick="generateAIPrompt2()">
+                            ✨ 生成绘画提示词
+                        </button>
+                        <div class="result-section" id="promptResult2" style="display: none;">
+                            <label>AI 生成的提示词:</label>
+                            <textarea id="generatedPrompt2" rows="5" readonly></textarea>
+                            <button class="use-prompt-btn" onclick="useGeneratedPrompt()">
+                                📋 使用此提示词去绘画
+                            </button>
+                        </div>
+                        <div class="loading-section" id="promptLoading2" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>正在生成提示词...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧面板：AI 图片生成 -->
+                <div class="ai-panel ai-panel-right">
+                    <div class="ai-panel-header">
+                        <h3>🖼️ AI 图片生成</h3>
+                        <button class="ai-panel-close" onclick="closeAIPanels()">×</button>
+                    </div>
+                    <div class="ai-panel-content">
+                        <div class="form-group">
+                            <label for="imagePrompt2">绘画提示词:</label>
+                            <textarea id="imagePrompt2" placeholder="请输入详细的绘画提示词..." rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="imageSize2">图片尺寸:</label>
+                            <select id="imageSize2" class="size-select">
+                                <option value="16:9" selected>16:9 (宽屏)</option>
+                                <option value="9:16">9:16 (竖屏)</option>
+                                <option value="1:1">1:1 (正方形)</option>
+                                <option value="4:3">4:3 (标准)</option>
+                                <option value="3:4">3:4 (纵向)</option>
+                                <option value="3:2">3:2 (电影)</option>
+                                <option value="2:3">2:3 (海报)</option>
+                                <option value="2:1">2:1 (全景)</option>
+                                <option value="1:2">1:2 (长屏)</option>
+                            </select>
+                        </div>
+                        <button class="generate-image-btn" onclick="startImageGeneration2()">
+                            🎨 开始生成图片
+                        </button>
+                        
+                        <div class="loading-section" id="imageLoading2" style="display: none;">
+                            <div class="spinner"></div>
+                            <p id="imageStatusText2">正在准备中...</p>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="imageProgressBar2"></div>
+                            </div>
+                            <p class="progress-text" id="imageProgressText2">进度：0%</p>
+                        </div>
+                        
+                        <div class="image-result-section" id="imageResult2" style="display: none;">
+                            <img id="generatedImage2" src="" alt="Generated Image" onclick="viewImageFullscreen('generatedImage2')" style="cursor: pointer;" />
+                            <div class="image-actions">
+                                <button class="save-image-btn" onclick="saveImageToChapter2()">
+                                    💾 保存到本章
+                                </button>
+                                <button class="regenerate-btn" onclick="resetImageGeneration2()">
+                                    🔄 重新生成
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="error-section" id="imageError2" style="display: none;">
+                            <p id="imageErrorMessage2"></p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div id="chapterContent" style="display: none;">
@@ -1201,6 +2138,86 @@
         </div>
     </div>
 
+    <!-- 选中文字浮动工具栏 -->
+    <div class="selection-toolbar" id="selectionToolbar">
+        <span class="toolbar-text">🎨 根据选中内容生成图片？</span>
+        <button onclick="openImageGenerationModal()">✨ 开始生成</button>
+        <button onclick="hideSelectionToolbar()">✕ 取消</button>
+    </div>
+
+    <!-- 图片生成弹窗 -->
+    <div class="image-generation-modal-overlay" id="modalOverlay" onclick="closeImageGenerationModal()"></div>
+    <div class="image-generation-modal" id="imageGenerationModal">
+        <div class="modal-header">
+            <h3>🎨 AI 图片生成</h3>
+            <button class="modal-close" onclick="closeImageGenerationModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- 双栏面板 -->
+            <div class="dual-panel">
+                <!-- 左侧：提示词生成 -->
+                <div class="panel">
+                    <div class="panel-title">
+                        📝 AI 绘画提示词
+                    </div>
+                    <textarea id="modalPromptInput" placeholder="描述画面内容..."></textarea>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="generateModalPrompt()">
+                            ✨ 生成提示词
+                        </button>
+                    </div>
+                    <div class="loading-section" id="modalPromptLoading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>正在生成提示词...</p>
+                    </div>
+                </div>
+                
+                <!-- 右侧：图片生成 -->
+                <div class="panel">
+                    <div class="panel-title">
+                        🖼️ 图片生成
+                    </div>
+                    <textarea id="modalImagePrompt" placeholder="输入绘画提示词..."></textarea>
+                    <div class="btn-group">
+                        <select class="btn btn-secondary" id="modalImageSize" style="cursor: pointer;">
+                            <option value="16:9">16:9 (横屏)</option>
+                            <option value="3:4">3:4 (纵向)</option>
+                            <option value="1:1">1:1 (正方形)</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="startModalImageGeneration()">
+                            🎨 开始生成
+                        </button>
+                    </div>
+                    
+                    <div class="loading-section" id="modalImageLoading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p id="modalImageStatusText">正在准备中...</p>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="modalImageProgressBar"></div>
+                        </div>
+                        <p class="progress-text" id="modalImageProgressText">进度：0%</p>
+                    </div>
+                    
+                    <div class="image-result" id="modalImageResult" style="display: none;">
+                        <img id="modalGeneratedImage" src="" alt="Generated Image" onclick="showImageFullscreen(this.src)" style="cursor: pointer;" />
+                        <div class="btn-group" style="justify-content: center; margin-top: 15px;">
+                            <button class="btn btn-success" onclick="saveImageToSelectedText()">
+                                💾 保存到文中
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetModalImageGeneration()">
+                                🔄 重新生成
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="error-section" id="modalImageError" style="display: none;">
+                        <p id="modalImageErrorMessage"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 世界观弹窗 -->
     <div id="worldViewModal" class="modal-overlay">
         <div class="modal-content">
@@ -1243,7 +2260,7 @@
         let boundaryAction = null;        // 边界操作（上一张/下一章）
         let cardResizeObserver = null;    // 窗口大小变化监听器
         
-        // 配置marked.js
+        // 配置 marked.js
         marked.setOptions({
             highlight: function(code, lang) {
                 if (lang && hljs.getLanguage(lang)) {
@@ -1264,6 +2281,7 @@
             setupKeyboardNavigation(); // 设置键盘导航
             loadCardModeSettings(); // 加载卡片模式设置
             setupResizeObserver(); // 设置窗口大小监听
+            setupTextSelectionListener(); // 设置文字选择监听
         });
         
         // 设置图片上传监听器
@@ -1526,18 +2544,19 @@
             // 处理章节插图
             handleChapterImage(chapter);
             
-            // 渲染Markdown内容
+            // 渲染 Markdown 内容
             const content = chapter.content || '暂无内容';
             try {
-                if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+                if (typeof marked !== 'undefined') {
+                    // marked 12.x 版本直接使用 marked() 函数
                     document.getElementById('chapterText').innerHTML = marked.parse(content);
                 } else {
                     // 降级处理：直接显示文本内容
-                    console.warn('Marked.js不可用，直接显示文本内容');
+                    console.warn('Marked.js 不可用，直接显示文本内容');
                     document.getElementById('chapterText').textContent = content;
                 }
             } catch (error) {
-                console.error('Markdown解析错误:', error);
+                console.error('Markdown 解析错误:', error);
                 // 出错时直接显示原始内容
                 document.getElementById('chapterText').textContent = content;
             }
@@ -2146,6 +3165,901 @@
                 window.goToPrevious();
             } else if (boundaryAction === 'next' && window.goToNext) {
                 window.goToNext();
+            }
+        }
+        
+        // ========== 侧边栏功能 ==========
+        let leftPanelVisible = false;
+        let rightPanelVisible = false;
+        let imageGenerator = null;
+        let currentGeneratedImageUrl = null;
+        
+        // 打开 AI 绘画面板
+        function openAIPanels() {
+            const panels = document.getElementById('aiPaintingPanels');
+            panels.style.display = 'grid';
+            panels.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // 关闭 AI 绘画面板
+        function closeAIPanels() {
+            const panels = document.getElementById('aiPaintingPanels');
+            panels.style.display = 'none';
+        }
+        
+        // 切换左侧面板
+        function toggleLeftPanel() {
+            const panel = document.getElementById('leftSidePanel');
+            leftPanelVisible = !leftPanelVisible;
+            if (leftPanelVisible) {
+                panel.classList.add('show');
+                panel.querySelector('.side-panel-toggle').textContent = '▶';
+            } else {
+                panel.classList.remove('show');
+                panel.querySelector('.side-panel-toggle').textContent = '◀';
+            }
+        }
+        
+        // 切换右侧面板
+        function toggleRightPanel() {
+            const panel = document.getElementById('rightSidePanel');
+            rightPanelVisible = !rightPanelVisible;
+            if (rightPanelVisible) {
+                panel.classList.add('show');
+                panel.querySelector('.side-panel-toggle').textContent = '◀';
+            } else {
+                panel.classList.remove('show');
+                panel.querySelector('.side-panel-toggle').textContent = '▶';
+            }
+        }
+        
+        // 生成 AI 绘画提示词 (面板版本)
+        async function generateAIPrompt2() {
+            const input = document.getElementById('aiPromptInput2').value.trim();
+            if (!input) {
+                alert('请输入画面描述！');
+                return;
+            }
+            
+            document.getElementById('promptLoading2').style.display = 'block';
+            document.getElementById('promptResult2').style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `请将以下简短的描述扩展为详细的 AI 绘画提示词。
+
+重要要求:
+1. 必须使用中文生成
+2. 使用逗号、句号等标点符号来组织句子结构
+3. 包含画面细节、光影效果、色彩搭配、构图方式等
+4. 适合用于 Stable Diffusion 等 AI 绘画工具
+5. 不要使用紧凑的标签格式，要写成完整的描述性段落
+6. 字数控制在 1500 以内。
+
+原始描述：${input}`
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+                
+                // 读取完整响应
+                const result = await response.json();
+                const fullPrompt = result.response || result.message || result.content;
+                
+                console.log('✅ AI 提示词生成完成!');
+                console.log('\n📋 完整提示词内容:');
+                console.log(fullPrompt);
+                console.log('\n📊 提示词长度:', fullPrompt.length, '字符');
+                
+                // 显示结果
+                if (!fullPrompt || !fullPrompt.trim()) {
+                    throw new Error('未生成有效内容，请重试');
+                }
+                
+                document.getElementById('generatedPrompt2').value = fullPrompt;
+                document.getElementById('promptResult2').style.display = 'block';
+            } catch (error) {
+                alert('生成提示词失败：' + error.message);
+            } finally {
+                document.getElementById('promptLoading2').style.display = 'none';
+            }
+        }
+        
+        // 使用生成的提示词
+        function useGeneratedPrompt() {
+            const prompt = document.getElementById('generatedPrompt2').value;
+            document.getElementById('imagePrompt2').value = prompt;
+        }
+        
+        // 开始生成图片 (面板版本)
+        function startImageGeneration2() {
+            const prompt = document.getElementById('imagePrompt2').value.trim();
+            if (!prompt) {
+                alert('请输入绘画提示词！');
+                return;
+            }
+            
+            const size = document.getElementById('imageSize2').value;
+            
+            // 重置界面
+            document.getElementById('imageError2').style.display = 'none';
+            document.getElementById('imageResult2').style.display = 'none';
+            document.getElementById('imageLoading2').style.display = 'block';
+            document.getElementById('imageStatusText2').textContent = '正在准备中...';
+            document.getElementById('imageProgressBar2').style.width = '0%';
+            document.getElementById('imageProgressText2').textContent = '进度：0%';
+            
+            // 创建生成器实例
+            imageGenerator = new EvoLinkImageGenerator({
+                onProgress: (progress, status) => {
+                    const statusMap = {
+                        'pending': '📝 准备中...',
+                        'processing': '🎨 绘制中...',
+                        'completed': '✅ 完成!'
+                    };
+                    document.getElementById('imageStatusText2').textContent = statusMap[status] || status;
+                    document.getElementById('imageProgressBar2').style.width = progress + '%';
+                    document.getElementById('imageProgressText2').textContent = `进度：${progress}%`;
+                },
+                onComplete: (imageUrl) => {
+                    currentGeneratedImageUrl = imageUrl;
+                    document.getElementById('generatedImage2').src = imageUrl;
+                    document.getElementById('imageLoading2').style.display = 'none';
+                    document.getElementById('imageResult2').style.display = 'block';
+                },
+                onError: (error) => {
+                    document.getElementById('imageErrorMessage2').textContent = error.message;
+                    document.getElementById('imageError2').style.display = 'block';
+                    document.getElementById('imageLoading2').style.display = 'none';
+                }
+            });
+            
+            imageGenerator.generate(prompt, size);
+        }
+        
+        // 重置图片生成 (面板版本)
+        function resetImageGeneration2() {
+            document.getElementById('imageResult2').style.display = 'none';
+            document.getElementById('imageError2').style.display = 'none';
+            currentGeneratedImageUrl = null;
+        }
+        
+        // 保存图片到章节 (面板版本)
+        async function saveImageToChapter2() {
+            if (!currentGeneratedImageUrl) {
+                alert('没有可保存的图片！');
+                return;
+            }
+            
+            if (!confirm('确定要将此图片保存到当前章节吗？')) {
+                return;
+            }
+            
+            try {
+                // 下载图片
+                const response = await fetch(currentGeneratedImageUrl);
+                const blob = await response.blob();
+                
+                // 创建 FormData
+                const formData = new FormData();
+                const file = new File([blob], 'ai-generated.png', { type: 'image/png' });
+                formData.append('file', file);  // 确保参数名为 'file'
+                
+                // 上传到章节
+                const uploadResponse = await fetch(`/api/images/chapter/${chapterId}/image`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (uploadResponse.ok) {
+                    const result = await uploadResponse.json();
+                    alert('图片已保存到章节！\n路径：' + (result.imageUrl || '未知'));
+                    // 重新加载章节内容
+                    loadChapterDetail();
+                    // 关闭面板
+                    closeAIPanels();
+                } else {
+                    const errorText = await uploadResponse.text();
+                    throw new Error('上传失败：' + uploadResponse.status + ' - ' + errorText);
+                }
+            } catch (error) {
+                alert('保存图片失败：' + error.message);
+            }
+        }
+        
+        // 全屏查看图片
+        function viewImageFullscreen(imageId) {
+            const img = document.getElementById(imageId);
+            if (!img || !img.src) {
+                alert('没有可查看的图片！');
+                return;
+            }
+            
+            // 创建全屏容器
+            const modal = document.createElement('div');
+            modal.className = 'image-fullscreen-modal';
+            modal.onclick = function() {
+                document.body.removeChild(modal);
+            };
+            
+            // 创建关闭按钮
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'image-fullscreen-close';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.onclick = function(e) {
+                e.stopPropagation();
+                document.body.removeChild(modal);
+            };
+            
+            // 创建图片
+            const fullscreenImg = document.createElement('img');
+            fullscreenImg.src = img.src;
+            fullscreenImg.alt = 'Fullscreen View';
+            fullscreenImg.onclick = function(e) {
+                e.stopPropagation();
+            };
+            
+            // 组装 DOM
+            modal.appendChild(closeBtn);
+            modal.appendChild(fullscreenImg);
+            document.body.appendChild(modal);
+            
+            // 按 ESC 键关闭
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(modal);
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }
+        
+        // ========== 文字选择生成图片功能 ==========
+        
+        // 全局变量存储当前章节的角色卡信息
+        let currentChapterCharacterCards = [];
+        
+        // 弹窗相关变量
+        let selectedTextRange = null;  // 选中的文字范围
+        let savedSelectedText = '';    // 保存的选中文字内容
+        let modalImageGenerator = null;  // 图片生成器实例
+        let currentModalImageUrl = null;  // 当前生成的图片 URL
+        
+        // 设置文字选择监听
+        function setupTextSelectionListener() {
+            let hideToolbarTimeout = null;
+            
+            document.addEventListener('mouseup', async function(e) {
+                const selection = window.getSelection();
+                const selectedText = selection.toString().trim();
+                const toolbar = document.getElementById('selectionToolbar');
+                
+                // 清除自动隐藏定时器
+                if (hideToolbarTimeout) {
+                    clearTimeout(hideToolbarTimeout);
+                }
+                
+                // 如果有选中的文字且长度大于 5 个字符
+                if (selectedText && selectedText.length > 5) {
+                    // 延迟加载角色卡信息
+                    if (currentChapterCharacterCards.length === 0) {
+                        await loadCharacterCardsForNovel();
+                    }
+                    
+                    // 显示工具栏
+                    showSelectionToolbar(e, selectedText);
+                } else {
+                    hideSelectionToolbar();
+                }
+            });
+            
+            // 点击其他地方时隐藏工具栏
+            document.addEventListener('mousedown', function(e) {
+                const toolbar = document.getElementById('selectionToolbar');
+                if (!toolbar.contains(e.target)) {
+                    hideToolbarTimeout = setTimeout(() => {
+                        hideSelectionToolbar();
+                    }, 200);
+                }
+            });
+        }
+        
+        // 加载小说的角色卡信息
+        async function loadCharacterCardsForNovel() {
+            try {
+                // 使用正确的接口路径：/api/novels/{novelId}/character-cards
+                const response = await fetch(`/api/novels/${novelId}/character-cards`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.characterCards) {
+                        // 如果是 JSON 字符串，需要解析
+                        if (typeof result.characterCards === 'string') {
+                            currentChapterCharacterCards = JSON.parse(result.characterCards);
+                        } else {
+                            currentChapterCharacterCards = result.characterCards;
+                        }
+                        console.log('✅ 加载角色卡成功:', currentChapterCharacterCards.length, '个');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 加载角色卡失败:', error);
+            }
+        }
+        
+        // 从选中文本中识别人名并获取外貌描写
+        function extractCharacterAppearances(selectedText) {
+            const appearances = [];
+            
+            currentChapterCharacterCards.forEach(card => {
+                const characterName = card.name;
+                if (characterName && selectedText.includes(characterName)) {
+                    // 提取外貌描写
+                    let appearanceDescription = '';
+                    
+                    if (card.appearance) {
+                        const app = card.appearance;
+                        const parts = [];
+                        parts.push(`年龄：${card.age}`);
+                        if (app.height) parts.push(`身高${app.height}`);
+                        if (app.hair) parts.push(`发型：${app.hair}`);
+                        if (app.eyes) parts.push(`眼睛：${app.eyes}`);
+                        if (app.build) parts.push(`体型：${app.build}`);
+                        if (app.distinguishingFeatures) parts.push(`特征：${app.distinguishingFeatures}`);
+                        appearanceDescription = parts.join('，');
+                    }
+                    
+                    if (card.appearanceSummary) {
+                        appearanceDescription += '。' + card.appearanceSummary;
+                    }
+                    
+                    if (appearanceDescription) {
+                        appearances.push({
+                            name: characterName,
+                            description: appearanceDescription.trim()
+                        });
+                        console.log(`👤 识别到角色 [${characterName}]:`, appearanceDescription);
+                    }
+                }
+            });
+            
+            return appearances;
+        }
+        
+        // 显示选中文字工具栏
+        function showSelectionToolbar(event, selectedText) {
+            const toolbar = document.getElementById('selectionToolbar');
+            const range = window.getSelection().getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            
+            // 计算工具栏位置（在选中文本上方）
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            
+            toolbar.style.display = 'block';
+            toolbar.style.top = (rect.top + scrollTop - 50) + 'px';
+            toolbar.style.left = (rect.left + scrollLeft + rect.width / 2 - toolbar.offsetWidth / 2) + 'px';
+            
+            // ✅ 保存选中的文字范围和纯文本内容
+            selectedTextRange = range.cloneRange();
+            savedSelectedText = selectedText;  // ← 新增：保存纯文本内容
+            
+            console.log('📋 选中文字已保存:', selectedText.substring(0, 50));
+            console.log('📏 选中文字长度:', selectedText.length);
+        }
+        
+        // 隐藏选中文字工具栏
+        function hideSelectionToolbar() {
+            const toolbar = document.getElementById('selectionToolbar');
+            toolbar.style.display = 'none';
+            // 不清除选择，让用户可以看到选择了什么
+        }
+        
+        // 根据选中的文字生成图片
+        async function generateImageFromSelection() {
+            const toolbar = document.getElementById('selectionToolbar');
+            const generateBtn = toolbar.querySelector('button[onclick="generateImageFromSelection()"]');
+            const selectedText = decodeURIComponent(generateBtn.getAttribute('data-selected-text'));
+            
+            if (!selectedText) {
+                alert('未找到选中的文字！');
+                return;
+            }
+            
+            // 识别人物和外貌描写
+            const characterAppearances = extractCharacterAppearances(selectedText);
+            
+            // 构建提示词
+            let promptBuilder = `请根据以下小说片段生成 AI 绘画提示词。\n\n`;
+            promptBuilder += `小说片段：${selectedText}\n\n`;
+            
+            if (characterAppearances.length > 0) {
+                promptBuilder += `🎭 重要角色外貌信息:\n`;
+                characterAppearances.forEach((char, index) => {
+                    promptBuilder += `${index + 1}. ${char.name}:${char.description}\n`;
+                });
+                promptBuilder += '\n';
+            }
+            
+            promptBuilder += `重要要求:\n`;
+            promptBuilder += `1. 必须使用中文\n`;
+            promptBuilder += `2. 使用逗号、句号等标点符号来组织句子结构\n`;
+            promptBuilder += `3. 包含画面细节、光影效果、色彩搭配、构图方式等\n`;
+            promptBuilder += `4. 字数控制在 1500 以内, 只需要生成提示词即可。不要生成其他多余的东西。\n`;
+            promptBuilder += `5. 如果出现人物，请结合提供的角色外貌信息进行详细描述。要精确控制画面中人物的数量和小说提到的人物一样。\n`;
+            
+            console.log('\n📝 根据选中文字生成图片提示词:');
+            console.log('📖 选中的文字:', selectedText);
+            console.log('👥 识别到的角色:', characterAppearances);
+            console.log('🔖 完整提示词:', promptBuilder);
+            
+            // 打开 AI 绘画面板并填充提示词
+            openAIPanels();
+            
+            // 滚动到面板位置
+            setTimeout(() => {
+                const panels = document.getElementById('aiPaintingPanels');
+                if (panels) {
+                    panels.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 300);
+            
+            // 填充左侧输入框并生成
+            setTimeout(() => {
+                document.getElementById('aiPromptInput2').value = selectedText;
+                // 使用自定义提示词生成
+                generateAIPrompt2WithCustomPrompt(promptBuilder);
+            }, 800);
+            
+            hideSelectionToolbar();
+        }
+        
+        // 使用自定义提示词生成 AI 绘画提示词
+        async function generateAIPrompt2WithCustomPrompt(customPrompt) {
+            document.getElementById('promptLoading2').style.display = 'block';
+            document.getElementById('promptResult2').style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: customPrompt
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+                
+                // 读取完整响应
+                const result = await response.json();
+                const fullPrompt = result.response || result.message || result.content;
+                
+                console.log('\n✅ AI 提示词生成完成!');
+                console.log('\n📋 完整提示词内容:');
+                console.log(fullPrompt);
+                console.log('\n📊 提示词长度:', fullPrompt.length, '字符');
+                
+                // 显示结果
+                if (!fullPrompt || !fullPrompt.trim()) {
+                    throw new Error('未生成有效内容，请重试');
+                }
+                
+                document.getElementById('generatedPrompt2').value = fullPrompt;
+                document.getElementById('promptResult2').style.display = 'block';
+            } catch (error) {
+                alert('生成提示词失败：' + error.message);
+            } finally {
+                document.getElementById('promptLoading2').style.display = 'none';
+            }
+        }
+        
+        // ========== 弹窗图片生成功能 ==========
+        
+        function openImageGenerationModal() {
+            const modal = document.getElementById('imageGenerationModal');
+            const overlay = document.getElementById('modalOverlay');
+            if (!selectedTextRange) { alert('请先选择一段文字！'); return; }
+            const selectedText = selectedTextRange.toString().trim();
+            document.getElementById('modalPromptInput').value = selectedText;
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            console.log('🎨 打开图片生成弹窗，选中文字:', selectedText);
+        }
+        
+        function closeImageGenerationModal() {
+            const modal = document.getElementById('imageGenerationModal');
+            const overlay = document.getElementById('modalOverlay');
+            
+            if (modal) modal.style.display = 'none';
+            if (overlay) overlay.style.display = 'none';
+            document.body.style.overflow = '';
+            
+            resetModalState();
+        }
+        
+        function resetModalState() {
+            // ✅ 添加空值检查，避免 null 错误
+            ['modalPromptLoading', 'modalImageLoading', 'modalImageResult', 'modalImageError'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            });
+            
+            const modalPromptResult = document.getElementById('modalPromptResult');
+            if (modalPromptResult) modalPromptResult.style.display = 'none';
+            
+            const modalGeneratedPrompt = document.getElementById('modalGeneratedPrompt');
+            if (modalGeneratedPrompt) modalGeneratedPrompt.value = '';
+            
+            const modalImagePrompt = document.getElementById('modalImagePrompt');
+            if (modalImagePrompt) modalImagePrompt.value = '';
+            
+            currentModalImageUrl = null;
+            modalImageGenerator = null;
+        }
+        
+        async function generateModalPrompt() {
+            const input = document.getElementById('modalPromptInput').value.trim();
+            if (!input) { alert('请输入画面描述！'); return; }
+            
+            document.getElementById('modalPromptLoading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: buildAIPrompt(input) })
+                });
+                if (!response.ok) throw new Error('请求失败');
+                const result = await response.json();
+                const fullPrompt = result.response || result.message || result.content;
+                if (!fullPrompt || !fullPrompt.trim()) throw new Error('未生成有效内容');
+                
+                // ✅ 直接将生成的提示词填充到图片生成输入框
+                document.getElementById('modalImagePrompt').value = fullPrompt;
+                
+                console.log('✅ 提示词已生成并填充到图片生成框');
+                console.log('📋 提示词内容:', fullPrompt);
+            } catch (error) {
+                alert('生成提示词失败：' + error.message);
+            } finally {
+                document.getElementById('modalPromptLoading').style.display = 'none';
+            }
+        }
+        
+        function startModalImageGeneration() {
+            const prompt = document.getElementById('modalImagePrompt').value.trim();
+            if (!prompt) { alert('请输入绘画提示词！'); return; }
+            const size = document.getElementById('modalImageSize').value;
+            
+            // ✅ 只有当输入框内容与原始选中文字相同时才记录 (说明是文章原有内容)
+            const inputText = document.getElementById('modalPromptInput').value.trim();
+            const originalSelectedText = savedSelectedText || '';
+            
+            // 判断是否是文章原有内容：输入框内容必须包含原始选中的文字
+            if (originalSelectedText && inputText.includes(originalSelectedText)) {
+                // ✅ 只记录最后 10 个字符
+                const textToRecord = originalSelectedText.slice(-10);
+                savedSelectedText = textToRecord;
+                console.log('📋 记录文章原有内容 (最后 10 字):', textToRecord);
+                console.log('📏 文字长度:', textToRecord.length);
+            } else {
+                console.log('⚠️ 输入内容已被修改或非文章原有内容，不记录');
+            }
+            
+            document.getElementById('modalImageError').style.display = 'none';
+            document.getElementById('modalImageResult').style.display = 'none';
+            document.getElementById('modalImageLoading').style.display = 'block';
+            document.getElementById('modalImageStatusText').textContent = '正在准备中...';
+            document.getElementById('modalImageProgressBar').style.width = '0%';
+            document.getElementById('modalImageProgressText').textContent = '进度：0%';
+            
+            modalImageGenerator = new EvoLinkImageGenerator({
+                onProgress: (progress, status) => {
+                    const statusMap = { 'pending': '📝 准备中...', 'processing': '🎨 绘制中...', 'completed': '✅ 完成!' };
+                    document.getElementById('modalImageStatusText').textContent = statusMap[status] || status;
+                    document.getElementById('modalImageProgressBar').style.width = progress + '%';
+                    document.getElementById('modalImageProgressText').textContent = `进度：${progress}%`;
+                },
+                onComplete: async (imageUrl) => {
+                    currentModalImageUrl = imageUrl;
+                    document.getElementById('modalGeneratedImage').src = imageUrl;
+                    document.getElementById('modalImageLoading').style.display = 'none';
+                    document.getElementById('modalImageResult').style.display = 'block';
+                    
+                    // ✅ 自动保存图片到本地
+                    await autoSaveGeneratedImage(imageUrl);
+                },
+                onError: (error) => {
+                    document.getElementById('modalImageErrorMessage').textContent = error.message;
+                    document.getElementById('modalImageError').style.display = 'block';
+                    document.getElementById('modalImageLoading').style.display = 'none';
+                }
+            });
+            modalImageGenerator.generate(prompt, size);
+        }
+        
+        function resetModalImageGeneration() {
+            document.getElementById('modalImageResult').style.display = 'none';
+            document.getElementById('modalImageError').style.display = 'none';
+            currentModalImageUrl = null;
+            modalImageGenerator = null;
+        }
+        
+        // 自动保存生成的图片到本地
+        async function autoSaveGeneratedImage(imageUrl) {
+            try {
+                console.log('🔄 开始自动保存图片...');
+                
+                // 从 EvoLink 下载图片
+                const response = await fetch(imageUrl);
+                if (!response.ok) {
+                    console.warn('⚠️ 无法下载生成的图片:', imageUrl);
+                    return;
+                }
+                
+                const blob = await response.blob();
+                const formData = new FormData();
+                const file = new File([blob], 'ai-generated.png', { type: 'image/png' });
+                formData.append('file', file);
+                
+                // 上传到后端
+                const uploadResponse = await fetch(`/api/images/chapter/${chapterId}/auto-save`, { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                
+                if (uploadResponse.ok) {
+                    const result = await uploadResponse.json();
+                    const savedImageUrl = result.imageUrl;
+                    console.log('✅ 图片已自动保存到本地:', savedImageUrl);
+                    
+                    // 更新 currentModalImageUrl 为本地路径
+                    currentModalImageUrl = savedImageUrl.startsWith('http') 
+                        ? savedImageUrl 
+                        : window.location.origin + savedImageUrl;
+                    
+                    // 更新显示的图片为本地路径
+                    document.getElementById('modalGeneratedImage').src = currentModalImageUrl;
+                } else {
+                    console.warn('⚠️ 自动保存失败，但用户仍可使用临时 URL');
+                }
+            } catch (error) {
+                console.error('❌ 自动保存图片失败:', error);
+                // 不弹窗提示，避免打扰用户
+            }
+        }
+        
+        async function saveImageToSelectedText() {
+            if (!currentModalImageUrl) { alert('没有可保存的图片！'); return; }
+            if (!confirm('确定要将此图片保存到选中的文字下方吗？')) return;
+            
+            try {
+                const response = await fetch(currentModalImageUrl);
+                const blob = await response.blob();
+                const formData = new FormData();
+                const file = new File([blob], 'ai-generated.png', { type: 'image/png' });
+                formData.append('file', file);
+
+                const uploadResponse = await fetch(`/api/images/chapter/${chapterId}/image`, { method: 'POST', body: formData });
+                if (uploadResponse.ok) {
+                    const result = await uploadResponse.json();
+                    const imageUrl = result.imageUrl;
+                    console.log('📦 上传响应结果:', result);
+                    console.log('✅ 图片已保存:', imageUrl);
+
+                    // 确保 imageUrl 是完整的 URL 路径
+                    const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
+                    console.log('🔗 完整图片 URL:', fullImageUrl);
+
+                    // 使用 Markdown 语法更新章节内容
+                    updateChapterContentWithMarkdown(fullImageUrl);
+                    closeImageGenerationModal();
+                } else {
+                    throw new Error('上传失败');
+                }
+            } catch (error) {
+                alert('保存图片失败：' + error.message);
+            }
+        }
+        
+        // 使用 Markdown 语法更新章节内容
+        async function updateChapterContentWithMarkdown(imageUrl) {
+            if (!savedSelectedText) {
+                alert('未选中任何文字！');
+                return;
+            }
+            
+            try {
+                // 使用保存的选中文字
+                const selectedText = savedSelectedText.trim();
+                
+                // 构建 Markdown 图片语法
+                const markdownImage = `
+
+![AI Generated Image](${imageUrl})
+
+`;
+                
+                // 直接从数据库获取原始章节内容
+                const chapterResponse = await fetch(`/api/chapters/detail/${novelId}/${chapterId}`);
+                if (!chapterResponse.ok) {
+                    throw new Error('无法加载章节内容');
+                }
+                const chapterData = await chapterResponse.json();
+                const originalContent = chapterData.chapter.content || '';
+                
+                console.log('📝 准备更新章节内容');
+                console.log('原始长度:', originalContent.length);
+                console.log('选中的文字:', selectedText.substring(0, 50));
+                
+                // 在原始内容中找到选中的文字
+                const selectedIndex = originalContent.indexOf(selectedText);
+                if (selectedIndex === -1) {
+                    // 尝试用 trim 后的文字匹配
+                    const trimmedIndex = originalContent.indexOf(selectedText.trim());
+                    if (trimmedIndex !== -1) {
+                        console.log('✅ 使用修剪后的文字匹配成功');
+                        // 在选中文字后插入图片
+                        const newContent = originalContent.slice(0, trimmedIndex + selectedText.trim().length) 
+                                         + markdownImage 
+                                         + originalContent.slice(trimmedIndex + selectedText.trim().length);
+                        return saveUpdatedContent(newContent);
+                    }
+                    
+                    console.error('❌ 无法在内容中找到选中的文字');
+                    console.error('选中文字长度:', selectedText.length);
+                    console.error('原始内容前 200 字符:', originalContent.substring(0, 200));
+                    throw new Error('无法在章节内容中找到选中的文字，可能是因为内容已更改或选择了特殊字符。请刷新页面后重试。');
+                }
+                
+                // 在选中文字后插入图片
+                const newContent = originalContent.slice(0, selectedIndex + selectedText.length) 
+                                 + markdownImage 
+                                 + originalContent.slice(selectedIndex + selectedText.length);
+                
+                console.log('新长度:', newContent.length);
+                console.log('📦 新内容预览:', newContent.substring(0, 200));
+                
+                // 保存更新后的内容
+                return saveUpdatedContent(newContent);
+            } catch (error) {
+                console.error('❌ 更新章节内容失败:', error);
+                alert('更新章节内容失败：' + error.message);
+            }
+        }
+        
+        // 保存更新后的章节内容
+        async function saveUpdatedContent(newContent) {
+            // 获取当前章节的标题
+            const currentTitle = document.querySelector('.chapter-title, h1, h2')?.textContent || '';
+            
+            // 调用后端接口保存
+            const saveResponse = await fetch(`/api/chapters/${chapterId}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: currentTitle,
+                    content: newContent
+                })
+            });
+            
+            console.log('📡 响应状态:', saveResponse.status);
+            const result = await saveResponse.json();
+            console.log('📦 响应结果:', result);
+            
+            if (saveResponse.ok) {
+                console.log('✅ 章节内容已更新到数据库');
+                
+                alert('✅ 图片已成功插入到文章中！\n位置：选中文字后方\n格式：Markdown 图片语法');
+                
+                // 清除选择并隐藏工具栏
+                window.getSelection().removeAllRanges();
+                hideSelectionToolbar();
+                
+                // 关闭弹窗
+                closeImageGenerationModal();
+                
+                // 重新加载章节以显示更新后的内容
+                setTimeout(() => {
+                    loadChapterDetail();
+                }, 500);
+            } else {
+                throw new Error('保存章节内容失败');
+            }
+        }
+        
+        function buildAIPrompt(inputText) {
+            const characterAppearances = extractCharacterAppearances(inputText);
+            let promptBuilder = `请根据以下小说片段生成 AI 绘画提示词。\n\n`;
+            promptBuilder += `小说片段：${inputText}\n\n`;
+            if (characterAppearances.length > 0) {
+                promptBuilder += `🎭 重要角色外貌信息:\n`;
+                characterAppearances.forEach((char, index) => {
+                    promptBuilder += `${index + 1}. ${char.name}:, ${char.description}\n`;
+                });
+                promptBuilder += '\n';
+            }
+            promptBuilder += `重要要求:\n`;
+            promptBuilder += `1. 必须只包含使用中文\n`;
+            promptBuilder += `2. 使用逗号、句号等标点符号来组织句子结构\n`;
+            promptBuilder += `3. 包含画面细节、光影效果、色彩搭配、构图方式等\n`;
+            promptBuilder += `4. 字数控制在 1500 以内，只需要生成提示词即可。不要生成其他多余的东西。\n`;
+            promptBuilder += `5. 如果出现人物，请结合提供的角色外貌信息进行详细描述。要精确控制画面中人物的数量和小说提到的人物一样。\n`;
+            return promptBuilder;
+        }
+        
+        // ========== 图片全屏显示功能 ==========
+        
+        // 为文章内容中的所有图片绑定全屏点击事件
+        function bindImageFullscreen() {
+            const contentElement = document.querySelector('.content-body, .chapter-content, article, .markdown-body');
+            if (!contentElement) return;
+            
+            const images = contentElement.querySelectorAll('img');
+            images.forEach(img => {
+                // 只为 Markdown 生成的图片添加（排除表情等小图标）
+                if (img.alt && img.alt.includes('AI Generated Image')) {
+                    img.style.cursor = 'pointer';
+                    img.onclick = function(e) {
+                        e.stopPropagation();
+                        showImageFullscreen(this.src);
+                    };
+                }
+            });
+        }
+        
+        // 显示图片全屏
+        function showImageFullscreen(src) {
+            // 创建全屏容器
+            const modal = document.createElement('div');
+            modal.className = 'image-fullscreen-modal';
+            
+            // 创建关闭按钮
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'image-fullscreen-close';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.onclick = function(e) {
+                e.stopPropagation();
+                closeImageFullscreen(modal);
+            };
+            
+            // 创建图片
+            const fullscreenImg = document.createElement('img');
+            fullscreenImg.src = src;
+            fullscreenImg.alt = 'Fullscreen View';
+            fullscreenImg.onclick = function(e) {
+                e.stopPropagation();
+            };
+            
+            // 组装 DOM
+            modal.appendChild(closeBtn);
+            modal.appendChild(fullscreenImg);
+            document.body.appendChild(modal);
+            
+            // 按 ESC 键关闭
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    closeImageFullscreen(modal);
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }
+        
+        // 关闭图片全屏
+        function closeImageFullscreen(modal) {
+            if (modal && modal.parentNode) {
+                modal.parentNode.removeChild(modal);
             }
         }
     </script>
