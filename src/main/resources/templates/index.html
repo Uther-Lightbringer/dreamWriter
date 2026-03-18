@@ -80,6 +80,23 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
         }
+        .history-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(17, 153, 142, 0.3);
+        }
+        .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
         .novel-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -198,6 +215,7 @@
             <a href="/novel/add" class="add-novel-btn">➕ 添加新小说</a>
             <a href="/ai-chat" class="ai-chat-btn">🤖 AI 对话助手</a>
             <a href="/ai-image-generator" class="image-gen-btn">🎨 AI 图片生成</a>
+            <a href="/ai-image-history" class="history-btn">📷 查看历史照片</a>
         </div>
         
         <div class="novel-list" id="novelList">

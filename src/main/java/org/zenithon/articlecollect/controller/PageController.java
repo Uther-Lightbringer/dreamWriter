@@ -137,4 +137,12 @@ public class PageController {
     public String aiImageGenerator() {
         return "ai-image-generator";
     }
+
+    /**
+     * AI 图片历史记录页面
+     */
+    @GetMapping("/ai-image-history")
+    public String aiImageHistory() {
+        return "ai-image-history";
+    }
 }

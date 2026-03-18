@@ -144,16 +144,23 @@ public class ImageGenerationController {
     @PostMapping("/history")
     public ResponseEntity<Map<String, Object>> saveHistory(@RequestBody ImageHistoryRequest request) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             if (request.getPrompt() == null || request.getImageUrl() == null) {
                 response.put("success", false);
                 response.put("error", "参数不完整");
                 return ResponseEntity.badRequest().body(response);
             }
-            
-            AiImageHistory history = historyService.saveHistory(request.getPrompt(), request.getImageUrl());
-            
+
+            AiImageHistory history = historyService.saveHistory(
+                request.getPrompt(),
+                request.getImageUrl(),
+                request.getNovelId(),
+                request.getNovelTitle(),
+                request.getChapterId(),
+                request.getChapterTitle()
+            );
+
             if (history != null) {
                 response.put("success", true);
                 response.put("message", "保存成功");
@@ -163,7 +170,7 @@ public class ImageGenerationController {
                 response.put("error", "保存失败");
                 return ResponseEntity.internalServerError().body(response);
             }
-            
+
         } catch (Exception e) {
             response.put("success", false);
             response.put("error", e.getMessage());
@@ -181,6 +188,23 @@ public class ImageGenerationController {
             return ResponseEntity.ok(history);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * 删除图片历史记录
+     */
+    @DeleteMapping("/history/{id}")
+    public ResponseEntity<Map<String, Object>> deleteHistory(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            historyService.deleteHistory(id);
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
     }
 }
