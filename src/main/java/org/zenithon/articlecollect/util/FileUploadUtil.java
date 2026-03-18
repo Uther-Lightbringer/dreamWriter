@@ -291,4 +291,46 @@ public class FileUploadUtil {
         // 返回相对路径用于 Web 访问
         return "/images/auto-generated/" + chapterId + "/" + fileName;
     }
+
+    /**
+     * 保存角色卡图片
+     * @param imageData 图片二进制数据
+     * @param characterName 角色名称
+     * @return 保存的文件相对路径
+     * @throws IOException 文件操作异常
+     */
+    public static String saveCharacterCardImage(byte[] imageData, String characterName) throws IOException {
+        // 参数验证
+        if (imageData == null || imageData.length == 0) {
+            throw new IllegalArgumentException("图片数据不能为空");
+        }
+
+        if (characterName == null || characterName.trim().isEmpty()) {
+            throw new IllegalArgumentException("角色名称不能为空");
+        }
+
+        // 创建目录结构：uploads/images/character-card/
+        Path uploadPath = Paths.get(UPLOAD_DIR + "character-card");
+
+        // 确保目录存在
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // 生成文件名：{角色名}-{时间戳}-{4 位随机数}.jpg
+        long timestamp = System.currentTimeMillis();
+        String randomId = String.format("%04d", (int)(Math.random() * 10000));
+        String safeCharacterName = characterName.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fa5]", "_");
+        String fileName = safeCharacterName + "-" + timestamp + "-" + randomId + ".jpg";
+
+        Path filePath = uploadPath.resolve(fileName);
+
+        // 保存图片
+        Files.write(filePath, imageData);
+
+        System.out.println("角色卡图片已保存：" + filePath.toString());
+
+        // 返回相对路径用于 Web 访问
+        return "/images/character-card/" + fileName;
+    }
 }

@@ -775,7 +775,7 @@ public class NovelController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // 调用火山引擎生成图片
+            // 调用 EvoLink 生成图片
             String imageUrl = novelService.generateImageForCharacter(targetCard);
             
             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
@@ -791,7 +791,7 @@ public class NovelController {
             } else {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "图片生成失败，请检查火山引擎配置");
+                response.put("message", "图片生成失败，请检查 EvoLink 配置");
                 return ResponseEntity.badRequest().body(response);
             }
         } catch (Exception e) {

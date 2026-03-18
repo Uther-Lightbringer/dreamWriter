@@ -3,12 +3,17 @@ package org.zenithon.articlecollect.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.zenithon.articlecollect.config.EvoLinkConfig;
 import org.zenithon.articlecollect.dto.CharacterCard;
 import org.zenithon.articlecollect.entity.CharacterCardEntity;
 import org.zenithon.articlecollect.repository.CharacterCardRepository;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +37,16 @@ public class CharacterCardAsyncService {
     
     @Autowired
     private CharacterCardPromptTaskService promptTaskService;
-    
+
+    @Autowired
+    private EvoLinkConfig evoLinkConfig;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     // 图片生成间隔时间（毫秒）
     private static final long IMAGE_GENERATION_INTERVAL_MS = 3000; // 3 秒
     
@@ -62,7 +76,7 @@ public class CharacterCardAsyncService {
                     }
                 }
                 
-                // 2. 如果有 AI 绘画提示词，且没有图片 URL，则调用火山引擎生成图片
+                // 2. 如果有 AI 绘画提示词，且没有图片 URL，则调用 EvoLink 生成图片
                 if ((card.getGeneratedImageUrl() == null || card.getGeneratedImageUrl().trim().isEmpty()) 
                         && card.getAppearanceDescription() != null && !card.getAppearanceDescription().trim().isEmpty()) {
                     logger.info("正在为角色 '{}' 生成 AI 图片...", card.getName());
@@ -76,10 +90,10 @@ public class CharacterCardAsyncService {
                     }
                     
                     try {
-                        String imageUrl = new VolcEngineImageService().generateImage(card.getAppearanceDescription());
-                        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                            card.setGeneratedImageUrl(imageUrl);
-                            logger.info("角色 '{}' AI 图片生成成功：{}", card.getName(), imageUrl);
+                        String localImagePath = generateAndSaveCharacterImage(card);
+                        if (localImagePath != null && !localImagePath.trim().isEmpty()) {
+                            card.setGeneratedImageUrl(localImagePath);
+                            logger.info("角色 '{}' AI 图片生成成功：{}", card.getName(), localImagePath);
                         } else {
                             logger.warn("角色 '{}' AI 图片生成结果为空", card.getName());
                         }
@@ -159,5 +173,89 @@ public class CharacterCardAsyncService {
             logger.error("重新生成角色卡 AI 绘画提示词失败，taskId={}, characterId={}", taskId, characterId, e);
             promptTaskService.failTask(taskId, "生成失败：" + e.getMessage());
         }
+    }
+
+    /**
+     * 生成并保存角色卡图片到本地
+     */
+    private String generateAndSaveCharacterImage(CharacterCard card) {
+        try {
+            // 创建 EvoLinkImageService 实例
+            EvoLinkImageService imageService = new EvoLinkImageService(evoLinkConfig, restTemplate, objectMapper);
+            String taskId = imageService.generateImage(card.getAppearanceDescription(), "1:1");
+
+            // 等待图片生成完成
+            String imageUrl = waitForImageCompletion(imageService, taskId, 5 * 60 * 1000);
+
+            if (imageUrl != null) {
+                // 下载并保存到本地
+                return downloadAndSaveToLocal(card, imageUrl);
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            logger.error("生成并保存角色卡图片失败：" + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * 下载图片并保存到本地角色卡目录
+     */
+    private String downloadAndSaveToLocal(CharacterCard card, String imageUrl) {
+        try {
+            // 下载图片
+            ResponseEntity<byte[]> response = restTemplate.getForEntity(imageUrl, byte[].class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                // 使用 FileUploadUtil 保存图片
+                String localPath = org.zenithon.articlecollect.util.FileUploadUtil.saveCharacterCardImage(
+                    response.getBody(),
+                    card.getName()
+                );
+
+                logger.info("角色卡图片已保存到本地：{}", localPath);
+                return localPath;
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            logger.error("下载并保存角色卡图片失败：" + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * 等待图片生成完成
+     */
+    private String waitForImageCompletion(EvoLinkImageService imageService, String taskId, long timeout) {
+        long startTime = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() - startTime < timeout) {
+            try {
+                EvoLinkImageService.TaskStatus status = imageService.getTaskStatus(taskId);
+
+                if (status.isCompleted()) {
+                    return status.getImageUrl();
+                }
+
+                if (status.isFailed()) {
+                    logger.error("图片生成失败：{}", status.getError());
+                    return null;
+                }
+
+                // 等待 2 秒后再次检查
+                Thread.sleep(2000);
+
+            } catch (Exception e) {
+                logger.error("检查任务状态失败：" + e.getMessage(), e);
+                return null;
+            }
+        }
+
+        logger.error("等待图片生成超时");
+        return null;
     }
 }
