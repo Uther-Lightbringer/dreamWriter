@@ -125,24 +125,45 @@ public class AIPromptService {
     }
     
     /**
-     * 构建 AI 提示词生成的 Prompt
+     * 构建 AI 提示词生成的 Prompt - 使用高级提示词结构（英文输出）
      */
     private String buildPrompt(String characterDescription) {
-        return "你是一位专业的 AI 绘画提示词工程师。请根据以下角色信息，生成一段用于 AI 人物写真的详细描述。\n\n" +
-               "要求：\n" +
-               "1. **画风风格**：写实主义、高品质人物摄影、电影感光影、精细细节\n" +
-               "2. **构图要求**：全身照，完整展现人物从头到脚的整体形象\n" +
-               "3. **姿势造型**：根据角色性格和背景，设计自然且富有表现力的 pose 和造型（如站立、坐姿、动态姿势等）\n" +
-               "4. **视角灵活**：可根据角色特点选择最佳视角（平视、仰视、俯视、侧身等）\n" +
-               "5. **重点描述**：\n" +
-               "   - 外貌特征：发型、发色、瞳色、面部表情、五官细节\n" +
-               "   - 身材体型：身高、体态、比例\n" +
-               "   - 服装搭配：服饰风格、颜色、配饰细节\n" +
-               "   - 动作姿态：手部动作、身体语言、重心分布\n" +
-               "6. **补充元素**：可适当添加符合角色气质的场景、道具或氛围\n" +
-               "7. **输出格式**：只输出描述文本，不要其他说明，长度控制在 150-300 字\n" +
-                "8. **违禁词**:生成的提示词要避免有违禁词。如果存在有违禁词，尝试替换为其他的意思相似的词语。如果存在一些可能色情的东西，使用其他外形类似的东西替代。\n\n" +
-               "角色信息：\n" +
+        return "You are a professional AI image prompt engineer. Please generate a high-quality, detailed prompt for AI image generation based on the following character information.\n\n" +
+
+               "【Advanced Prompt Structure Requirements】\n" +
+               "Please generate the prompt following this structure:\n" +
+               "1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n" +
+               "2. **Style Modifiers**: e.g., \"cyberpunk style\", \"Studio Ghibli style\", \"Makoto Shinkai style\", \"Michelangelo style\", etc.\n" +
+               "3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.\n" +
+               "4. **Camera Angles**: e.g., \"wide-angle lens shot\", \"bird's eye view\", \"medium shot\", \"close-up shot\", etc.\n" +
+               "5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., \"mysterious\", \"warm and cozy\", \"epic\", etc.\n" +
+               "6. **Artist References**: e.g., \"in the style of Hayao Miyazaki\", \"in the style of Makoto Shinkai\", \"in the style of Van Gogh\", etc.\n" +
+               "7. **Lighting Description**: e.g., \"soft morning light\", \"cyberpunk neon lights\", \"cinematic lighting\", \"dramatic lighting\", etc.\n" +
+               "8. **Texture/Material**: e.g., \"smooth marble texture\", \"polished metal surface\", \"fabric texture\", etc.\n" +
+               "9. **Composition**: e.g., \"rule of thirds composition\", \"symmetrical composition\", \"center composition\", etc.\n\n" +
+
+               "【Character Portrait Prompt Specific Requirements】\n" +
+               "- **Art Style**: Choose appropriate style based on character (realism/anime illustration/cyberpunk/fantasy epic/Japanese anime, etc.)\n" +
+               "- **Composition**: Choose based on character (full body shot/half body shot/close-up/medium shot, etc.)\n" +
+               "- **Pose**: Design natural and expressive poses (standing/sitting/dynamic pose/fighting stance, etc.)\n" +
+               "- **Perspective**: Choose the best perspective (eye level/low angle/high angle/profile/front view, etc.)\n" +
+               "- **Key Descriptions**: Appearance features (hair style, hair color, eye color, expression, facial features), body type, clothing details, action pose\n" +
+               "- **Scene/Background**: Add scene and atmosphere matching the character's temperament\n" +
+               "- **Lighting**: Detailed description of lighting effects\n" +
+               "- **Colors**: Describe main color palette and color scheme\n" +
+               "- **Image Quality**: e.g., \"high quality, ultra HD, 8k resolution, fine details\", etc.\n\n" +
+
+               "【Output Format Requirements】\n" +
+               "- Only output the prompt text, no other explanations\n" +
+               "- Length between 200-500 words\n" +
+               "- **USE ENGLISH ONLY**\n" +
+               "- Avoid inappropriate content, use synonyms when necessary\n\n" +
+
+               "【Prompt Optimization Example】\n" +
+               "Original idea: \"an eagle\"\n" +
+               "Optimized prompt: \"A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style.\"\n\n" +
+
+               "Character Information:\n" +
                characterDescription;
     }
     

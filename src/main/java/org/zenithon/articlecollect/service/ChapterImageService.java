@@ -291,69 +291,103 @@ public class ChapterImageService {
     }
     
     /**
-     * 为配图位置生成 AI 绘画提示词（包含角色信息）
+     * 为配图位置生成 AI 绘画提示词（包含角色信息）- 高级提示词版本（英文输出）
      */
     public String generateImagePromptWithCharacters(String description, List<CharacterCardEntity> characterCards) {
         try {
             StringBuilder promptBuilder = new StringBuilder();
-            
-            promptBuilder.append("请根据以下描述，生成一段用于 AI 绘画的详细提示词。\n\n");
-            
+
+            promptBuilder.append("You are a professional AI image prompt engineer. Please generate a high-quality, detailed prompt for AI image generation based on the following scene description.\n\n");
+
             // 如果有角色卡，添加角色信息
             if (characterCards != null && !characterCards.isEmpty()) {
-                promptBuilder.append("🎭【重要角色外貌信息】（如果画面中包含这些角色，必须严格按照以下外貌描述）：\n");
+                promptBuilder.append("🎭【Important Character Appearance Information】(If the scene includes these characters, you MUST strictly follow their appearance descriptions):\n");
                 for (int i = 0; i < characterCards.size(); i++) {
                     CharacterCardEntity card = characterCards.get(i);
-                    promptBuilder.append("\n角色 ").append(i + 1).append(": ").append(card.getName()).append("\n");
-                    
+                    promptBuilder.append("\nCharacter ").append(i + 1).append(": ").append(card.getName()).append("\n");
+
                     if (card.getAge() != null) {
-                        promptBuilder.append("  - 年龄：").append(card.getAge()).append("\n");
+                        promptBuilder.append("  - Age: ").append(card.getAge()).append("\n");
                     }
                     if (card.getGender() != null && !card.getGender().isEmpty()) {
-                        promptBuilder.append("  - 性别：").append(card.getGender()).append("\n");
+                        promptBuilder.append("  - Gender: ").append(card.getGender()).append("\n");
                     }
                     if (card.getAppearanceDescription() != null && !card.getAppearanceDescription().isEmpty()) {
-                        promptBuilder.append("  - 外貌：").append(card.getAppearanceDescription()).append("\n");
+                        promptBuilder.append("  - Appearance: ").append(card.getAppearanceDescription()).append("\n");
                     }
                 }
                 promptBuilder.append("\n");
             }
-            
-            promptBuilder.append("要求：\n");
-            promptBuilder.append("1. 使用中文\n");
-            promptBuilder.append("2. 详细描述画面内容，包括场景、人物、动作、光影等\n");
-            promptBuilder.append("3. 适合写实风格或插画风格\n");
-            promptBuilder.append("4. 长度在 150-300 字之间\n");
-            promptBuilder.append("5. 如果画面中包含上述角色，必须严格遵循角色的外貌特征（年龄、性别、发型、瞳色、服装等）\n\n");
-            promptBuilder.append("画面描述：\n");
+
+            promptBuilder.append("【Advanced Prompt Structure Requirements】\n");
+            promptBuilder.append("Please generate the prompt following this structure:\n");
+            promptBuilder.append("1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n");
+            promptBuilder.append("2. **Style Modifiers**: e.g., \"cyberpunk style\", \"Studio Ghibli style\", \"Makoto Shinkai style\", \"Hayao Miyazaki style\", \"Van Gogh style\", \"Michelangelo style\", \"realism\", \"anime illustration style\", etc.\n");
+            promptBuilder.append("3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, materials, etc.\n");
+            promptBuilder.append("4. **Camera Angles**: e.g., \"wide-angle lens shot\", \"bird's eye view\", \"medium shot\", \"close-up shot\", \"rule of thirds composition\", \"fisheye lens\", etc.\n");
+            promptBuilder.append("5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., \"mysterious\", \"warm and cozy\", \"epic\", \"melancholic\", \"cheerful\", \"tense\", etc.\n");
+            promptBuilder.append("6. **Artist References**: e.g., \"in the style of Hayao Miyazaki\", \"in the style of Makoto Shinkai\", \"in the style of Van Gogh\", etc.\n");
+            promptBuilder.append("7. **Lighting Description**: e.g., \"soft morning light\", \"cyberpunk neon lights\", \"cinematic lighting\", \"dramatic lighting\", \"sunset glow\", \"moonlight\", etc.\n");
+            promptBuilder.append("8. **Texture/Material**: e.g., \"smooth marble texture\", \"polished metal surface\", \"fabric texture\", \"distressed wood surface\", etc.\n");
+            promptBuilder.append("9. **Image Quality**: e.g., \"high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality\", etc.\n\n");
+
+            promptBuilder.append("【Output Format Requirements】\n");
+            promptBuilder.append("- **USE ENGLISH ONLY**\n");
+            promptBuilder.append("- Only output the prompt text, no other explanations\n");
+            promptBuilder.append("- Length between 200-500 words\n");
+            promptBuilder.append("- If the scene includes the above characters, you MUST strictly follow their appearance features (age, gender, hairstyle, eye color, clothing, etc.)\n");
+            promptBuilder.append("- Avoid inappropriate content, use synonyms when necessary\n\n");
+
+            promptBuilder.append("【Prompt Optimization Example】\n");
+            promptBuilder.append("Original idea: \"an eagle\"\n");
+            promptBuilder.append("Optimized prompt: \"A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style.\"\n\n");
+
+            promptBuilder.append("Scene Description:\n");
             promptBuilder.append(description);
-            
+
             String prompt = promptBuilder.toString();
             return aiPromptService.callDeepSeekAPI(prompt);
-            
+
         } catch (Exception e) {
             logger.error("生成图片提示词失败：" + e.getMessage(), e);
             return null;
         }
     }
-    
+
     /**
-     * 为配图位置生成 AI 绘画提示词（旧版本，不含角色信息）
+     * 为配图位置生成 AI 绘画提示词（不含角色信息）- 高级提示词版本（英文输出）
      */
     public String generateImagePrompt(String description) {
         try {
-            // 使用 AIPromptService 的通用方法生成提示词
-            String prompt = "请根据以下描述，生成一段用于 AI 绘画的详细提示词。\n\n" +
-                           "要求：\n" +
-                           "1. 使用中文\n" +
-                           "2. 详细描述画面内容，包括场景、人物、动作、光影等\n" +
-                           "3. 适合写实风格或插画风格\n" +
-                           "4. 长度在 150-300 字之间\n\n" +
-                           "描述：\n" +
+            String prompt = "You are a professional AI image prompt engineer. Please generate a high-quality, detailed prompt for AI image generation based on the following scene description.\n\n" +
+
+                           "【Advanced Prompt Structure Requirements】\n" +
+                           "Please generate the prompt following this structure:\n" +
+                           "1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n" +
+                           "2. **Style Modifiers**: e.g., \"cyberpunk style\", \"Studio Ghibli style\", \"Makoto Shinkai style\", \"Hayao Miyazaki style\", \"Van Gogh style\", \"Michelangelo style\", \"realism\", \"anime illustration style\", etc.\n" +
+                           "3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, materials, etc.\n" +
+                           "4. **Camera Angles**: e.g., \"wide-angle lens shot\", \"bird's eye view\", \"medium shot\", \"close-up shot\", \"rule of thirds composition\", \"fisheye lens\", etc.\n" +
+                           "5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., \"mysterious\", \"warm and cozy\", \"epic\", \"melancholic\", \"cheerful\", \"tense\", etc.\n" +
+                           "6. **Artist References**: e.g., \"in the style of Hayao Miyazaki\", \"in the style of Makoto Shinkai\", \"in the style of Van Gogh\", etc.\n" +
+                           "7. **Lighting Description**: e.g., \"soft morning light\", \"cyberpunk neon lights\", \"cinematic lighting\", \"dramatic lighting\", \"sunset glow\", \"moonlight\", etc.\n" +
+                           "8. **Texture/Material**: e.g., \"smooth marble texture\", \"polished metal surface\", \"fabric texture\", \"distressed wood surface\", etc.\n" +
+                           "9. **Image Quality**: e.g., \"high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality\", etc.\n\n" +
+
+                           "【Output Format Requirements】\n" +
+                           "- **USE ENGLISH ONLY**\n" +
+                           "- Only output the prompt text, no other explanations\n" +
+                           "- Length between 200-500 words\n" +
+                           "- Avoid inappropriate content, use synonyms when necessary\n\n" +
+
+                           "【Prompt Optimization Example】\n" +
+                           "Original idea: \"an eagle\"\n" +
+                           "Optimized prompt: \"A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style.\"\n\n" +
+
+                           "Scene Description:\n" +
                            description;
-            
+
             return aiPromptService.callDeepSeekAPI(prompt);
-            
+
         } catch (Exception e) {
             logger.error("生成图片提示词失败：" + e.getMessage(), e);
             return null;
