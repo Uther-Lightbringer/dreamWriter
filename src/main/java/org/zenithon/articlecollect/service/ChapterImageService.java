@@ -322,16 +322,17 @@ public class ChapterImageService {
             promptBuilder.append("【Advanced Prompt Structure Requirements】\n");
             promptBuilder.append("Please generate the prompt following this structure:\n");
             promptBuilder.append("1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n");
-            promptBuilder.append("2. **Style Modifiers**: e.g., \"cyberpunk style\", \"Studio Ghibli style\", \"Makoto Shinkai style\", \"Hayao Miyazaki style\", \"Van Gogh style\", \"Michelangelo style\", \"realism\", \"anime illustration style\", etc.\n");
+            promptBuilder.append("2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n");
             promptBuilder.append("3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, materials, etc.\n");
             promptBuilder.append("4. **Camera Angles**: e.g., \"wide-angle lens shot\", \"bird's eye view\", \"medium shot\", \"close-up shot\", \"rule of thirds composition\", \"fisheye lens\", etc.\n");
             promptBuilder.append("5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., \"mysterious\", \"warm and cozy\", \"epic\", \"melancholic\", \"cheerful\", \"tense\", etc.\n");
-            promptBuilder.append("6. **Artist References**: e.g., \"in the style of Hayao Miyazaki\", \"in the style of Makoto Shinkai\", \"in the style of Van Gogh\", etc.\n");
-            promptBuilder.append("7. **Lighting Description**: e.g., \"soft morning light\", \"cyberpunk neon lights\", \"cinematic lighting\", \"dramatic lighting\", \"sunset glow\", \"moonlight\", etc.\n");
-            promptBuilder.append("8. **Texture/Material**: e.g., \"smooth marble texture\", \"polished metal surface\", \"fabric texture\", \"distressed wood surface\", etc.\n");
-            promptBuilder.append("9. **Image Quality**: e.g., \"high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality\", etc.\n\n");
+            promptBuilder.append("6. **Artist References**: e.g., \"in the style of National Geographic photography\", \"in the style of professional portrait photography\", etc.\n");
+            promptBuilder.append("7. **Lighting Description**: e.g., \"natural daylight\", \"soft studio lighting\", \"golden hour sunlight\", etc.\n");
+            promptBuilder.append("8. **Texture/Material**: e.g., \"natural skin texture\", \"real fabric texture\", \"authentic material details\", etc.\n");
+            promptBuilder.append("9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n");
 
             promptBuilder.append("【Output Format Requirements】\n");
+            promptBuilder.append("- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n");
             promptBuilder.append("- **USE ENGLISH ONLY**\n");
             promptBuilder.append("- Only output the prompt text, no other explanations\n");
             promptBuilder.append("- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n");
@@ -371,16 +372,17 @@ public class ChapterImageService {
                            "【Advanced Prompt Structure Requirements】\n" +
                            "Please generate the prompt following this structure:\n" +
                            "1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n" +
-                           "2. **Style Modifiers**: e.g., \"cyberpunk style\", \"Studio Ghibli style\", \"Makoto Shinkai style\", \"Hayao Miyazaki style\", \"Van Gogh style\", \"Michelangelo style\", \"realism\", \"anime illustration style\", etc.\n" +
+                           "2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n" +
                            "3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, materials, etc.\n" +
                            "4. **Camera Angles**: e.g., \"wide-angle lens shot\", \"bird's eye view\", \"medium shot\", \"close-up shot\", \"rule of thirds composition\", \"fisheye lens\", etc.\n" +
                            "5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., \"mysterious\", \"warm and cozy\", \"epic\", \"melancholic\", \"cheerful\", \"tense\", etc.\n" +
-                           "6. **Artist References**: e.g., \"in the style of Hayao Miyazaki\", \"in the style of Makoto Shinkai\", \"in the style of Van Gogh\", etc.\n" +
-                           "7. **Lighting Description**: e.g., \"soft morning light\", \"cyberpunk neon lights\", \"cinematic lighting\", \"dramatic lighting\", \"sunset glow\", \"moonlight\", etc.\n" +
-                           "8. **Texture/Material**: e.g., \"smooth marble texture\", \"polished metal surface\", \"fabric texture\", \"distressed wood surface\", etc.\n" +
-                           "9. **Image Quality**: e.g., \"high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality\", etc.\n\n" +
+                           "6. **Artist References**: e.g., \"in the style of National Geographic photography\", \"in the style of professional portrait photography\", etc.\n" +
+                           "7. **Lighting Description**: e.g., \"natural daylight\", \"soft studio lighting\", \"golden hour sunlight\", etc.\n" +
+                           "8. **Texture/Material**: e.g., \"natural skin texture\", \"real fabric texture\", \"authentic material details\", etc.\n" +
+                           "9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n" +
 
                            "【Output Format Requirements】\n" +
+                           "- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n" +
                            "- **USE ENGLISH ONLY**\n" +
                            "- Only output the prompt text, no other explanations\n" +
                            "- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n" +

@@ -3673,16 +3673,17 @@
 【Advanced Prompt Structure Requirements】
 Please generate the prompt following this structure:
 1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]
-2. **Style Modifiers**: e.g., "cyberpunk style", "Studio Ghibli style", "Makoto Shinkai style", "Michelangelo style", etc.
+2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait
 3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.
 4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.
 5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.
-6. **Artist References**: e.g., "in the style of Hayao Miyazaki", "in the style of Makoto Shinkai", "in the style of Van Gogh", etc.
-7. **Lighting Description**: e.g., "soft morning light", "cyberpunk neon lights", "cinematic lighting", "dramatic lighting", etc.
-8. **Texture/Material**: e.g., "smooth marble texture", "polished metal surface", "fabric texture", etc.
-9. **Image Quality**: e.g., "high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality", etc.
+6. **Artist References**: e.g., "in the style of National Geographic photography", "in the style of professional portrait photography", etc.
+7. **Lighting Description**: e.g., "natural daylight", "soft studio lighting", "golden hour sunlight", etc.
+8. **Texture/Material**: e.g., "natural skin texture", "real fabric texture", "authentic material details", etc.
+9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo
 
 【Output Format Requirements】
+- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality
 - **USE ENGLISH ONLY**
 - Only output the prompt text, no other explanations
 - Length between 200-500 words, **MAX 1800 CHARACTERS**, **NEVER EXCEED 1800 CHARACTERS**
@@ -4048,16 +4049,17 @@ Original description: ${input}`
             promptBuilder += `【Advanced Prompt Structure Requirements】\n`;
             promptBuilder += `Please generate the prompt following this structure:\n`;
             promptBuilder += `1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n`;
-            promptBuilder += `2. **Style Modifiers**: e.g., "cyberpunk style", "Studio Ghibli style", "Makoto Shinkai style", "Michelangelo style", etc.\n`;
+            promptBuilder += `2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n`;
             promptBuilder += `3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.\n`;
             promptBuilder += `4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.\n`;
             promptBuilder += `5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.\n`;
-            promptBuilder += `6. **Artist References**: e.g., "in the style of Hayao Miyazaki", "in the style of Makoto Shinkai", "in the style of Van Gogh", etc.\n`;
-            promptBuilder += `7. **Lighting Description**: e.g., "soft morning light", "cyberpunk neon lights", "cinematic lighting", "dramatic lighting", etc.\n`;
-            promptBuilder += `8. **Texture/Material**: e.g., "smooth marble texture", "polished metal surface", "fabric texture", etc.\n`;
-            promptBuilder += `9. **Image Quality**: e.g., "high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality", etc.\n\n`;
+            promptBuilder += `6. **Artist References**: e.g., "in the style of National Geographic photography", "in the style of professional portrait photography", etc.\n`;
+            promptBuilder += `7. **Lighting Description**: e.g., "natural daylight", "soft studio lighting", "golden hour sunlight", etc.\n`;
+            promptBuilder += `8. **Texture/Material**: e.g., "natural skin texture", "real fabric texture", "authentic material details", etc.\n`;
+            promptBuilder += `9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n`;
 
             promptBuilder += `【Output Format Requirements】\n`;
+            promptBuilder += `- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n`;
             promptBuilder += `- **USE ENGLISH ONLY**\n`;
             promptBuilder += `- Only output the prompt text, no other explanations\n`;
             promptBuilder += `- Length between 200-500 words, **MAX 1800 CHARACTERS**\n`;
@@ -4065,6 +4067,8 @@ Original description: ${input}`
             promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
             promptBuilder += `- **NEVER EXCEED 1800 CHARACTERS** - THIS IS CRITICAL! - Only generate the prompt, no extra content\n`;
             promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
+            promptBuilder += `- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n`;
+            promptBuilder += `- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n\n`;
             
             console.log('\n📝 根据选中文字生成图片提示词:');
             console.log('📖 选中的文字:', selectedText);
@@ -4467,16 +4471,17 @@ Original description: ${input}`
             promptBuilder += `【Advanced Prompt Structure Requirements】\n`;
             promptBuilder += `Please generate the prompt following this structure:\n`;
             promptBuilder += `1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n`;
-            promptBuilder += `2. **Style Modifiers**: e.g., "cyberpunk style", "Studio Ghibli style", "Makoto Shinkai style", "Michelangelo style", etc.\n`;
+            promptBuilder += `2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n`;
             promptBuilder += `3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.\n`;
             promptBuilder += `4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.\n`;
             promptBuilder += `5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.\n`;
-            promptBuilder += `6. **Artist References**: e.g., "in the style of Hayao Miyazaki", "in the style of Makoto Shinkai", "in the style of Van Gogh", etc.\n`;
-            promptBuilder += `7. **Lighting Description**: e.g., "soft morning light", "cyberpunk neon lights", "cinematic lighting", "dramatic lighting", etc.\n`;
-            promptBuilder += `8. **Texture/Material**: e.g., "smooth marble texture", "polished metal surface", "fabric texture", etc.\n`;
-            promptBuilder += `9. **Image Quality**: e.g., "high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality", etc.\n\n`;
+            promptBuilder += `6. **Artist References**: e.g., "in the style of National Geographic photography", "in the style of professional portrait photography", etc.\n`;
+            promptBuilder += `7. **Lighting Description**: e.g., "natural daylight", "soft studio lighting", "golden hour sunlight", etc.\n`;
+            promptBuilder += `8. **Texture/Material**: e.g., "natural skin texture", "real fabric texture", "authentic material details", etc.\n`;
+            promptBuilder += `9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n`;
 
             promptBuilder += `【Output Format Requirements】\n`;
+            promptBuilder += `- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n`;
             promptBuilder += `- **USE ENGLISH ONLY**\n`;
             promptBuilder += `- Only output the prompt text, no other explanations\n`;
             promptBuilder += `- Length between 200-500 words, **MAX 1800 CHARACTERS**\n`;
@@ -4484,6 +4489,8 @@ Original description: ${input}`
             promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
             promptBuilder += `- **NEVER EXCEED 1800 CHARACTERS** - THIS IS CRITICAL! - Only generate the prompt, no extra content\n`;
             promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
+            promptBuilder += `- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n`;
+            promptBuilder += `- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n\n`;
 
             return promptBuilder;
         }

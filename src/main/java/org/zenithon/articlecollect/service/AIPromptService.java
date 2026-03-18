@@ -144,17 +144,18 @@ public class AIPromptService {
                "9. **Composition**: e.g., \"rule of thirds composition\", \"symmetrical composition\", \"center composition\", etc.\n\n" +
 
                "【Character Portrait Prompt Specific Requirements】\n" +
-               "- **Art Style**: Choose appropriate style based on character (realism/anime illustration/cyberpunk/fantasy epic/Japanese anime, etc.)\n" +
+               "- **Art Style**: photorealistic, realistic portrait, real person photography, authentic photo style\n" +
                "- **Composition**: Choose based on character (full body shot/half body shot/close-up/medium shot, etc.)\n" +
                "- **Pose**: Design natural and expressive poses (standing/sitting/dynamic pose/fighting stance, etc.)\n" +
                "- **Perspective**: Choose the best perspective (eye level/low angle/high angle/profile/front view, etc.)\n" +
                "- **Key Descriptions**: Appearance features (hair style, hair color, eye color, expression, facial features), body type, clothing details, action pose\n" +
                "- **Scene/Background**: Add scene and atmosphere matching the character's temperament\n" +
-               "- **Lighting**: Detailed description of lighting effects\n" +
-               "- **Colors**: Describe main color palette and color scheme\n" +
-               "- **Image Quality**: e.g., \"high quality, ultra HD, 8k resolution, fine details\", etc.\n\n" +
+               "- **Lighting**: Detailed description of lighting effects, natural lighting, soft studio lighting\n" +
+               "- **Colors**: Describe main color palette and color scheme, natural skin tones, realistic colors\n" +
+               "- **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic\n\n" +
 
                "【Output Format Requirements】\n" +
+               "- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n" +
                "- Only output the prompt text, no other explanations\n" +
                "- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n" +
                "- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n" +
