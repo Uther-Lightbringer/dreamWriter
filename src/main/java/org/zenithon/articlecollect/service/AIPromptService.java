@@ -187,7 +187,7 @@ public class AIPromptService {
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", deepSeekConfig.getModel());
-        requestBody.put("max_tokens", 1800);
+        requestBody.put("max_tokens", 1000);
 
         Map<String, String> message = new HashMap<>();
         message.put("role", "user");

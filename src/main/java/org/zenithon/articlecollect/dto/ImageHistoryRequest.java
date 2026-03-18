@@ -11,6 +11,7 @@ public class ImageHistoryRequest {
     private String novelTitle;
     private Long chapterId;
     private String chapterTitle;
+    private String novelContent;
 
     public ImageHistoryRequest() {
     }
@@ -66,5 +67,13 @@ public class ImageHistoryRequest {
 
     public void setChapterTitle(String chapterTitle) {
         this.chapterTitle = chapterTitle;
+    }
+
+    public String getNovelContent() {
+        return novelContent;
+    }
+
+    public void setNovelContent(String novelContent) {
+        this.novelContent = novelContent;
     }
 }

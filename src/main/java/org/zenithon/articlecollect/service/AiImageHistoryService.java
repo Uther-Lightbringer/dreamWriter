@@ -33,6 +33,13 @@ public class AiImageHistoryService {
      * 保存历史记录（带小说和章节信息）
      */
     public AiImageHistory saveHistory(String prompt, String imageUrl, Long novelId, String novelTitle, Long chapterId, String chapterTitle) {
+        return saveHistory(prompt, imageUrl, novelId, novelTitle, chapterId, chapterTitle, null);
+    }
+
+    /**
+     * 保存历史记录（带小说、章节和小说内容信息）
+     */
+    public AiImageHistory saveHistory(String prompt, String imageUrl, Long novelId, String novelTitle, Long chapterId, String chapterTitle, String novelContent) {
         try {
             // 先检查是否已存在相同的图片 URL
             List<AiImageHistory> allHistory = repository.findAllByOrderByCreateTimeDesc();
@@ -44,7 +51,7 @@ public class AiImageHistoryService {
             }
 
             // 不存在则创建新记录
-            AiImageHistory history = new AiImageHistory(prompt, imageUrl, novelId, novelTitle, chapterId, chapterTitle);
+            AiImageHistory history = new AiImageHistory(prompt, imageUrl, novelId, novelTitle, chapterId, chapterTitle, novelContent);
             AiImageHistory saved = repository.save(history);
             logger.info("历史记录保存成功：{}", imageUrl);
             return saved;

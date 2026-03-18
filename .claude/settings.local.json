@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor: 将角色卡图片生成从火山引擎替换为EvoLink\n\n- 修改 CharacterCardAsyncService，使用EvoLink生成角色卡图片\n- 修改 NovelService，使用EvoLink生成单个角色卡图片\n- 在 FileUploadUtil 中添加 saveCharacterCardImage 方法\n- 更新相关注释和提示信息\n- 图片保存到 uploads/images/character-card/ 目录\n- 支持1:1比例的角色卡图片生成\n- 添加图片下载到本地和等待生成完成的逻辑\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor: 优化文生图提示词生成，使用英文输出和高级提示词结构\n\n- 优化 AIPromptService，使用高级提示词结构（主题+动作+背景）\n- 优化 ChapterImageService，支持角色卡信息的英文提示词生成\n- 添加风格修饰词、相机角度、情感基调、艺术家参考、光线描述等高级技巧\n- 所有生成的提示词统一使用英文输出\n- 调整提示词长度范围为 200-500 词\n- 添加完整的英文提示词优化示例\n- 包含画面质量、构图、纹理材质等详细描述\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(git reset:*)"
     ]
   }
 }

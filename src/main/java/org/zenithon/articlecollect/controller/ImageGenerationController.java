@@ -158,7 +158,8 @@ public class ImageGenerationController {
                 request.getNovelId(),
                 request.getNovelTitle(),
                 request.getChapterId(),
-                request.getChapterTitle()
+                request.getChapterTitle(),
+                request.getNovelContent()
             );
 
             if (history != null) {

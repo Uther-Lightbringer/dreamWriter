@@ -45,7 +45,6 @@ public class EvoLinkImageService {
             requestBody.put("model", evoLinkConfig.getModel());
             requestBody.put("prompt", prompt);
             requestBody.put("size", size);
-            requestBody.put("seed", 1);
             
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
             

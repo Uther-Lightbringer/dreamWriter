@@ -3891,7 +3891,7 @@ Original description: ${input}`
         let modalImageGenerator = null;  // 图片生成器实例
         let currentModalImageUrl = null;  // 当前生成的图片 URL
         
-        // 设置文字选择监听
+        // 设置文字选择监听 - 只在章节详情页启用
         function setupTextSelectionListener() {
             let hideToolbarTimeout = null;
             
@@ -3903,6 +3903,13 @@ Original description: ${input}`
                 // 清除自动隐藏定时器
                 if (hideToolbarTimeout) {
                     clearTimeout(hideToolbarTimeout);
+                }
+                
+                // ✅ 只在章节内容区域内选择文字时才显示工具栏
+                const contentElement = document.querySelector('.content-body, .chapter-content, .markdown-body');
+                if (!contentElement || !contentElement.contains(e.target)) {
+                    hideSelectionToolbar();
+                    return;
                 }
                 
                 // 如果有选中的文字且长度大于 5 个字符
@@ -4200,10 +4207,15 @@ Original description: ${input}`
                 if (!fullPrompt || !fullPrompt.trim()) throw new Error('未生成有效内容');
                 
                 // ✅ 直接将生成的提示词填充到图片生成输入框
-                document.getElementById('modalImagePrompt').value = fullPrompt;
+                const modalImagePrompt = document.getElementById('modalImagePrompt');
+                modalImagePrompt.value = fullPrompt;
+                
+                // ✅ 手动触发字数统计更新
+                updateCharacterCount('modalImagePrompt', 'modalImagePromptCount');
                 
                 console.log('✅ 提示词已生成并填充到图片生成框');
                 console.log('📋 提示词内容:', fullPrompt);
+                console.log('📊 提示词长度:', fullPrompt.length, '字符');
             } catch (error) {
                 alert('生成提示词失败：' + error.message);
             } finally {
@@ -4270,7 +4282,7 @@ Original description: ${input}`
             modalImageGenerator = null;
         }
         
-        // 自动保存生成的图片到本地
+        // 自动保存生成的图片到本地并记录历史
         async function autoSaveGeneratedImage(imageUrl) {
             try {
                 console.log('🔄 开始自动保存图片...');
@@ -4305,11 +4317,50 @@ Original description: ${input}`
                     
                     // 更新显示的图片为本地路径
                     document.getElementById('modalGeneratedImage').src = currentModalImageUrl;
+                    
+                    // ✅ 保存到历史记录（带小说和章节信息）
+                    await saveToImageHistory(
+                        document.getElementById('modalPromptInput').value, // 提示词
+                        currentModalImageUrl, // 图片 URL
+                        novelId,
+                        document.getElementById('novelTitle')?.textContent || '',
+                        chapterId,
+                        document.getElementById('chapterTitle')?.textContent || ''
+                    );
                 } else {
                     console.warn('⚠️ 自动保存失败，但用户仍可使用临时 URL');
                 }
             } catch (error) {
                 console.error('❌ 自动保存图片失败:', error);
+                // 不弹窗提示，避免打扰用户
+            }
+        }
+        
+        // 保存图片到历史记录
+        async function saveToImageHistory(prompt, imageUrl, novelId, novelTitle, chapterId, chapterTitle) {
+            try {
+                console.log('📝 正在保存图片到历史记录...');
+                
+                const saveResponse = await fetch('/api/image/history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        imageUrl: imageUrl,
+                        novelId: novelId,
+                        novelTitle: novelTitle,
+                        chapterId: chapterId,
+                        chapterTitle: chapterTitle
+                    })
+                });
+                
+                if (saveResponse.ok) {
+                    console.log('✅ 历史记录保存成功');
+                } else {
+                    console.warn('⚠️ 历史记录保存失败，但不影响使用');
+                }
+            } catch (error) {
+                console.error('❌ 保存历史记录失败:', error);
                 // 不弹窗提示，避免打扰用户
             }
         }
@@ -4347,7 +4398,7 @@ Original description: ${input}`
             }
         }
         
-        // 使用 Markdown 语法更新章节内容
+        // 使用 Markdown 语法更新章节内容 - 在选中文字的最后一个字后面插入
         async function updateChapterContentWithMarkdown(imageUrl) {
             if (!savedSelectedText) {
                 alert('未选中任何文字！');
@@ -4384,10 +4435,11 @@ Original description: ${input}`
                     const trimmedIndex = originalContent.indexOf(selectedText.trim());
                     if (trimmedIndex !== -1) {
                         console.log('✅ 使用修剪后的文字匹配成功');
-                        // 在选中文字后插入图片
-                        const newContent = originalContent.slice(0, trimmedIndex + selectedText.trim().length) 
+                        // ✅ 在选中文字的最后一个字后面插入图片
+                        const insertPosition = trimmedIndex + selectedText.trim().length;
+                        const newContent = originalContent.slice(0, insertPosition) 
                                          + markdownImage 
-                                         + originalContent.slice(trimmedIndex + selectedText.trim().length);
+                                         + originalContent.slice(insertPosition);
                         return saveUpdatedContent(newContent);
                     }
                     
@@ -4397,13 +4449,15 @@ Original description: ${input}`
                     throw new Error('无法在章节内容中找到选中的文字，可能是因为内容已更改或选择了特殊字符。请刷新页面后重试。');
                 }
                 
-                // 在选中文字后插入图片
-                const newContent = originalContent.slice(0, selectedIndex + selectedText.length) 
+                // ✅ 在选中文字的最后一个字后面插入图片
+                const insertPosition = selectedIndex + selectedText.length;
+                const newContent = originalContent.slice(0, insertPosition) 
                                  + markdownImage 
-                                 + originalContent.slice(selectedIndex + selectedText.length);
+                                 + originalContent.slice(insertPosition);
                 
                 console.log('新长度:', newContent.length);
                 console.log('📦 新内容预览:', newContent.substring(0, 200));
+                console.log('✅ 图片插入位置：第', insertPosition, '个字符后 (选中文字末尾)');
                 
                 // 保存更新后的内容
                 return saveUpdatedContent(newContent);

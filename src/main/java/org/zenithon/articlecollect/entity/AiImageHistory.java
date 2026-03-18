@@ -35,6 +35,9 @@ public class AiImageHistory {
     @Column(name = "chapter_title", length = 500)
     private String chapterTitle;
 
+    @Column(name = "novel_content", columnDefinition = "TEXT")
+    private String novelContent;
+
     public AiImageHistory() {
     }
 
@@ -51,6 +54,17 @@ public class AiImageHistory {
         this.novelTitle = novelTitle;
         this.chapterId = chapterId;
         this.chapterTitle = chapterTitle;
+        this.createTime = LocalDateTime.now();
+    }
+
+    public AiImageHistory(String prompt, String imageUrl, Long novelId, String novelTitle, Long chapterId, String chapterTitle, String novelContent) {
+        this.prompt = prompt;
+        this.imageUrl = imageUrl;
+        this.novelId = novelId;
+        this.novelTitle = novelTitle;
+        this.chapterId = chapterId;
+        this.chapterTitle = chapterTitle;
+        this.novelContent = novelContent;
         this.createTime = LocalDateTime.now();
     }
 
@@ -116,5 +130,13 @@ public class AiImageHistory {
 
     public void setChapterTitle(String chapterTitle) {
         this.chapterTitle = chapterTitle;
+    }
+
+    public String getNovelContent() {
+        return novelContent;
+    }
+
+    public void setNovelContent(String novelContent) {
+        this.novelContent = novelContent;
     }
 }
