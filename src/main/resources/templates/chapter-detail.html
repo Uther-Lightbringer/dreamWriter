@@ -47,7 +47,7 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         .container {
-            max-width: 70%;
+            max-width: 800px;
             margin: 0 auto;
             background-color: var(--card-bg);
             box-shadow: 0 0 20px var(--shadow-color);
@@ -790,6 +790,220 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* 自动配图面板样式 */
+        .auto-image-panel {
+            margin: 30px 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .auto-image-panel-content {
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        
+        .auto-image-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .auto-image-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .auto-image-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-image-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+        
+        .auto-image-body {
+            padding: 25px;
+        }
+        
+        .auto-image-step {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .step-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 12px;
+        }
+        
+        .step-description {
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .auto-image-loading,
+        .auto-image-generating {
+            text-align: center;
+            padding: 30px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .auto-image-positions {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .position-item {
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .position-reason {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .position-description {
+            color: var(--text-color);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .generate-all-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+            margin-top: 15px;
+        }
+        
+        .generate-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+        }
+        
+        .auto-image-result {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .generated-image-item {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        .generated-image-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .save-content-btn {
+            background: linear-gradient(135deg, #26a69a 0%, #66bb6a 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(38, 166, 154, 0.3);
+            margin-top: 20px;
+        }
+        
+        .save-content-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(38, 166, 154, 0.4);
+        }
+        
+        /* 自动配图按钮样式 */
+        .auto-image-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .auto-image-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
         .chapter-header {
             text-align: center;
             margin-bottom: 30px;
@@ -2044,10 +2258,63 @@
                 </div>
             </div>
             
+            <!-- 自动配画面板区域 -->
+            <div class="auto-image-panel" id="autoImagePanel" style="display: none;">
+                <div class="auto-image-panel-content">
+                    <div class="auto-image-header">
+                        <h3>🖼️ 自动配图功能</h3>
+                        <button class="auto-image-close" onclick="closeAutoImagePanel()">×</button>
+                    </div>
+                    <div class="auto-image-body">
+                        <div class="auto-image-step">
+                            <div class="step-title">✨ 第一步：分析章节内容</div>
+                            <p class="step-description">AI 将自动分析章节内容，找出适合配图的位置（每章节最多 4 张）</p>
+                            <button class="analyze-btn" onclick="analyzeChapterContent()">
+                                🔍 开始分析
+                            </button>
+                        </div>
+                        
+                        <div class="auto-image-loading" id="analyzeLoading" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>正在分析章节内容...</p>
+                        </div>
+                        
+                        <div class="auto-image-positions" id="imagePositions" style="display: none;">
+                            <div class="step-title">📍 找到以下适合配图的位置：</div>
+                            <div id="positionsList"></div>
+                            <button class="generate-all-btn" onclick="generateAllImages()">
+                                🎨 批量生成所有图片
+                            </button>
+                        </div>
+                        
+                        <div class="auto-image-generating" id="generatingLoading" style="display: none;">
+                            <div class="spinner"></div>
+                            <p id="generatingText">正在生成图片...</p>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="generatingProgressBar"></div>
+                            </div>
+                            <p class="progress-text" id="generatingProgressText">进度：0/0</p>
+                        </div>
+                        
+                        <div class="auto-image-result" id="imageResult" style="display: none;">
+                            <div class="step-title">✅ 图片生成完成！</div>
+                            <div id="generatedImagesList"></div>
+                            <button class="save-content-btn" onclick="saveImagesToContent()">
+                                💾 保存图片到章节内容
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div id="chapterContent" style="display: none;">
                 <div class="chapter-header">
                     <h2 class="chapter-title" id="chapterTitle"></h2>
                     <div class="chapter-info" id="chapterInfo"></div>
+                    <!-- 自动配图按钮 -->
+                    <button type="button" class="auto-image-btn" onclick="showAutoImagePanel()">
+                        🖼️ 自动配图
+                    </button>
                 </div>
                 
                 <!-- 章节插图区域 -->
@@ -2248,6 +2515,9 @@
         
         // 章节插图相关变量
         let currentChapterImage = null;
+        
+        // 存储当前章节原始内容（用于自动配图功能）
+        let currentChapterContent = '';
         
         // 阅读设置相关变量
         let currentFontSize = 16; // 默认字体大小
@@ -2546,6 +2816,8 @@
             
             // 渲染 Markdown 内容
             const content = chapter.content || '暂无内容';
+            // 保存原始内容用于自动配图
+            currentChapterContent = content;
             try {
                 if (typeof marked !== 'undefined') {
                     // marked 12.x 版本直接使用 marked() 函数
@@ -4060,6 +4332,256 @@
         function closeImageFullscreen(modal) {
             if (modal && modal.parentNode) {
                 modal.parentNode.removeChild(modal);
+            }
+        }
+        
+        // ========== 自动配图功能 ==========
+        
+        // 全局变量存储配图数据
+        let currentImagePositions = [];
+        let generatedImagesData = [];
+        
+        // 显示自动配画面板
+        function showAutoImagePanel() {
+            document.getElementById('autoImagePanel').style.display = 'block';
+            // 重置状态
+            resetAutoImagePanel();
+        }
+        
+        // 关闭自动配图画板
+        function closeAutoImagePanel() {
+            document.getElementById('autoImagePanel').style.display = 'none';
+        }
+        
+        // 重置自动配图画板状态
+        function resetAutoImagePanel() {
+            document.getElementById('analyzeLoading').style.display = 'none';
+            document.getElementById('imagePositions').style.display = 'none';
+            document.getElementById('generatingLoading').style.display = 'none';
+            document.getElementById('imageResult').style.display = 'none';
+            currentImagePositions = [];
+            generatedImagesData = [];
+        }
+        
+        // 分析章节内容
+        async function analyzeChapterContent() {
+            try {
+                // 显示加载中
+                document.getElementById('analyzeLoading').style.display = 'block';
+                
+                const response = await fetch(`/api/chapter-image/analyze/${chapterId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentImagePositions = result.positions || [];
+                    
+                    if (currentImagePositions.length === 0) {
+                        alert('未找到适合配图的位置');
+                        document.getElementById('analyzeLoading').style.display = 'none';
+                        return;
+                    }
+                    
+                    // 显示位置列表
+                    displayImagePositions(currentImagePositions);
+                    document.getElementById('imagePositions').style.display = 'block';
+                    
+                    // 提示用户是否删除旧的配图
+                    const hasExistingImages = currentChapterContent && currentChapterContent.includes('![配图]');
+                    if (hasExistingImages) {
+                        setTimeout(() => {
+                            alert('⚠️ 检测到本章已有自动配图，重新生成将会删除旧的配图并替换为新的配图。');
+                        }, 500);
+                    }
+                } else {
+                    throw new Error(result.error || '分析失败');
+                }
+                
+                document.getElementById('analyzeLoading').style.display = 'none';
+                
+            } catch (error) {
+                console.error('分析章节失败:', error);
+                alert('分析失败：' + error.message);
+                document.getElementById('analyzeLoading').style.display = 'none';
+            }
+        }
+        
+        // 显示配图位置列表（带复选框）
+        function displayImagePositions(positions) {
+            const container = document.getElementById('positionsList');
+            container.innerHTML = '';
+            
+            // 显示数量提示
+            const countInfo = document.createElement('div');
+            countInfo.style.cssText = 'margin-bottom: 15px; padding: 10px; background: #e3f2fd; border-radius: 6px; font-size: 14px; color: #1976d2;';
+            countInfo.innerHTML = `📊 共找到 <strong>${positions.length}</strong> 个适合配图的位置，请勾选要生成的图片：`;
+            container.appendChild(countInfo);
+            
+            // 全选按钮
+            const selectAllBtn = document.createElement('button');
+            selectAllBtn.textContent = '全选';
+            selectAllBtn.style.cssText = 'margin-right: 10px; padding: 5px 10px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;';
+            selectAllBtn.onclick = () => toggleSelectAll(true);
+            container.appendChild(selectAllBtn);
+            
+            const deselectAllBtn = document.createElement('button');
+            deselectAllBtn.textContent = '取消全选';
+            deselectAllBtn.style.cssText = 'padding: 5px 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px;';
+            deselectAllBtn.onclick = () => toggleSelectAll(false);
+            container.appendChild(deselectAllBtn);
+            
+            positions.forEach((pos, index) => {
+                const item = document.createElement('div');
+                item.className = 'position-item';
+                item.style.cssText = 'margin-bottom: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #2196f3;';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `position-${index}`;
+                checkbox.checked = true; // 默认全选
+                checkbox.value = index;
+                checkbox.style.cssText = 'margin-right: 10px; width: 18px; height: 18px; cursor: pointer;';
+                
+                const content = document.createElement('div');
+                content.style.display = 'inline-block';
+                content.style.width = 'calc(100% - 40px)';
+                content.innerHTML = `
+                    <div class="position-reason" style="font-weight: bold; margin-bottom: 8px;">📍 位置 ${index + 1}: ${pos.reason}</div>
+                    <div class="position-description" style="font-size: 14px; color: #666; line-height: 1.6;">${pos.description.substring(0, 150)}...</div>
+                `;
+                
+                item.appendChild(checkbox);
+                item.appendChild(content);
+                container.appendChild(item);
+            });
+        }
+        
+        // 全选/取消全选
+        function toggleSelectAll(selectAll) {
+            const checkboxes = document.querySelectorAll('#positionsList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = selectAll);
+        }
+        
+        // 批量生成所有图片（支持用户选择）
+        async function generateAllImages() {
+            try {
+                // 获取用户选择的位置
+                const selectedPositions = [];
+                const checkboxes = document.querySelectorAll('#positionsList input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    if (cb.checked) {
+                        selectedPositions.push(parseInt(cb.value));
+                    }
+                });
+                
+                if (selectedPositions.length === 0) {
+                    alert('⚠️ 请至少选择一个位置！');
+                    return;
+                }
+                
+                // 隐藏位置列表，显示生成中
+                document.getElementById('imagePositions').style.display = 'none';
+                document.getElementById('generatingLoading').style.display = 'block';
+                
+                const totalPositions = selectedPositions.length;
+                let completedCount = 0;
+                
+                // 更新进度
+                function updateProgress() {
+                    const percentage = Math.round((completedCount / totalPositions) * 100);
+                    document.getElementById('generatingProgressBar').style.width = percentage + '%';
+                    document.getElementById('generatingProgressText').textContent = `进度：${completedCount}/${totalPositions}`;
+                }
+                
+                generatedImagesData = [];
+                
+                // 使用后端提供的批量生成接口，传入用户选择的位置
+                const response = await fetch(`/api/chapter-image/auto-generate/${chapterId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        selectedPositions: selectedPositions
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.images && result.images.length > 0) {
+                    generatedImagesData = result.images;
+                    completedCount = result.images.length;
+                    updateProgress();
+                    
+                    // 显示结果
+                    displayGeneratedImages();
+                    document.getElementById('generatingLoading').style.display = 'none';
+                    document.getElementById('imageResult').style.display = 'block';
+                } else {
+                    throw new Error(result.message || '未生成任何图片');
+                }
+                
+            } catch (error) {
+                console.error('批量生成失败:', error);
+                alert('批量生成失败：' + error.message);
+                document.getElementById('generatingLoading').style.display = 'none';
+            }
+        }
+        
+        // 显示生成的图片
+        function displayGeneratedImages() {
+            const container = document.getElementById('generatedImagesList');
+            container.innerHTML = '';
+            
+            if (!generatedImagesData || generatedImagesData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">未生成任何图片</div>';
+                return;
+            }
+            
+            generatedImagesData.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'generated-image-item';
+                item.innerHTML = `
+                    <div><strong>图片 ${index + 1}:</strong></div>
+                    ${img.imageUrl ? `<img src="${img.imageUrl}" alt="配图${index + 1}" style="max-width: 100%; margin: 10px 0; border-radius: 6px;" />` : ''}
+                    <div style="font-size: 13px; color: #666; margin: 8px 0;">提示词：${img.prompt ? img.prompt.substring(0, 100) + '...' : '未生成'}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        // 保存图片到章节内容
+        async function saveImagesToContent() {
+            try {
+                if (!currentChapterContent) {
+                    alert('章节内容为空');
+                    return;
+                }
+                
+                // 调用后端接口插入图片
+                const response = await fetch('/api/chapter-image/insert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: currentChapterContent,
+                        images: generatedImagesData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 保存更新后的内容到数据库
+                    await saveUpdatedContent(result.newContent);
+                    
+                    // 关闭面板
+                    closeAutoImagePanel();
+                    
+                    alert('✅ 图片已成功插入到章节内容中！');
+                } else {
+                    throw new Error(result.error || '保存失败');
+                }
+                
+            } catch (error) {
+                console.error('保存图片失败:', error);
+                alert('保存失败：' + error.message);
             }
         }
     </script>

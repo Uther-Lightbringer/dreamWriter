@@ -129,4 +129,12 @@ public class PageController {
     public String imageGenerator() {
         return "image-generator";
     }
+    
+    /**
+     * AI 图片生成页面（新版）
+     */
+    @GetMapping("/ai-image-generator")
+    public String aiImageGenerator() {
+        return "ai-image-generator";
+    }
 }

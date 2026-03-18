@@ -2,10 +2,15 @@ package org.zenithon.articlecollect.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.zenithon.articlecollect.dto.ImageHistoryRequest;
+import org.zenithon.articlecollect.entity.AiImageHistory;
+import org.zenithon.articlecollect.service.AiImageHistoryService;
 import org.zenithon.articlecollect.service.EvoLinkImageService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 图片生成控制器
@@ -15,9 +20,11 @@ import java.util.Map;
 public class ImageGenerationController {
     
     private final EvoLinkImageService imageService;
+    private final AiImageHistoryService historyService;
     
-    public ImageGenerationController(EvoLinkImageService imageService) {
+    public ImageGenerationController(EvoLinkImageService imageService, AiImageHistoryService historyService) {
         this.imageService = imageService;
+        this.historyService = historyService;
     }
     
     /**
@@ -129,5 +136,51 @@ public class ImageGenerationController {
         }
         
         return false;
+    }
+    
+    /**
+     * 保存图片历史记录
+     */
+    @PostMapping("/history")
+    public ResponseEntity<Map<String, Object>> saveHistory(@RequestBody ImageHistoryRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            if (request.getPrompt() == null || request.getImageUrl() == null) {
+                response.put("success", false);
+                response.put("error", "参数不完整");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            AiImageHistory history = historyService.saveHistory(request.getPrompt(), request.getImageUrl());
+            
+            if (history != null) {
+                response.put("success", true);
+                response.put("message", "保存成功");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("error", "保存失败");
+                return ResponseEntity.internalServerError().body(response);
+            }
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * 获取图片历史记录
+     */
+    @GetMapping("/history")
+    public ResponseEntity<List<AiImageHistory>> getHistory() {
+        try {
+            List<AiImageHistory> history = historyService.getAllHistory();
+            return ResponseEntity.ok(history);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
