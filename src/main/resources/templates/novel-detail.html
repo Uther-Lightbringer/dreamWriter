@@ -1279,8 +1279,9 @@
                     <!-- AI 绘画提示词移到最后 -->
                     <div class="form-group">
                         <label class="form-label" for="appearanceDescription">🤖 AI 绘画提示词 (外貌描述):</label>
-                        <textarea id="appearanceDescription" name="appearanceDescription" rows="4" 
-                                  placeholder="请输入用于 AI 文生图的外貌描述，例如：一位黑发棕瞳的少年，身穿蓝色校服，面容清秀，左眉有一道明显的疤痕，身材匀称..."></textarea>
+                        <textarea id="appearanceDescription" name="appearanceDescription" rows="4"
+                                  placeholder="请输入用于 AI 文生图的外貌描述，例如：一位黑发棕瞳的少年，身穿蓝色校服，面容清秀，左眉有一道明显的疤痕，身材匀称..." oninput="updateCharacterCount('appearanceDescription', 'appearanceDescriptionCount')"></textarea>
+                        <div class="character-count" id="appearanceDescriptionCount" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
                         <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
                             <small style="color: #6c757d; font-size: 12px; flex: 1;">
                                 💡 提示：这个字段将用于提供给 AI 进行角色图像生成，建议详细描述外貌特征
@@ -2391,7 +2392,8 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">提示词:</label>
-                    <textarea id="imagePrompt" rows="4" placeholder="请描述你想生成的图片内容，例如：一只可爱的猫咪在阳光下玩耍..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+                    <textarea id="imagePrompt" rows="4" placeholder="请描述你想生成的图片内容，例如：一只可爱的猫咪在阳光下玩耍..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" oninput="updateCharacterCount('imagePrompt', 'imagePromptCount')"></textarea>
+                    <div class="character-count" id="imagePromptCount" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
                 </div>
                 
                 <div class="form-group">
@@ -2487,6 +2489,32 @@
     <script>
         let currentTaskId = null;
         let pollInterval = null;
+
+        // 更新字数显示
+        function updateCharacterCount(textareaId, countId) {
+            const textarea = document.getElementById(textareaId);
+            const countDiv = document.getElementById(countId);
+            if (textarea && countDiv) {
+                const length = textarea.value.length;
+                countDiv.textContent = length + '/2000';
+                if (length > 2000) {
+                    countDiv.style.color = '#dc3545';
+                    countDiv.style.fontWeight = 'bold';
+                } else if (length > 1800) {
+                    countDiv.style.color = '#ffc107';
+                    countDiv.style.fontWeight = 'bold';
+                } else {
+                    countDiv.style.color = '#666';
+                    countDiv.style.fontWeight = 'normal';
+                }
+            }
+        }
+
+        // 页面加载时初始化字数显示
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCharacterCount('imagePrompt', 'imagePromptCount');
+            updateCharacterCount('appearanceDescription', 'appearanceDescriptionCount');
+        });
         
         function showImageGenerationPanel() {
             document.getElementById('imageGenerationPanel').style.display = 'block';

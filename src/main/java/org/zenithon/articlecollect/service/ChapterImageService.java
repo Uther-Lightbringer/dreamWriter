@@ -339,6 +339,8 @@ public class ChapterImageService {
             promptBuilder.append("- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n");
             promptBuilder.append("- Focus on the most important visual elements, avoid unnecessary decorative details\n");
             promptBuilder.append("- If the scene includes the above characters, you MUST strictly follow their appearance features (age, gender, hairstyle, eye color, clothing, etc.)\n");
+            promptBuilder.append("- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n");
+            promptBuilder.append("- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n");
             promptBuilder.append("- Avoid inappropriate content, use synonyms when necessary\n\n");
 
             promptBuilder.append("【Prompt Optimization Example】\n");
@@ -385,6 +387,8 @@ public class ChapterImageService {
                            "- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n" +
                            "- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n" +
                            "- Focus on the most important visual elements, avoid unnecessary decorative details\n" +
+                           "- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n" +
+                           "- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n" +
                            "- Avoid inappropriate content, use synonyms when necessary\n\n" +
 
                            "【Prompt Optimization Example】\n" +

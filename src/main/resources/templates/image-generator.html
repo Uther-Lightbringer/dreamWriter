@@ -287,7 +287,8 @@
             <!-- 提示词输入 -->
             <div class="form-group">
                 <label for="prompt">图片描述</label>
-                <textarea id="prompt" placeholder="请详细描述你想要的画面，例如：一只可爱的猫咪在阳光下玩耍，毛茸茸的，大眼睛，背景是温馨的房间..."></textarea>
+                <textarea id="prompt" placeholder="请详细描述你想要的画面，例如：一只可爱的猫咪在阳光下玩耍，毛茸茸的，大眼睛，背景是温馨的房间..." oninput="updateCharacterCount('prompt', 'promptCount')"></textarea>
+                <div class="character-count" id="promptCount" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
             </div>
             
             <!-- 尺寸选择 -->
@@ -395,6 +396,26 @@
     <script>
         let generator = null;
         let currentSize = "16:9";
+
+        // 更新字数显示
+        function updateCharacterCount(textareaId, countId) {
+            const textarea = document.getElementById(textareaId);
+            const countDiv = document.getElementById(countId);
+            if (textarea && countDiv) {
+                const length = textarea.value.length;
+                countDiv.textContent = length + '/2000';
+                if (length > 2000) {
+                    countDiv.style.color = '#dc3545';
+                    countDiv.style.fontWeight = 'bold';
+                } else if (length > 1800) {
+                    countDiv.style.color = '#ffc107';
+                    countDiv.style.fontWeight = 'bold';
+                } else {
+                    countDiv.style.color = '#666';
+                    countDiv.style.fontWeight = 'normal';
+                }
+            }
+        }
         
         // 尺寸选择逻辑
         document.getElementById('sizeSelector').addEventListener('click', function(e) {
@@ -418,7 +439,12 @@
                 customInput.style.display = 'none';
             }
         });
-        
+
+        // 页面加载时初始化字数显示
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCharacterCount('prompt', 'promptCount');
+        });
+
         // 开始生成
         async function startGeneration() {
             const prompt = document.getElementById('prompt').value.trim();

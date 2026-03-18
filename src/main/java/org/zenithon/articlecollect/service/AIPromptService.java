@@ -161,6 +161,8 @@ public class AIPromptService {
                "- **USE ENGLISH ONLY**\n" +
                "- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n" +
                "- Focus on the most important visual elements, avoid unnecessary decorative details\n" +
+               "- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n" +
+               "- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n" +
                "- Avoid inappropriate content, use synonyms when necessary\n\n" +
 
                "【Prompt Optimization Example】\n" +
@@ -181,15 +183,16 @@ public class AIPromptService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
-        
+
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", deepSeekConfig.getModel());
-        
+        requestBody.put("max_tokens", 1800);
+
         Map<String, String> message = new HashMap<>();
         message.put("role", "user");
         message.put("content", prompt);
         requestBody.put("messages", new Object[]{message});
-        
+
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
         
         ResponseEntity<String> response = restTemplate.postForEntity(

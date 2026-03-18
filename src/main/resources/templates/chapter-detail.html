@@ -2336,7 +2336,8 @@
                     <div class="ai-panel-content">
                         <div class="form-group">
                             <label for="imagePrompt2">绘画提示词:</label>
-                            <textarea id="imagePrompt2" placeholder="请输入详细的绘画提示词..." rows="3"></textarea>
+                            <textarea id="imagePrompt2" placeholder="请输入详细的绘画提示词..." rows="3" oninput="updateCharacterCount('imagePrompt2', 'imagePromptCount2')"></textarea>
+                            <div class="character-count" id="imagePromptCount2" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
                         </div>
                         <div class="form-group">
                             <label for="imageSize2">图片尺寸:</label>
@@ -2586,7 +2587,8 @@
                     <div class="panel-title">
                         🖼️ 图片生成
                     </div>
-                    <textarea id="modalImagePrompt" placeholder="输入绘画提示词..."></textarea>
+                    <textarea id="modalImagePrompt" placeholder="输入绘画提示词..." oninput="updateCharacterCount('modalImagePrompt', 'modalImagePromptCount')"></textarea>
+                    <div class="character-count" id="modalImagePromptCount" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
                     <div class="btn-group">
                         <select class="btn btn-secondary" id="modalImageSize" style="cursor: pointer;">
                             <option value="16:9">16:9 (横屏)</option>
@@ -2646,6 +2648,26 @@
     </div>
 
     <script th:inline="javascript">
+        // 更新字数显示
+        function updateCharacterCount(textareaId, countId) {
+            const textarea = document.getElementById(textareaId);
+            const countDiv = document.getElementById(countId);
+            if (textarea && countDiv) {
+                const length = textarea.value.length;
+                countDiv.textContent = length + '/2000';
+                if (length > 2000) {
+                    countDiv.style.color = '#dc3545';
+                    countDiv.style.fontWeight = 'bold';
+                } else if (length > 1800) {
+                    countDiv.style.color = '#ffc107';
+                    countDiv.style.fontWeight = 'bold';
+                } else {
+                    countDiv.style.color = '#666';
+                    countDiv.style.fontWeight = 'normal';
+                }
+            }
+        }
+
         // 从URL获取参数
         const novelId = /*[[${novelId}]]*/ null;
         const chapterId = /*[[${chapterId}]]*/ null;
@@ -2694,6 +2716,9 @@
             loadCardModeSettings(); // 加载卡片模式设置
             setupResizeObserver(); // 设置窗口大小监听
             setupTextSelectionListener(); // 设置文字选择监听
+            // 初始化字数显示
+            updateCharacterCount('imagePrompt2', 'imagePrompt2Count');
+            updateCharacterCount('modalImagePrompt', 'modalImagePromptCount');
         });
         
         // 设置图片上传监听器
@@ -3667,7 +3692,8 @@ Please generate the prompt following this structure:
 - Use punctuation to organize sentence structure
 - Include scene details, lighting effects, color schemes, composition methods, etc.
 - Suitable for AI painting tools like Stable Diffusion
-- Do not use compact tag format, write in complete descriptive paragraphs
+- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks
+- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences
 
 【Prompt Optimization Example】
 Original idea: "an eagle"
