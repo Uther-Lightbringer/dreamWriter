@@ -3,498 +3,963 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 图片生成 - 小说收藏系统</title>
+    <title>梦境画坊 · AI 图片生成</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --accent-teal: #009688;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
         }
-        
+
+        body {
+            font-family: 'Noto Serif SC', serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 25%, var(--dream-mint) 50%, var(--dream-peach) 75%, var(--dream-pink) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 梦幻气泡背景 */
+        .floating-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #ffb3d9, transparent);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #b3d9ff, transparent);
+            top: 30%;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #b3ffe0, transparent);
+            bottom: -50px;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        .orb-4 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #ffe0b3, transparent);
+            bottom: 20%;
+            right: 20%;
+            animation-delay: -7s;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        /* 主容器 - 玻璃态设计 */
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
         }
-        
+
+        /* 头部设计 */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
             text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 1s ease-out;
         }
-        
+
         .header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: 8px;
+            text-shadow: 0 0 40px rgba(156, 39, 176, 0.3);
         }
-        
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-weight: 300;
+            letter-spacing: 3px;
         }
-        
-        .back-btn {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 25px;
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-        }
-        
-        .back-btn:hover {
-            background-color: rgba(255,255,255,0.3);
-        }
-        
-        .content {
-            padding: 40px;
-        }
-        
-        .section {
-            margin-bottom: 40px;
-        }
-        
-        .section-title {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 2px;
-        }
-        
-        /* 提示词生成区域 */
-        .prompt-generator {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 8px;
-        }
-        
-        .form-group textarea,
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-group textarea:focus,
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+
+        .back-link {
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            margin-top: 25px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 12px 28px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(-5px);
+            box-shadow: 0 8px 32px rgba(156, 39, 176, 0.15);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 玻璃卡片通用样式 */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            margin-bottom: 30px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+        }
+
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+
+        .section-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(156, 39, 176, 0.3), transparent);
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 12px;
             color: white;
+            font-size: 1.2rem;
         }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 28px;
         }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+
+        .form-label {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .dream-input,
+        .dream-textarea {
+            width: 100%;
+            padding: 18px 24px;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+
+        .dream-textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.8;
+        }
+
+        .dream-input:focus,
+        .dream-textarea:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 6px rgba(156, 39, 176, 0.1), 0 8px 24px rgba(156, 39, 176, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            opacity: 0.7;
+        }
+
+        /* 按钮样式 */
+        .dream-btn {
+            padding: 16px 42px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dream-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .dream-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .dream-btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
             color: white;
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4);
         }
-        
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+
+        .dream-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(156, 39, 176, 0.5);
         }
-        
-        .btn-info {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+        .dream-btn-secondary {
+            background: linear-gradient(135deg, var(--accent-teal), #4db6ac);
             color: white;
+            box-shadow: 0 8px 25px rgba(0, 150, 136, 0.4);
         }
-        
-        .btn-info:hover {
+
+        .dream-btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 150, 136, 0.5);
+        }
+
+        .dream-btn-ghost {
+            background: transparent;
+            border: 2px solid var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .dream-btn-ghost:hover {
+            background: var(--accent-purple);
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
         }
-        
-        .btn:disabled {
+
+        .dream-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none !important;
         }
-        
-        .result-box {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-            min-height: 80px;
-            position: relative;
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
         }
-        
-        .result-box-label {
-            position: absolute;
-            top: -10px;
-            left: 15px;
-            background: #667eea;
-            color: white;
-            padding: 2px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        /* 图片生成区域 */
-        .image-generator {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 12px;
-        }
-        
+
+        /* 尺寸选择器 */
         .size-selector {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
         }
-        
+
         .size-option {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 20px 15px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid transparent;
+            border-radius: 16px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .size-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(63, 81, 181, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
         .size-option:hover {
-            border-color: #667eea;
-            background: #f0f0f0;
+            transform: translateY(-3px);
+            border-color: rgba(156, 39, 176, 0.3);
         }
-        
+
+        .size-option:hover::before {
+            opacity: 1;
+        }
+
         .size-option.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            font-weight: 600;
+            border-color: var(--accent-purple);
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.15), rgba(63, 81, 181, 0.15));
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.2);
         }
-        
-        .loading {
+
+        .size-ratio {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .size-name {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* 加载动画 */
+        .loading-container {
             display: none;
             text-align: center;
-            padding: 30px;
+            padding: 50px 20px;
         }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+
+        .dream-spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid transparent;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            animation: spin 1.5s linear infinite;
         }
-        
+
+        .spinner-ring:nth-child(1) {
+            border-top-color: var(--accent-purple);
+            animation-delay: 0s;
+        }
+
+        .spinner-ring:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 10px;
+            left: 10px;
+            border-right-color: var(--accent-blue);
+            animation-delay: 0.15s;
+            animation-direction: reverse;
+        }
+
+        .spinner-ring:nth-child(3) {
+            width: 40px;
+            height: 40px;
+            top: 20px;
+            left: 20px;
+            border-bottom-color: var(--accent-teal);
+            animation-delay: 0.3s;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background-color: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 15px;
-            display: none;
+
+        .loading-text {
+            color: var(--text-light);
+            font-size: 1rem;
+            letter-spacing: 2px;
         }
-        
+
+        .progress-container {
+            margin-top: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(156, 39, 176, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            border-radius: 3px;
             width: 0%;
             transition: width 0.3s ease;
         }
-        
+
+        .progress-text {
+            margin-top: 10px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* 图片结果 */
         .image-result {
             display: none;
-            text-align: center;
-            margin-top: 20px;
+            margin-top: 30px;
+            animation: fadeInUp 0.6s ease-out;
         }
-        
-        .generated-image {
-            max-width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-            transition: transform 0.3s ease;
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
-        .generated-image:hover {
+
+        .result-image-wrapper {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+        }
+
+        .result-image {
+            width: 100%;
+            display: block;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .result-image-wrapper:hover .result-image {
             transform: scale(1.02);
         }
-        
-        .image-actions {
-            margin-top: 20px;
+
+        .result-actions {
             display: flex;
             gap: 15px;
             justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
         }
-        
-        /* 历史记录区域 */
+
+        /* 提示框 */
+        .alert {
+            padding: 18px 24px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.4s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-error {
+            background: rgba(255, 235, 238, 0.8);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #c62828;
+        }
+
+        .alert-success {
+            background: rgba(232, 245, 233, 0.8);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #2e7d32;
+        }
+
+        /* 历史记录 */
         .history-section {
             margin-top: 50px;
         }
-        
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
         .history-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
         }
-        
+
         .history-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             overflow: hidden;
-            background: white;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
-        
+
         .history-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
         }
-        
+
         .history-image {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
+            display: block;
         }
-        
+
         .history-info {
-            padding: 15px;
+            padding: 20px;
         }
-        
+
         .history-prompt {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            line-height: 1.7;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            margin-bottom: 12px;
         }
-        
+
         .history-date {
-            font-size: 12px;
-            color: #999;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        
+
         .empty-history {
             text-align: center;
-            padding: 50px;
-            color: #999;
+            padding: 80px 20px;
+            color: var(--text-light);
         }
-        
-        .alert {
-            padding: 12px 20px;
-            border-radius: 8px;
+
+        .empty-icon {
+            font-size: 4rem;
             margin-bottom: 20px;
-            display: none;
+            opacity: 0.5;
         }
-        
-        .alert-error {
-            background-color: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
+
+        /* 两栏布局 */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
         }
-        
-        .alert-success {
-            background-color: #efe;
-            color: #3c3;
-            border: 1px solid #cfc;
+
+        @media (max-width: 1024px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
         }
-        
-        /* 响应式设计 */
+
+        /* 响应式 */
         @media (max-width: 768px) {
-            .content {
-                padding: 20px;
-            }
-            
             .header h1 {
-                font-size: 24px;
+                font-size: 2.2rem;
+                letter-spacing: 4px;
             }
-            
+
+            .glass-card {
+                padding: 25px;
+            }
+
+            .section-title {
+                font-size: 1.4rem;
+            }
+
+            .size-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
             .history-grid {
                 grid-template-columns: 1fr;
             }
+
+            .container {
+                padding: 20px 15px;
+            }
+        }
+
+        /* 全屏查看 */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(156, 39, 176, 0.3);
+        }
+
+        /* 输出框标签 */
+        .result-box {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .result-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            z-index: 1;
+        }
+
+        /* 分隔线装饰 */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.3), transparent);
+            margin: 40px 0;
         }
     </style>
 </head>
 <body>
+    <!-- 梦幻背景装饰 -->
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
     <div class="container">
-        <div class="header">
-            <h1>🎨 AI 图片生成</h1>
-            <p>输入关键词，让 AI 为你生成精美的图片提示词并创作图片</p>
-            <a href="/" class="back-btn">← 返回首页</a>
-        </div>
-        
-        <div class="content">
-            <!-- 提示词生成区域 -->
-            <div class="section">
-                <h2 class="section-title">AI 提示词生成</h2>
-                <div class="prompt-generator">
-                    <div class="form-group">
-                        <label for="keywordInput">📝 输入关键词：</label>
-                        <textarea id="keywordInput" placeholder="请输入关键词，例如：古装女子、桃花树、月光、唯美..."></textarea>
-                    </div>
-                    
-                    <button class="btn btn-primary" onclick="generatePrompt()" id="generatePromptBtn">
-                        ✨ 生成 AI 提示词
-                    </button>
-                    
-                    <div class="loading" id="promptLoading">
-                        <div class="spinner"></div>
-                        <p>正在生成提示词...</p>
-                    </div>
-                    
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label for="generatedPrompt">🎯 生成的提示词：</label>
-                        <div class="result-box">
-                            <span class="result-box-label">AI 生成</span>
-                            <textarea id="generatedPrompt" readonly placeholder="点击“生成 AI 提示词”按钮后，这里会显示生成的详细提示词..."></textarea>
-                        </div>
-                        <button class="btn btn-success" onclick="useGeneratedPrompt()" id="usePromptBtn" style="display: none; margin-top: 15px; width: 100%;">
-                            ✅ 使用此提示词到下方输入框
-                        </button>
-                    </div>
-                    
-                    <div class="alert alert-error" id="promptError"></div>
+        <!-- 头部 -->
+        <header class="header">
+            <h1>梦境画坊</h1>
+            <p class="subtitle">将文字化为艺术，让梦境触手可及</p>
+            <a href="/" class="back-link">
+                <span>←</span>
+                <span>返回首页</span>
+            </a>
+        </header>
+
+        <!-- 两栏主内容 -->
+        <div class="two-column">
+            <!-- 左侧：提示词生成 -->
+            <div class="glass-card">
+                <h2 class="section-title">
+                    <span class="section-icon">✨</span>
+                    <span>灵感咒语</span>
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label">输入您的关键词</label>
+                    <textarea
+                        id="keywordInput"
+                        class="dream-textarea"
+                        placeholder="例如：古装女子、桃花树、月光、唯美..."></textarea>
                 </div>
-            </div>
-            
-            <!-- 图片生成区域 -->
-            <div class="section">
-                <h2 class="section-title">AI 图片生成</h2>
-                <div class="image-generator">
-                    <div class="form-group">
-                        <label for="imagePrompt">🎨 图片提示词：</label>
-                        <textarea id="imagePrompt" placeholder="请输入或从上方使用 AI 生成的提示词..." rows="4" oninput="updateCharacterCount('imagePrompt', 'imagePromptCount')"></textarea>
-                        <div class="character-count" id="imagePromptCount" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
+
+                <button class="dream-btn dream-btn-primary" onclick="generatePrompt()" id="generatePromptBtn">
+                    <span>🌸</span>
+                    <span>编织梦境</span>
+                </button>
+
+                <!-- 提示词加载 -->
+                <div class="loading-container" id="promptLoading">
+                    <div class="dream-spinner">
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>📐 图片尺寸：</label>
-                        <div class="size-selector">
-                            <div class="size-option" data-size="16:9" onclick="selectSize(this)">16:9 (宽屏)</div>
-                            <div class="size-option" data-size="3:4" onclick="selectSize(this)">3:4 (竖版)</div>
-                            <div class="size-option" data-size="1:1" onclick="selectSize(this)">1:1 (正方形)</div>
-                            <div class="size-option selected" data-size="9:16" onclick="selectSize(this)">9:16 (手机)</div>
-                            <div class="size-option" data-size="4:3" onclick="selectSize(this)">4:3 (标准)</div>
-                            <div class="size-option" data-size="2:3" onclick="selectSize(this)">2:3 (人像)</div>
+                    <p class="loading-text">正在唤醒灵感...</p>
+                </div>
+
+                <div class="result-box" style="margin-top: 30px;">
+                    <span class="result-label">AI 生成</span>
+                    <textarea
+                        id="generatedPrompt"
+                        class="dream-textarea"
+                        readonly
+                        placeholder="点击上方按钮后，这里将呈现 AI 为您编织的梦境咒语..."
+                        style="padding-top: 30px;"></textarea>
+                </div>
+
+                <div class="btn-group" id="usePromptGroup" style="display: none;">
+                    <button class="dream-btn dream-btn-secondary" onclick="useGeneratedPrompt()">
+                        <span>💫</span>
+                        <span>用于作画</span>
+                    </button>
+                </div>
+
+                <div class="alert alert-error" id="promptError"></div>
+            </div>
+
+            <!-- 右侧：图片生成 -->
+            <div class="glass-card">
+                <h2 class="section-title">
+                    <span class="section-icon">🎨</span>
+                    <span>绘梦成真</span>
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label">梦境描述</label>
+                    <textarea
+                        id="imagePrompt"
+                        class="dream-textarea"
+                        placeholder="描述您想要的画面..."
+                        rows="4"
+                        oninput="updateCharacterCount('imagePrompt', 'imagePromptCount')"></textarea>
+                    <div class="char-count" id="imagePromptCount">0/2000</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">画幅比例</label>
+                    <div class="size-selector">
+                        <div class="size-option" data-size="16:9" onclick="selectSize(this)">
+                            <div class="size-ratio">16:9</div>
+                            <div class="size-name">宽屏梦境</div>
+                        </div>
+                        <div class="size-option" data-size="3:4" onclick="selectSize(this)">
+                            <div class="size-ratio">3:4</div>
+                            <div class="size-name">竖幅画卷</div>
+                        </div>
+                        <div class="size-option" data-size="1:1" onclick="selectSize(this)">
+                            <div class="size-ratio">1:1</div>
+                            <div class="size-name">方圆之间</div>
+                        </div>
+                        <div class="size-option selected" data-size="9:16" onclick="selectSize(this)">
+                            <div class="size-ratio">9:16</div>
+                            <div class="size-name">手机画幅</div>
+                        </div>
+                        <div class="size-option" data-size="4:3" onclick="selectSize(this)">
+                            <div class="size-ratio">4:3</div>
+                            <div class="size-name">经典比例</div>
+                        </div>
+                        <div class="size-option" data-size="2:3" onclick="selectSize(this)">
+                            <div class="size-ratio">2:3</div>
+                            <div class="size-name">人像特写</div>
                         </div>
                     </div>
-                    
-                    <button class="btn btn-success" onclick="generateImage()" id="generateImageBtn">
-                        🖼️ 开始生成图片
-                    </button>
-                    
-                    <div class="loading" id="imageLoading">
-                        <div class="spinner"></div>
-                        <p>正在绘制图片，请稍候...</p>
-                        <div class="progress-bar" id="progressBar">
+                </div>
+
+                <button class="dream-btn dream-btn-secondary" onclick="generateImage()" id="generateImageBtn">
+                    <span>🌙</span>
+                    <span>开始绘梦</span>
+                </button>
+
+                <!-- 图片加载 -->
+                <div class="loading-container" id="imageLoading">
+                    <div class="dream-spinner">
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
+                    </div>
+                    <p class="loading-text">画师正在精心绘制...</p>
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
                             <div class="progress-fill" id="progressFill"></div>
                         </div>
-                        <p id="progressText" style="margin-top: 10px; color: #666;"></p>
+                        <p class="progress-text" id="progressText">进度：0%</p>
                     </div>
-                    
-                    <div class="image-result" id="imageResult">
-                        <img id="generatedImage" class="generated-image" src="" alt="生成的图片" onclick="viewImageFullscreen()" style="cursor: pointer;">
-                        <div class="image-actions">
-                            <button class="btn btn-info" onclick="downloadImage()">⬇️ 下载图片</button>
-                            <button class="btn btn-primary" onclick="regenerateImage()" id="regenerateBtn">🔄 重新生成</button>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-error" id="imageError"></div>
-                    <div class="alert alert-success" id="imageSuccess"></div>
                 </div>
-            </div>
-            
-            <!-- 历史记录区域 -->
-            <div class="section history-section">
-                <h2 class="section-title">📚 生成历史</h2>
-                <button class="btn btn-info" onclick="loadHistory()" style="margin-bottom: 20px;">
-                    🔄 刷新历史
-                </button>
-                
-                <div class="history-grid" id="historyGrid">
-                    <div class="empty-history" id="emptyHistory">
-                        <p>暂无生成记录</p>
-                        <p style="font-size: 14px; margin-top: 10px;">开始生成你的第一张图片吧！</p>
+
+                <!-- 图片结果 -->
+                <div class="image-result" id="imageResult">
+                    <div class="result-image-wrapper" onclick="viewImageFullscreen()">
+                        <img id="generatedImage" class="result-image" src="" alt="梦境画作">
                     </div>
+                    <div class="result-actions">
+                        <button class="dream-btn dream-btn-ghost" onclick="downloadImage()">
+                            <span>⬇️</span>
+                            <span>珍藏画作</span>
+                        </button>
+                        <button class="dream-btn dream-btn-primary" onclick="regenerateImage()" id="regenerateBtn">
+                            <span>🔄</span>
+                            <span>再绘一梦</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-error" id="imageError"></div>
+                <div class="alert alert-success" id="imageSuccess"></div>
+            </div>
+        </div>
+
+        <!-- 历史记录 -->
+        <div class="glass-card history-section">
+            <div class="history-header">
+                <h2 class="section-title">
+                    <span class="section-icon">📜</span>
+                    <span>梦境画廊</span>
+                </h2>
+                <button class="dream-btn dream-btn-ghost" onclick="loadHistory()" style="padding: 12px 28px;">
+                    <span>🔄</span>
+                    <span>刷新画廊</span>
+                </button>
+            </div>
+
+            <div class="history-grid" id="historyGrid">
+                <div class="empty-history" id="emptyHistory">
+                    <div class="empty-icon">🖼️</div>
+                    <p>画廊空空如也</p>
+                    <p style="font-size: 0.95rem; margin-top: 10px; opacity: 0.7;">开始创作您的第一幅梦境画作吧</p>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script>
         let currentTaskId = null;
         let pollInterval = null;
-        let selectedSize = '9:16'; // 默认 9:16
-        let isGenerating = false; // 防止重复生成
+        let selectedSize = '9:16';
+        let isGenerating = false;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+            updateCharacterCount('imagePrompt', 'imagePromptCount');
+        });
 
         // 更新字数显示
         function updateCharacterCount(textareaId, countId) {
@@ -504,110 +969,100 @@
                 const length = textarea.value.length;
                 countDiv.textContent = length + '/2000';
                 if (length > 2000) {
-                    countDiv.style.color = '#dc3545';
-                    countDiv.style.fontWeight = 'bold';
+                    countDiv.style.color = '#c62828';
+                    countDiv.style.fontWeight = '600';
                 } else if (length > 1800) {
-                    countDiv.style.color = '#ffc107';
-                    countDiv.style.fontWeight = 'bold';
+                    countDiv.style.color = '#f57c00';
+                    countDiv.style.fontWeight = '600';
                 } else {
-                    countDiv.style.color = '#666';
+                    countDiv.style.color = 'var(--text-light)';
                     countDiv.style.fontWeight = 'normal';
                 }
             }
         }
 
-        // 页面加载时自动加载历史记录
-        document.addEventListener('DOMContentLoaded', function() {
-            loadHistory();
-            // 初始化字数显示
-            updateCharacterCount('imagePrompt', 'imagePromptCount');
-        });
-        
         // 选择尺寸
         function selectSize(element) {
             document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('selected'));
             element.classList.add('selected');
             selectedSize = element.getAttribute('data-size');
         }
-        
+
         // 生成提示词
         async function generatePrompt() {
             const keyword = document.getElementById('keywordInput').value.trim();
             if (!keyword) {
-                showAlert('promptError', '请输入关键词！');
+                showAlert('promptError', '请输入关键词，让灵感开始流动 ✨');
                 return;
             }
-            
+
             hideAlert('promptError');
-            document.getElementById('generatePromptBtn').disabled = true;
+            const btn = document.getElementById('generatePromptBtn');
+            btn.disabled = true;
             document.getElementById('promptLoading').style.display = 'block';
             document.getElementById('generatedPrompt').value = '';
-            document.getElementById('usePromptBtn').style.display = 'none';
-            
+            document.getElementById('usePromptGroup').style.display = 'none';
+
             try {
-                // 调用 AI 对话 API 生成提示词
                 const response = await fetch('/api/ai/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: `Please generate a detailed prompt for AI image generation based on the following keywords.
+                        prompt: `# Role: Cinematic Scene Visualist
 
-【Advanced Prompt Structure Requirements】
-Please generate the prompt following this structure:
-1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]
-2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait
-3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.
-4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.
-5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.
-6. **Artist References**: e.g., "in the style of National Geographic photography", "in the style of professional portrait photography", etc.
-7. **Lighting Description**: e.g., "natural daylight", "soft studio lighting", "golden hour sunlight", etc.
-8. **Texture/Material**: e.g., "natural skin texture", "real fabric texture", "authentic material details", etc.
-9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo
+## 1. Core Task
+I will deconstruct the user's simple statement into its core "Narrative DNA" and "Emotional DNA". Then, I will act as a professional art director, cinematographer, and scene designer to reconstruct these elements into a rich, atmospheric, and highly detailed image generation prompt. The final output must be a ready-to-use AI painting prompt in English.
 
-【Output Format Requirements】
-- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality
-- **USE ENGLISH ONLY**
-- Only output the prompt text, no other explanations
-- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**
-- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**
-- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences
-- Focus on the most important visual elements, avoid unnecessary decorative details
-- Use punctuation to organize sentence structure
-- Include scene details, lighting effects, color schemes, composition methods, etc.
-- Suitable for AI painting tools like Stable Diffusion
-- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks
-- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences
+## 2. Deconstruction Phase (Internal Monologue)
+- **Narrative DNA **(User Input): ${keyword}
+- **Core Emotion**: What unspoken feeling lies beneath these keywords? (freedom/joy, lonely ceremony, mysterious atmosphere, epic sense, etc.)
+- **Key Entities & Actions**:
+  - **Subject**: [Main object extracted from keywords]
+  - **Action/State**: [Possible action or state]
+  - **Objects/Environment**: [Surroundings, props, background]
 
-【Prompt Optimization Example】
-Original idea: "an eagle"
-Optimized prompt: "A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style."
+## 3. Reconstruction Phase (Art Direction)
+Based on the deconstructed DNA, I will build a complete scene through specific artistic choices.
 
-Keywords: ${keyword}`
+- **Scene & Atmosphere**:
+  - **Specific Environment**: Where exactly are we? (indoor/outdoor, urban/natural, specific location features)
+  - **Time & Weather**: (dawn/dusk/night, sunny/rainy/foggy, seasonal characteristics)
+  - **Overall Mood**: What feeling to create? (peaceful, epic, melancholic, dreamy, tense, etc.)
+
+- **Camera & Composition**:
+  - **Cinematography**: (wide-angle, low-angle shot, medium shot, close-up, tracking shot)
+  - **Lighting Design**: (backlight, diffused light, Rembrandt lighting, natural light, dramatic lighting)
+  - **Color Palette**: (high saturation, vintage monochrome, cool blue-gray tones, warm golden tones)
+
+- **Style & Medium**:
+  - **Art Style**: (Miyazaki animation style, surrealist digital painting, 35mm film photography, impressionist oil painting, National Geographic photography)
+  - **Textures & Details**: (clothing folds, skin texture, object quality, environmental details, lighting effects)
+
+## 4. Final Prompt Synthesis
+Integrate all elements above into a coherent, comma-separated string of keywords and phrases. Output the final result in English only.
+
+【Important】Please directly output the final image generation instruction in English. Do not include any analysis process, phase descriptions, or additional explanations. Only output the usable prompt.`
                     })
                 });
-                
-                if (!response.ok) {
-                    throw new Error('请求失败');
-                }
-                
+
+                if (!response.ok) throw new Error('请求失败');
+
                 const result = await response.json();
-                console.log('AI 响应:', result); // 调试日志
                 const generatedText = result.response || result.content || result.message || '';
                 document.getElementById('generatedPrompt').value = generatedText;
-                
-                // 显示“使用此提示词”按钮
+
                 if (generatedText) {
-                    document.getElementById('usePromptBtn').style.display = 'block';
+                    document.getElementById('usePromptGroup').style.display = 'flex';
                 }
-                
+
             } catch (error) {
-                showAlert('promptError', '生成提示词失败：' + error.message);
+                showAlert('promptError', '灵感被打断了：' + error.message);
             } finally {
-                document.getElementById('generatePromptBtn').disabled = false;
+                btn.disabled = false;
                 document.getElementById('promptLoading').style.display = 'none';
             }
         }
-        
+
         // 使用生成的提示词
         function useGeneratedPrompt() {
             const generatedPrompt = document.getElementById('generatedPrompt').value.trim();
@@ -615,57 +1070,50 @@ Keywords: ${keyword}`
                 showAlert('imageError', '提示词为空，无法使用！');
                 return;
             }
-            
-            // 填充到图片生成输入框
+
             document.getElementById('imagePrompt').value = generatedPrompt;
-            
-            // 滚动到图片生成区域
-            document.querySelector('.image-generator').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
-            
-            // 高亮显示图片生成输入框
-            const imagePromptDiv = document.getElementById('imagePrompt').parentElement;
-            imagePromptDiv.style.transition = 'all 0.5s ease';
-            imagePromptDiv.style.boxShadow = '0 0 20px rgba(17, 153, 142, 0.5)';
-            imagePromptDiv.style.borderRadius = '8px';
-            
+            updateCharacterCount('imagePrompt', 'imagePromptCount');
+
+            // 平滑滚动到右侧
+            document.querySelector('.two-column').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 高亮效果
+            const textarea = document.getElementById('imagePrompt');
+            textarea.style.transition = 'all 0.5s ease';
+            textarea.style.boxShadow = '0 0 30px rgba(156, 39, 176, 0.4)';
+
             setTimeout(() => {
-                imagePromptDiv.style.boxShadow = 'none';
+                textarea.style.boxShadow = '';
             }, 2000);
-            
-            // 显示成功提示
-            showAlert('imageSuccess', '✅ 提示词已填充到下方输入框，您可以直接点击“开始生成图片”按钮！');
+
+            showAlert('imageSuccess', '✨ 梦境咒语已就绪，开始绘梦吧！');
         }
-        
+
         // 生成图片
         async function generateImage() {
             const prompt = document.getElementById('imagePrompt').value.trim();
             if (!prompt) {
-                showAlert('imageError', '请输入图片提示词！');
+                showAlert('imageError', '请描述您的梦境 🎨');
                 return;
             }
-            
-            // 检查是否正在生成
+
             if (isGenerating) {
-                showAlert('imageError', '⚠️ 已有图片正在生成中，请耐心等待完成！');
+                showAlert('imageError', '⏳ 画师正在创作中，请耐心等待...');
                 return;
             }
-            
+
             hideAlert('imageError');
             hideAlert('imageSuccess');
             isGenerating = true;
             updateGenerateButtonState();
-            
+
             document.getElementById('imageResult').style.display = 'none';
             document.getElementById('imageLoading').style.display = 'block';
-            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'block';
             document.getElementById('progressFill').style.width = '0%';
             document.getElementById('progressText').textContent = '进度：0%';
-            
+
             try {
-                // 创建生成任务
                 const response = await fetch('/api/image/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -674,11 +1122,9 @@ Keywords: ${keyword}`
                         size: selectedSize
                     })
                 });
-                
-                if (!response.ok) {
-                    throw new Error('创建任务失败');
-                }
-                
+
+                if (!response.ok) throw new Error('创建任务失败');
+
                 const result = await response.json();
                 if (result.success && result.taskId) {
                     currentTaskId = result.taskId;
@@ -686,125 +1132,92 @@ Keywords: ${keyword}`
                 } else {
                     throw new Error(result.error || '创建任务失败');
                 }
-                
+
             } catch (error) {
-                showAlert('imageError', '生成图片失败：' + error.message);
+                showAlert('imageError', '绘梦失败：' + error.message);
                 isGenerating = false;
                 updateGenerateButtonState();
                 document.getElementById('imageLoading').style.display = 'none';
             }
         }
-        
+
         // 轮询任务状态
         async function pollTaskStatus() {
             if (!currentTaskId) return;
-            
+
             try {
                 const response = await fetch(`/api/image/status/${currentTaskId}`);
-                if (!response.ok) {
-                    throw new Error('查询状态失败');
-                }
-                
+                if (!response.ok) throw new Error('查询状态失败');
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     const progress = result.progress || 0;
                     document.getElementById('progressFill').style.width = progress + '%';
                     document.getElementById('progressText').textContent = `进度：${progress}%`;
-                    
+
                     if (result.status === 'completed' && result.imageUrl) {
-                        // 生成完成
                         clearInterval(pollInterval);
                         isGenerating = false;
                         updateGenerateButtonState();
                         showGeneratedImage(result.imageUrl);
-                        // 保存到历史记录
                         await saveToHistory(document.getElementById('imagePrompt').value, result.imageUrl);
                     } else if (result.status === 'failed') {
-                        // 生成失败
                         clearInterval(pollInterval);
                         isGenerating = false;
                         updateGenerateButtonState();
-                        showAlert('imageError', result.error || '图片生成失败');
+                        showAlert('imageError', result.error || '画作未能完成');
                         document.getElementById('imageLoading').style.display = 'none';
-                    } else if (result.status === 'processing' || result.status === 'pending') {
-                        // 正在处理中，继续轮询
-                        console.log(`图片生成进度：${progress}% - ${result.status}`);
                     }
                 }
-                
+
             } catch (error) {
                 console.error('轮询失败:', error);
             }
-            
-            if (pollInterval) {
-                clearInterval(pollInterval);
-            }
-            pollInterval = setInterval(pollTaskStatus, 2000); // 每 2 秒查询一次
+
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(pollTaskStatus, 2000);
         }
-        
+
         // 显示生成的图片
         function showGeneratedImage(imageUrl) {
             document.getElementById('generatedImage').src = imageUrl;
             document.getElementById('imageResult').style.display = 'block';
             document.getElementById('imageLoading').style.display = 'none';
-            document.getElementById('progressBar').style.display = 'none';
             updateGenerateButtonState();
-            showAlert('imageSuccess', '图片生成成功！');
+            showAlert('imageSuccess', '✨ 梦境画作已完成！');
         }
-        
+
         // 下载图片
         function downloadImage() {
             const imageUrl = document.getElementById('generatedImage').src;
             const link = document.createElement('a');
             link.href = imageUrl;
-            link.download = 'ai_generated_' + Date.now() + '.png';
+            link.download = 'dream_art_' + Date.now() + '.png';
             link.target = '_blank';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
-        
-        // 全屏查看图片
+
+        // 全屏查看
         function viewImageFullscreen() {
             const imageUrl = document.getElementById('generatedImage').src;
             if (!imageUrl) return;
-            
-            // 创建全屏容器
+
             const fullscreenDiv = document.createElement('div');
-            fullscreenDiv.id = 'imageFullscreen';
-            fullscreenDiv.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.95);
-                z-index: 9999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-            `;
-            
-            const img = document.createElement('img');
-            img.src = imageUrl;
-            img.style.cssText = `
-                max-width: 90%;
-                max-height: 90%;
-                object-fit: contain;
-                box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            `;
-            
-            fullscreenDiv.appendChild(img);
-            document.body.appendChild(fullscreenDiv);
-            
-            // 点击关闭
+            fullscreenDiv.className = 'fullscreen-overlay';
             fullscreenDiv.onclick = function() {
                 document.body.removeChild(fullscreenDiv);
             };
-            
-            // ESC 键关闭
+
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.className = 'fullscreen-image';
+
+            fullscreenDiv.appendChild(img);
+            document.body.appendChild(fullscreenDiv);
+
             const escHandler = function(e) {
                 if (e.key === 'Escape') {
                     document.body.removeChild(fullscreenDiv);
@@ -813,103 +1226,82 @@ Keywords: ${keyword}`
             };
             document.addEventListener('keydown', escHandler);
         }
-        
+
         // 重新生成
         function regenerateImage() {
-            // 检查是否正在生成
             if (isGenerating) {
-                showAlert('imageError', '⚠️ 已有图片正在生成中，请耐心等待完成！');
+                showAlert('imageError', '⏳ 画师正在创作中，请耐心等待...');
                 return;
             }
             generateImage();
         }
-        
+
         // 更新按钮状态
         function updateGenerateButtonState() {
             const generateBtn = document.getElementById('generateImageBtn');
             const regenerateBtn = document.getElementById('regenerateBtn');
-            
+
             if (isGenerating) {
                 generateBtn.disabled = true;
-                generateBtn.innerHTML = '⏳ 正在生成中...';
-                if (regenerateBtn) {
-                    regenerateBtn.disabled = true;
-                }
+                generateBtn.innerHTML = '<span>⏳</span><span>绘梦中...</span>';
+                if (regenerateBtn) regenerateBtn.disabled = true;
             } else {
                 generateBtn.disabled = false;
-                generateBtn.innerHTML = '🖼️ 开始生成图片';
-                if (regenerateBtn) {
-                    regenerateBtn.disabled = false;
-                }
+                generateBtn.innerHTML = '<span>🌙</span><span>开始绘梦</span>';
+                if (regenerateBtn) regenerateBtn.disabled = false;
             }
         }
-        
+
         // 保存历史记录
         async function saveToHistory(prompt, imageUrl) {
             try {
-                // 先检查是否已存在相同的图片 URL
                 const response = await fetch('/api/image/history');
                 if (response.ok) {
                     const history = await response.json();
-                    // 如果已存在相同 URL 的图片，则不重复保存
                     const exists = history.some(item => item.imageUrl === imageUrl);
-                    if (exists) {
-                        console.log('图片已存在于历史记录中，跳过保存');
-                        return;
-                    }
+                    if (exists) return;
                 }
-                
-                // 不存在则保存
+
                 await fetch('/api/image/history', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        imageUrl: imageUrl
-                    })
+                    body: JSON.stringify({ prompt: prompt, imageUrl: imageUrl })
                 });
-                console.log('历史记录保存成功');
             } catch (error) {
                 console.error('保存历史失败:', error);
             }
         }
-        
+
         // 加载历史记录
         async function loadHistory() {
             try {
                 const response = await fetch('/api/image/history');
-                if (!response.ok) {
-                    throw new Error('加载失败');
-                }
-                
+                if (!response.ok) throw new Error('加载失败');
+
                 const history = await response.json();
                 const historyGrid = document.getElementById('historyGrid');
-                
+
                 if (history.length === 0) {
-                    historyGrid.innerHTML = '<div class="empty-history"><p>暂无生成记录</p><p style="font-size: 14px; margin-top: 10px;">开始生成你的第一张图片吧！</p></div>';
+                    historyGrid.innerHTML = '<div class="empty-history" id="emptyHistory"><div class="empty-icon">🖼️</div><p>画廊空空如也</p><p style="font-size: 0.95rem; margin-top: 10px; opacity: 0.7;">开始创作您的第一幅梦境画作吧</p></div>';
                     return;
                 }
-                
-                // 去重：使用 Map 按 imageUrl 去重
+
                 const uniqueMap = new Map();
                 history.forEach(item => {
                     if (!uniqueMap.has(item.imageUrl)) {
                         uniqueMap.set(item.imageUrl, item);
                     }
                 });
-                
-                // 转换为数组并按时间倒序排序
+
                 const uniqueHistory = Array.from(uniqueMap.values());
-                uniqueHistory.sort((a, b) => {
-                    return new Date(b.createTime) - new Date(a.createTime);
-                });
-                
+                uniqueHistory.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
+
                 let html = '';
                 uniqueHistory.forEach(item => {
                     const date = new Date(item.createTime).toLocaleString('zh-CN');
                     html += `
-                        <div class="history-card">
-                            <img src="${item.imageUrl}" alt="生成的图片" class="history-image">
+                        <div class="history-card" onclick="viewHistoryImage('${item.imageUrl}')">
+                            <img src="${item.imageUrl}" alt="梦境画作" class="history-image">
                             <div class="history-info">
                                 <div class="history-prompt">${escapeHtml(item.prompt)}</div>
                                 <div class="history-date">🕐 ${date}</div>
@@ -917,26 +1309,50 @@ Keywords: ${keyword}`
                         </div>
                     `;
                 });
-                
+
                 historyGrid.innerHTML = html;
-                
+
             } catch (error) {
                 console.error('加载历史失败:', error);
             }
         }
-        
+
+        // 查看历史图片
+        function viewHistoryImage(imageUrl) {
+            const fullscreenDiv = document.createElement('div');
+            fullscreenDiv.className = 'fullscreen-overlay';
+            fullscreenDiv.onclick = function() {
+                document.body.removeChild(fullscreenDiv);
+            };
+
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.className = 'fullscreen-image';
+
+            fullscreenDiv.appendChild(img);
+            document.body.appendChild(fullscreenDiv);
+
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(fullscreenDiv);
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }
+
         // 显示提示
         function showAlert(elementId, message) {
             const element = document.getElementById(elementId);
             element.textContent = message;
             element.style.display = 'block';
         }
-        
+
         // 隐藏提示
         function hideAlert(elementId) {
             document.getElementById(elementId).style.display = 'none';
         }
-        
+
         // HTML 转义
         function escapeHtml(text) {
             const div = document.createElement('div');

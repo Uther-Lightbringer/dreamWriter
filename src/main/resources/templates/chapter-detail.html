@@ -2668,14 +2668,18 @@
             }
         }
 
-        // 从URL获取参数
+        // 从 URL 获取参数
         const novelId = /*[[${novelId}]]*/ null;
         const chapterId = /*[[${chapterId}]]*/ null;
-        
-        // 验证ID
+                
+        // 验证 ID
         if (!novelId || !chapterId) {
-            console.error('小说ID或章节ID获取失败');
+            console.error('小说 ID 或章节 ID 获取失败');
         }
+                
+        // 全局变量存储小说和章节标题（用于历史记录保存）
+        let currentNovelTitle = '';
+        let currentChapterTitle = '';
         
         // 章节插图相关变量
         let currentChapterImage = null;
@@ -2961,6 +2965,12 @@
         // 显示章节内容
         function displayChapter(detailView) {
             const chapter = detailView.chapter;
+            
+            // ✅ 保存小说和章节标题到全局变量（用于历史记录保存）
+            currentNovelTitle = detailView.novelTitle || '';
+            currentChapterTitle = chapter.title || '';
+            console.log('📚 当前小说标题:', currentNovelTitle);
+            console.log('📖 当前章节标题:', currentChapterTitle);
             
             // 设置面包屑导航链接
             document.getElementById('novelLink').href = `/novel/${novelId}`;
@@ -3668,42 +3678,43 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: `Please expand the following brief description into a detailed AI image generation prompt.
-
-【Advanced Prompt Structure Requirements】
-Please generate the prompt following this structure:
-1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]
-2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait
-3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.
-4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.
-5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.
-6. **Artist References**: e.g., "in the style of National Geographic photography", "in the style of professional portrait photography", etc.
-7. **Lighting Description**: e.g., "natural daylight", "soft studio lighting", "golden hour sunlight", etc.
-8. **Texture/Material**: e.g., "natural skin texture", "real fabric texture", "authentic material details", etc.
-9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo
-
-【Output Format Requirements】
-- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality
-- **USE ENGLISH ONLY**
-- Only output the prompt text, no other explanations
-- Length between 200-500 words, **MAX 1800 CHARACTERS**, **NEVER EXCEED 1800 CHARACTERS**
-- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**
-- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences
-- Focus on the most important visual elements, avoid unnecessary decorative details
-- Use punctuation to organize sentence structure
-- Include scene details, lighting effects, color schemes, composition methods, etc.
-- Suitable for AI painting tools like Stable Diffusion
-- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks
-- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences
-
-【Prompt Optimization Example】
-Original idea: "an eagle"
-Optimized prompt: "A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style."
-
-Original description: ${input}`
+                        prompt: `# 角色：电影级场景视觉师\n\n` +
+                            
+                            `## 1. Core Task\n` +
+                            `I will deconstruct the user's simple statement into its core "Narrative DNA" and "Emotional DNA". Then, I will act as a professional art director, cinematographer, and scene designer to reconstruct these elements into a rich, atmospheric, and highly detailed image generation prompt. The final output must be a ready-to-use AI painting prompt in English.\n\n` +
+                                                        
+                            `## 2. Deconstruction Phase (Internal Monologue)\n` +
+                            `- **Narrative DNA **(User Input): ${input}\n` +
+                            `- **Core Emotion**: What unspoken feeling lies beneath this description? (freedom/joy, lonely ceremony, mysterious atmosphere, epic sense, etc.)\n` +
+                            `- **Key Entities & Actions**:\n` +
+                            `  - **Subject**: [Main object extracted from description]\n` +
+                            `  - **Action/State**: [Action or state happening]\n` +
+                            `  - **Objects/Environment**: [Surroundings, props, background]\n\n` +
+                                                        
+                            `## 3. Reconstruction Phase (Art Direction)\n` +
+                            `Based on the deconstructed DNA, I will build a complete scene through specific artistic choices.\n\n` +
+                                                        
+                            `- **Scene & Atmosphere**:\n` +
+                            `  - **Specific Environment**: Where exactly are we? (indoor/outdoor, urban/natural, specific location features)\n` +
+                            `  - **Time & Weather**: (dawn/dusk/night, sunny/rainy/foggy, seasonal characteristics)\n` +
+                            `  - **Overall Mood**: What feeling to create? (peaceful, epic, melancholic, dreamy, tense, etc.)\n\n` +
+                                                        
+                            `- **Camera & Composition**:\n` +
+                            `  - **Cinematography**: (wide-angle, low-angle shot, medium shot, close-up, tracking shot)\n` +
+                            `  - **Lighting Design**: (backlight, diffused light, Rembrandt lighting, natural light, dramatic lighting)\n` +
+                            `  - **Color Palette**: (high saturation, vintage monochrome, cool blue-gray tones, warm golden tones)\n\n` +
+                                                        
+                            `- **Style & Medium**:\n` +
+                            `  - **Art Style**: (Miyazaki animation style, surrealist digital painting, 35mm film photography, impressionist oil painting, National Geographic photography)\n` +
+                            `  - **Textures & Details**: (clothing folds, skin texture, object quality, environmental details, lighting effects)\n\n` +
+                                                        
+                            `## 4. Final Prompt Synthesis\n` +
+                            `Integrate all elements above into a coherent, comma-separated string of keywords and phrases. Output the final result in English only.\n\n` +
+                                                        
+                            `【Important】Please directly output the final image generation instruction in English. Do not include any analysis process, phase descriptions, or additional explanations. Only output the usable prompt.`
                     })
-                });
-                
+                    });
+
                 if (!response.ok) {
                     throw new Error('请求失败');
                 }
@@ -4041,41 +4052,48 @@ Original description: ${input}`
             // 识别人物和外貌描写
             const characterAppearances = extractCharacterAppearances(selectedText);
             
-            // 构建提示词
-            let promptBuilder = `Please generate an AI image generation prompt based on the following novel excerpt.\n\n`;
-            promptBuilder += `Novel excerpt: ${selectedText}\n\n`;
-
+            // 构建提示词 - 使用新的结构化格式（英文版）
+            let promptBuilder = `# Role: Cinematic Scene Visualist\n\n`;
+                        
+            promptBuilder += `## 1. Core Task\n`;
+            promptBuilder += `I will deconstruct the user's simple statement into its core "Narrative DNA" and "Emotional DNA". Then, I will act as a professional art director, cinematographer, and scene designer to reconstruct these elements into a rich, atmospheric, and highly detailed image generation prompt. The final output must be a ready-to-use AI painting prompt in English.\n\n`;
+                        
+            promptBuilder += `## 2. Deconstruction Phase (Internal Monologue)\n`;
+            promptBuilder += `- **Narrative DNA **(User Input): ${selectedText}\n`;
+            promptBuilder += `- **Core Emotion**: What unspoken feeling lies beneath this text? (freedom/joy, lonely ceremony, mysterious atmosphere, epic sense, etc.)\n`;
+            promptBuilder += `- **Key Entities & Actions**:\n`;
+                        
             if (characterAppearances.length > 0) {
-                promptBuilder += `🎭 Important Character Appearance Information:\n`;
+                promptBuilder += `  - **Main Characters**:\n`;
                 characterAppearances.forEach((char, index) => {
-                    promptBuilder += `${index + 1}. ${char.name}:${char.description}\n`;
+                    promptBuilder += `    ${index + 1}. ${char.name}: ${char.description}\n`;
                 });
-                promptBuilder += '\n';
             }
-
-            promptBuilder += `【Advanced Prompt Structure Requirements】\n`;
-            promptBuilder += `Please generate the prompt following this structure:\n`;
-            promptBuilder += `1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n`;
-            promptBuilder += `2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n`;
-            promptBuilder += `3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.\n`;
-            promptBuilder += `4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.\n`;
-            promptBuilder += `5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.\n`;
-            promptBuilder += `6. **Artist References**: e.g., "in the style of National Geographic photography", "in the style of professional portrait photography", etc.\n`;
-            promptBuilder += `7. **Lighting Description**: e.g., "natural daylight", "soft studio lighting", "golden hour sunlight", etc.\n`;
-            promptBuilder += `8. **Texture/Material**: e.g., "natural skin texture", "real fabric texture", "authentic material details", etc.\n`;
-            promptBuilder += `9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n`;
-
-            promptBuilder += `【Output Format Requirements】\n`;
-            promptBuilder += `- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n`;
-            promptBuilder += `- **USE ENGLISH ONLY**\n`;
-            promptBuilder += `- Only output the prompt text, no other explanations\n`;
-            promptBuilder += `- Length between 200-500 words, **MAX 1800 CHARACTERS**\n`;
-            promptBuilder += `- Use punctuation to organize sentence structure\n`;
-            promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
-            promptBuilder += `- **NEVER EXCEED 1800 CHARACTERS** - THIS IS CRITICAL! - Only generate the prompt, no extra content\n`;
-            promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
-            promptBuilder += `- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n`;
-            promptBuilder += `- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n\n`;
+                        
+            promptBuilder += `  - **Subject**: [Main object extracted from text]\n`;
+            promptBuilder += `  - **Action/State**: [Action or state happening]\n`;
+            promptBuilder += `  - **Objects/Environment**: [Surroundings, props, background]\n\n`;
+                        
+            promptBuilder += `## 3. Reconstruction Phase (Art Direction)\n`;
+            promptBuilder += `Based on the deconstructed DNA, I will build a complete scene through specific artistic choices.\n\n`;
+                        
+            promptBuilder += `- **Scene & Atmosphere**:\n`;
+            promptBuilder += `  - **Specific Environment**: Where exactly are we? (indoor/outdoor, urban/natural, specific location features)\n`;
+            promptBuilder += `  - **Time & Weather**: (dawn/dusk/night, sunny/rainy/foggy, seasonal characteristics)\n`;
+            promptBuilder += `  - **Overall Mood**: What feeling to create? (peaceful, epic, melancholic, dreamy, tense, etc.)\n\n`;
+                        
+            promptBuilder += `- **Camera & Composition**:\n`;
+            promptBuilder += `  - **Cinematography**: (wide-angle, low-angle shot, medium shot, close-up, tracking shot)\n`;
+            promptBuilder += `  - **Lighting Design**: (backlight, diffused light, Rembrandt lighting, natural light, dramatic lighting)\n`;
+            promptBuilder += `  - **Color Palette**: (high saturation, vintage monochrome, cool blue-gray tones, warm golden tones)\n\n`;
+                        
+            promptBuilder += `- **Style & Medium**:\n`;
+            promptBuilder += `  - **Art Style**: (Miyazaki animation style, surrealist digital painting, 35mm film photography, impressionist oil painting, National Geographic photography)\n`;
+            promptBuilder += `  - **Textures & Details**: (clothing folds, skin texture, object quality, environmental details, lighting effects)\n\n`;
+                        
+            promptBuilder += `## 4. Final Prompt Synthesis\n`;
+            promptBuilder += `Integrate all elements above into a coherent, comma-separated string of keywords and phrases. Output the final result in English only.\n\n`;
+            promptBuilder += `【Important】Please directly output the final image generation instruction in English. Do not include any analysis process, phase descriptions, or additional explanations. Only output the usable prompt.`;
             
             console.log('\n📝 根据选中文字生成图片提示词:');
             console.log('📖 选中的文字:', selectedText);
@@ -4323,9 +4341,9 @@ Original description: ${input}`
                         document.getElementById('modalPromptInput').value, // 提示词
                         currentModalImageUrl, // 图片 URL
                         novelId,
-                        document.getElementById('novelTitle')?.textContent || '',
+                        getNovelTitle(), // 从页面可靠位置获取小说标题
                         chapterId,
-                        document.getElementById('chapterTitle')?.textContent || ''
+                        document.getElementById('chapterTitle')?.textContent || '' // 章节标题
                     );
                 } else {
                     console.warn('⚠️ 自动保存失败，但用户仍可使用临时 URL');
@@ -4340,6 +4358,8 @@ Original description: ${input}`
         async function saveToImageHistory(prompt, imageUrl, novelId, novelTitle, chapterId, chapterTitle) {
             try {
                 console.log('📝 正在保存图片到历史记录...');
+                console.log('📚 小说标题:', novelTitle);
+                console.log('📖 章节标题:', chapterTitle);
                 
                 const saveResponse = await fetch('/api/image/history', {
                     method: 'POST',
@@ -4363,6 +4383,31 @@ Original description: ${input}`
                 console.error('❌ 保存历史记录失败:', error);
                 // 不弹窗提示，避免打扰用户
             }
+        }
+        
+        // 获取小说标题（可靠方式）
+        function getNovelTitle() {
+            console.log('🔍 开始获取小说标题...');
+            console.log('  - currentNovelTitle:', currentNovelTitle);
+            
+            // 优先使用全局变量（最可靠）
+            if (currentNovelTitle) {
+                console.log('  ✅ 使用全局变量:', currentNovelTitle);
+                return currentNovelTitle;
+            }
+            
+            // 回退到面包屑导航中的文本
+            const novelLink = document.getElementById('novelLink');
+            if (novelLink && novelLink.textContent) {
+                const title = novelLink.textContent.trim();
+                console.log('  ✅ 从面包屑获取:', title);
+                return title;
+            }
+            
+            // 最后尝试从页面其他位置获取
+            const fallback = document.getElementById('novelTitle')?.textContent || '';
+            console.log('  ⚠️ 使用备用方案:', fallback);
+            return fallback;
         }
         
         async function saveImageToSelectedText() {
@@ -4512,40 +4557,50 @@ Original description: ${input}`
         
         function buildAIPrompt(inputText) {
             const characterAppearances = extractCharacterAppearances(inputText);
-            let promptBuilder = `Please generate an AI image generation prompt based on the following novel excerpt.\n\n`;
-            promptBuilder += `Novel excerpt: ${inputText}\n\n`;
+            
+            // 使用新的结构化格式 - 电影级场景视觉师角色
+            let promptBuilder = `# 角色：电影级场景视觉师\n\n`;
+            
+            promptBuilder += `## 1. Core Task\n`;
+            promptBuilder += `I will deconstruct the user's simple statement into its core "Narrative DNA" and "Emotional DNA". Then, I will act as a professional art director, cinematographer, and scene designer to reconstruct these elements into a rich, atmospheric, and highly detailed image generation prompt. The final output must be a ready-to-use AI painting prompt in English.\n\n`;
+                        
+            promptBuilder += `## 2. Deconstruction Phase (Internal Monologue)\n`;
+            promptBuilder += `- **Narrative DNA **(User Input): ${inputText}\n`;
+            promptBuilder += `- **Core Emotion**: What unspoken feeling lies beneath this text? (freedom/joy, lonely ceremony, mysterious atmosphere, epic sense, etc.)\n`;
+            promptBuilder += `- **Key Entities & Actions**:\n`;
+                        
             if (characterAppearances.length > 0) {
-                promptBuilder += `🎭 Important Character Appearance Information:\n`;
+                promptBuilder += `  - **Main Characters**:\n`;
                 characterAppearances.forEach((char, index) => {
-                    promptBuilder += `${index + 1}. ${char.name}:, ${char.description}\n`;
+                    promptBuilder += `    ${index + 1}. ${char.name}: ${char.description}\n`;
                 });
-                promptBuilder += '\n';
             }
-
-            promptBuilder += `【Advanced Prompt Structure Requirements】\n`;
-            promptBuilder += `Please generate the prompt following this structure:\n`;
-            promptBuilder += `1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n`;
-            promptBuilder += `2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n`;
-            promptBuilder += `3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.\n`;
-            promptBuilder += `4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.\n`;
-            promptBuilder += `5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.\n`;
-            promptBuilder += `6. **Artist References**: e.g., "in the style of National Geographic photography", "in the style of professional portrait photography", etc.\n`;
-            promptBuilder += `7. **Lighting Description**: e.g., "natural daylight", "soft studio lighting", "golden hour sunlight", etc.\n`;
-            promptBuilder += `8. **Texture/Material**: e.g., "natural skin texture", "real fabric texture", "authentic material details", etc.\n`;
-            promptBuilder += `9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n`;
-
-            promptBuilder += `【Output Format Requirements】\n`;
-            promptBuilder += `- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n`;
-            promptBuilder += `- **USE ENGLISH ONLY**\n`;
-            promptBuilder += `- Only output the prompt text, no other explanations\n`;
-            promptBuilder += `- Length between 200-500 words, **MAX 1800 CHARACTERS**\n`;
-            promptBuilder += `- Use punctuation to organize sentence structure\n`;
-            promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
-            promptBuilder += `- **NEVER EXCEED 1800 CHARACTERS** - THIS IS CRITICAL! - Only generate the prompt, no extra content\n`;
-            promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
-            promptBuilder += `- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n`;
-            promptBuilder += `- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n\n`;
-
+                        
+            promptBuilder += `  - **Subject**: [Main object extracted from text]\n`;
+            promptBuilder += `  - **Action/State**: [Action or state happening]\n`;
+            promptBuilder += `  - **Objects/Environment**: [Surroundings, props, background]\n\n`;
+                        
+            promptBuilder += `## 3. Reconstruction Phase (Art Direction)\n`;
+            promptBuilder += `Based on the deconstructed DNA, I will build a complete scene through specific artistic choices.\n\n`;
+                        
+            promptBuilder += `- **Scene & Atmosphere**:\n`;
+            promptBuilder += `  - **Specific Environment**: Where exactly are we? (indoor/outdoor, urban/natural, specific location features)\n`;
+            promptBuilder += `  - **Time & Weather**: (dawn/dusk/night, sunny/rainy/foggy, seasonal characteristics)\n`;
+            promptBuilder += `  - **Overall Mood**: What feeling to create? (peaceful, epic, melancholic, dreamy, tense, etc.)\n\n`;
+                        
+            promptBuilder += `- **Camera & Composition**:\n`;
+            promptBuilder += `  - **Cinematography**: (wide-angle, low-angle shot, medium shot, close-up, tracking shot)\n`;
+            promptBuilder += `  - **Lighting Design**: (backlight, diffused light, Rembrandt lighting, natural light, dramatic lighting)\n`;
+            promptBuilder += `  - **Color Palette**: (high saturation, vintage monochrome, cool blue-gray tones, warm golden tones)\n\n`;
+                        
+            promptBuilder += `- **Style & Medium**:\n`;
+            promptBuilder += `  - **Art Style**: (Miyazaki animation style, surrealist digital painting, 35mm film photography, impressionist oil painting, National Geographic photography)\n`;
+            promptBuilder += `  - **Textures & Details**: (clothing folds, skin texture, object quality, environmental details, lighting effects)\n\n`;
+            
+            promptBuilder += `## 4. 最终 Prompt 合成\n`;
+            promptBuilder += `将以上所有元素，整合成一个连贯的、以逗号分隔的关键词和短语字符串。输出的最终结果，只需要只输出可用的PROMPT即可。\n\n`;
+            promptBuilder += `【重要】请直接输出最终的图像生成指令，不要包含任何分析过程、阶段说明或额外解释。`;
+            
             return promptBuilder;
         }
         
