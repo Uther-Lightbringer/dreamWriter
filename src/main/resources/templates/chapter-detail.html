@@ -3660,12 +3660,12 @@ Please generate the prompt following this structure:
 【Output Format Requirements】
 - **USE ENGLISH ONLY**
 - Only output the prompt text, no other explanations
-- Length between 200-500 words
+- Length between 200-500 words, **MAX 1800 CHARACTERS**, **NEVER EXCEED 1800 CHARACTERS**
+- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**
 - Use punctuation to organize sentence structure
 - Include scene details, lighting effects, color schemes, composition methods, etc.
 - Suitable for AI painting tools like Stable Diffusion
 - Do not use compact tag format, write in complete descriptive paragraphs
-- Keep under 1500 words
 
 【Prompt Optimization Example】
 Original idea: "an eagle"
@@ -4032,10 +4032,10 @@ Original description: ${input}`
             promptBuilder += `【Output Format Requirements】\n`;
             promptBuilder += `- **USE ENGLISH ONLY**\n`;
             promptBuilder += `- Only output the prompt text, no other explanations\n`;
-            promptBuilder += `- Length between 200-500 words\n`;
+            promptBuilder += `- Length between 200-500 words, **MAX 1800 CHARACTERS**\n`;
             promptBuilder += `- Use punctuation to organize sentence structure\n`;
             promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
-            promptBuilder += `- Keep under 1500 words, only generate the prompt, no extra content\n`;
+            promptBuilder += `- **NEVER EXCEED 1800 CHARACTERS** - THIS IS CRITICAL! - Only generate the prompt, no extra content\n`;
             promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
             
             console.log('\n📝 根据选中文字生成图片提示词:');
@@ -4451,10 +4451,10 @@ Original description: ${input}`
             promptBuilder += `【Output Format Requirements】\n`;
             promptBuilder += `- **USE ENGLISH ONLY**\n`;
             promptBuilder += `- Only output the prompt text, no other explanations\n`;
-            promptBuilder += `- Length between 200-500 words\n`;
+            promptBuilder += `- Length between 200-500 words, **MAX 1800 CHARACTERS**\n`;
             promptBuilder += `- Use punctuation to organize sentence structure\n`;
             promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
-            promptBuilder += `- Keep under 1500 words, only generate the prompt, no extra content\n`;
+            promptBuilder += `- **NEVER EXCEED 1800 CHARACTERS** - THIS IS CRITICAL! - Only generate the prompt, no extra content\n`;
             promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
 
             return promptBuilder;

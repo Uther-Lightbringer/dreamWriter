@@ -58,10 +58,11 @@ public class AIPromptService {
             // 调用 DeepSeek API
             String aiResponse = callDeepSeekAPI(prompt);
             
-            // 解析响应并提取提示词
+            // 解析响应并提取提示词，限制长度在1800字符以下
             if (aiResponse != null && !aiResponse.trim().isEmpty()) {
-                logger.info("AI 绘画提示词生成成功");
-                return aiResponse;
+                String trimmedPrompt = trimPromptToLength(aiResponse, 1800);
+                logger.info("AI 绘画提示词生成成功，长度: {} 字符", trimmedPrompt.length());
+                return trimmedPrompt;
             }
         } catch (Exception e) {
             logger.error("生成 AI 绘画提示词失败：" + e.getMessage(), e);
@@ -155,7 +156,8 @@ public class AIPromptService {
 
                "【Output Format Requirements】\n" +
                "- Only output the prompt text, no other explanations\n" +
-               "- Length between 200-500 words\n" +
+               "- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n" +
+               "- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n" +
                "- **USE ENGLISH ONLY**\n" +
                "- Avoid inappropriate content, use synonyms when necessary\n\n" +
 
@@ -301,5 +303,34 @@ public class AIPromptService {
             logger.error("流式对话失败：" + e.getMessage(), e);
             throw e;
         }
+    }
+
+    /**
+     * 将提示词截断到指定字符数以内
+     * 在最后一个空格或标点处截断，避免截断单词
+     */
+    private String trimPromptToLength(String prompt, int maxLength) {
+        if (prompt == null || prompt.length() <= maxLength) {
+            return prompt;
+        }
+
+        // 先尝试在最后一个空格处截断
+        int lastSpace = prompt.lastIndexOf(' ', maxLength);
+        if (lastSpace > maxLength * 0.7) { // 确保不会截断太短
+            return prompt.substring(0, lastSpace);
+        }
+
+        // 尝试在标点符号处截断
+        char[] punctuation = {'.', ',', '!', '?', ';', ':'};
+        for (char p : punctuation) {
+            int lastPunc = prompt.lastIndexOf(p, maxLength);
+            if (lastPunc > maxLength * 0.7) {
+                return prompt.substring(0, lastPunc + 1);
+            }
+        }
+
+        // 如果没有找到合适的截断点，就直接截断
+        logger.warn("提示词过长({}字符)，已截断到{}字符", prompt.length(), maxLength);
+        return prompt.substring(0, maxLength);
     }
 }
