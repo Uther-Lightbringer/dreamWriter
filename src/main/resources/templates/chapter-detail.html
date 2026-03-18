@@ -4426,21 +4426,37 @@ Original description: ${input}`
         
         function buildAIPrompt(inputText) {
             const characterAppearances = extractCharacterAppearances(inputText);
-            let promptBuilder = `请根据以下小说片段生成 AI 绘画提示词。\n\n`;
-            promptBuilder += `小说片段：${inputText}\n\n`;
+            let promptBuilder = `Please generate an AI image generation prompt based on the following novel excerpt.\n\n`;
+            promptBuilder += `Novel excerpt: ${inputText}\n\n`;
             if (characterAppearances.length > 0) {
-                promptBuilder += `🎭 重要角色外貌信息:\n`;
+                promptBuilder += `🎭 Important Character Appearance Information:\n`;
                 characterAppearances.forEach((char, index) => {
                     promptBuilder += `${index + 1}. ${char.name}:, ${char.description}\n`;
                 });
                 promptBuilder += '\n';
             }
-            promptBuilder += `重要要求:\n`;
-            promptBuilder += `1. 必须只包含使用中文\n`;
-            promptBuilder += `2. 使用逗号、句号等标点符号来组织句子结构\n`;
-            promptBuilder += `3. 包含画面细节、光影效果、色彩搭配、构图方式等\n`;
-            promptBuilder += `4. 字数控制在 1500 以内，只需要生成提示词即可。不要生成其他多余的东西。\n`;
-            promptBuilder += `5. 如果出现人物，请结合提供的角色外貌信息进行详细描述。要精确控制画面中人物的数量和小说提到的人物一样。\n`;
+
+            promptBuilder += `【Advanced Prompt Structure Requirements】\n`;
+            promptBuilder += `Please generate the prompt following this structure:\n`;
+            promptBuilder += `1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n`;
+            promptBuilder += `2. **Style Modifiers**: e.g., "cyberpunk style", "Studio Ghibli style", "Makoto Shinkai style", "Michelangelo style", etc.\n`;
+            promptBuilder += `3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.\n`;
+            promptBuilder += `4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.\n`;
+            promptBuilder += `5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.\n`;
+            promptBuilder += `6. **Artist References**: e.g., "in the style of Hayao Miyazaki", "in the style of Makoto Shinkai", "in the style of Van Gogh", etc.\n`;
+            promptBuilder += `7. **Lighting Description**: e.g., "soft morning light", "cyberpunk neon lights", "cinematic lighting", "dramatic lighting", etc.\n`;
+            promptBuilder += `8. **Texture/Material**: e.g., "smooth marble texture", "polished metal surface", "fabric texture", etc.\n`;
+            promptBuilder += `9. **Image Quality**: e.g., "high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality", etc.\n\n`;
+
+            promptBuilder += `【Output Format Requirements】\n`;
+            promptBuilder += `- **USE ENGLISH ONLY**\n`;
+            promptBuilder += `- Only output the prompt text, no other explanations\n`;
+            promptBuilder += `- Length between 200-500 words\n`;
+            promptBuilder += `- Use punctuation to organize sentence structure\n`;
+            promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
+            promptBuilder += `- Keep under 1500 words, only generate the prompt, no extra content\n`;
+            promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
+
             return promptBuilder;
         }
         
