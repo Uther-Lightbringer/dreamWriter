@@ -159,6 +159,8 @@ public class AIPromptService {
                "- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n" +
                "- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n" +
                "- **USE ENGLISH ONLY**\n" +
+               "- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n" +
+               "- Focus on the most important visual elements, avoid unnecessary decorative details\n" +
                "- Avoid inappropriate content, use synonyms when necessary\n\n" +
 
                "【Prompt Optimization Example】\n" +

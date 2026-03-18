@@ -336,6 +336,8 @@ public class ChapterImageService {
             promptBuilder.append("- Only output the prompt text, no other explanations\n");
             promptBuilder.append("- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n");
             promptBuilder.append("- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n");
+            promptBuilder.append("- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n");
+            promptBuilder.append("- Focus on the most important visual elements, avoid unnecessary decorative details\n");
             promptBuilder.append("- If the scene includes the above characters, you MUST strictly follow their appearance features (age, gender, hairstyle, eye color, clothing, etc.)\n");
             promptBuilder.append("- Avoid inappropriate content, use synonyms when necessary\n\n");
 
@@ -381,6 +383,8 @@ public class ChapterImageService {
                            "- Only output the prompt text, no other explanations\n" +
                            "- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n" +
                            "- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n" +
+                           "- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n" +
+                           "- Focus on the most important visual elements, avoid unnecessary decorative details\n" +
                            "- Avoid inappropriate content, use synonyms when necessary\n\n" +
 
                            "【Prompt Optimization Example】\n" +
