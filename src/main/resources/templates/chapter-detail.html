@@ -3643,17 +3643,35 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: `请将以下简短的描述扩展为详细的 AI 绘画提示词。
+                        prompt: `Please expand the following brief description into a detailed AI image generation prompt.
 
-重要要求:
-1. 必须使用中文生成
-2. 使用逗号、句号等标点符号来组织句子结构
-3. 包含画面细节、光影效果、色彩搭配、构图方式等
-4. 适合用于 Stable Diffusion 等 AI 绘画工具
-5. 不要使用紧凑的标签格式，要写成完整的描述性段落
-6. 字数控制在 1500 以内。
+【Advanced Prompt Structure Requirements】
+Please generate the prompt following this structure:
+1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]
+2. **Style Modifiers**: e.g., "cyberpunk style", "Studio Ghibli style", "Makoto Shinkai style", "Michelangelo style", etc.
+3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.
+4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.
+5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.
+6. **Artist References**: e.g., "in the style of Hayao Miyazaki", "in the style of Makoto Shinkai", "in the style of Van Gogh", etc.
+7. **Lighting Description**: e.g., "soft morning light", "cyberpunk neon lights", "cinematic lighting", "dramatic lighting", etc.
+8. **Texture/Material**: e.g., "smooth marble texture", "polished metal surface", "fabric texture", etc.
+9. **Image Quality**: e.g., "high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality", etc.
 
-原始描述：${input}`
+【Output Format Requirements】
+- **USE ENGLISH ONLY**
+- Only output the prompt text, no other explanations
+- Length between 200-500 words
+- Use punctuation to organize sentence structure
+- Include scene details, lighting effects, color schemes, composition methods, etc.
+- Suitable for AI painting tools like Stable Diffusion
+- Do not use compact tag format, write in complete descriptive paragraphs
+- Keep under 1500 words
+
+【Prompt Optimization Example】
+Original idea: "an eagle"
+Optimized prompt: "A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style."
+
+Original description: ${input}`
                     })
                 });
                 
@@ -3988,23 +4006,37 @@
             const characterAppearances = extractCharacterAppearances(selectedText);
             
             // 构建提示词
-            let promptBuilder = `请根据以下小说片段生成 AI 绘画提示词。\n\n`;
-            promptBuilder += `小说片段：${selectedText}\n\n`;
-            
+            let promptBuilder = `Please generate an AI image generation prompt based on the following novel excerpt.\n\n`;
+            promptBuilder += `Novel excerpt: ${selectedText}\n\n`;
+
             if (characterAppearances.length > 0) {
-                promptBuilder += `🎭 重要角色外貌信息:\n`;
+                promptBuilder += `🎭 Important Character Appearance Information:\n`;
                 characterAppearances.forEach((char, index) => {
                     promptBuilder += `${index + 1}. ${char.name}:${char.description}\n`;
                 });
                 promptBuilder += '\n';
             }
-            
-            promptBuilder += `重要要求:\n`;
-            promptBuilder += `1. 必须使用中文\n`;
-            promptBuilder += `2. 使用逗号、句号等标点符号来组织句子结构\n`;
-            promptBuilder += `3. 包含画面细节、光影效果、色彩搭配、构图方式等\n`;
-            promptBuilder += `4. 字数控制在 1500 以内, 只需要生成提示词即可。不要生成其他多余的东西。\n`;
-            promptBuilder += `5. 如果出现人物，请结合提供的角色外貌信息进行详细描述。要精确控制画面中人物的数量和小说提到的人物一样。\n`;
+
+            promptBuilder += `【Advanced Prompt Structure Requirements】\n`;
+            promptBuilder += `Please generate the prompt following this structure:\n`;
+            promptBuilder += `1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n`;
+            promptBuilder += `2. **Style Modifiers**: e.g., "cyberpunk style", "Studio Ghibli style", "Makoto Shinkai style", "Michelangelo style", etc.\n`;
+            promptBuilder += `3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, etc.\n`;
+            promptBuilder += `4. **Camera Angles**: e.g., "wide-angle lens shot", "bird's eye view", "medium shot", "close-up shot", etc.\n`;
+            promptBuilder += `5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., "mysterious", "warm and cozy", "epic", etc.\n`;
+            promptBuilder += `6. **Artist References**: e.g., "in the style of Hayao Miyazaki", "in the style of Makoto Shinkai", "in the style of Van Gogh", etc.\n`;
+            promptBuilder += `7. **Lighting Description**: e.g., "soft morning light", "cyberpunk neon lights", "cinematic lighting", "dramatic lighting", etc.\n`;
+            promptBuilder += `8. **Texture/Material**: e.g., "smooth marble texture", "polished metal surface", "fabric texture", etc.\n`;
+            promptBuilder += `9. **Image Quality**: e.g., "high quality, ultra HD, 8k resolution, fine details, HDR, cinematic quality", etc.\n\n`;
+
+            promptBuilder += `【Output Format Requirements】\n`;
+            promptBuilder += `- **USE ENGLISH ONLY**\n`;
+            promptBuilder += `- Only output the prompt text, no other explanations\n`;
+            promptBuilder += `- Length between 200-500 words\n`;
+            promptBuilder += `- Use punctuation to organize sentence structure\n`;
+            promptBuilder += `- Include scene details, lighting effects, color schemes, composition methods, etc.\n`;
+            promptBuilder += `- Keep under 1500 words, only generate the prompt, no extra content\n`;
+            promptBuilder += `- If characters appear, combine with the provided character appearance information for detailed description. Precisely control the number of characters in the scene to match the novel.\n`;
             
             console.log('\n📝 根据选中文字生成图片提示词:');
             console.log('📖 选中的文字:', selectedText);
