@@ -1,21 +1,19 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${novel.title} + ' - 小说详情'">小说详情</title>
-    <link rel="stylesheet" href="/css/chapter-tags.css">
-    
-    <!-- 本地 Marked.js 实现（避免 CDN 依赖） -->
+    <title th:text="${novel.title} + ' · 梦境文阁'">小说详情</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+
+    <!-- 本地 Marked.js 实现 -->
     <script>
-        // 简单的 Markdown 解析器
         window.marked = {
-            setOptions: function(options) {
-                this.options = options;
-            },
+            setOptions: function(options) { this.options = options; },
             parse: function(markdown) {
                 if (!markdown) return '';
-                
                 let html = markdown
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -29,620 +27,558 @@
                     .replace(/`([^`]+)`/g, '<code>$1</code>')
                     .replace(/```([\s\S]*?)```/g, '<pre style="background:#f4f4f4;padding:10px;border-radius:5px;overflow:auto;"><code>$1</code></pre>')
                     .replace(/\n/g, '<br>');
-                
                 return html;
             }
         };
     </script>
+
     <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2c3e50;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --light-bg: #f8f9fa;
-            --border-color: #dee2e6;
-        }
-        
-        body {
-            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: var(--light-bg);
-            line-height: 1.6;
-            color: var(--secondary-color);
+            box-sizing: border-box;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
+
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --accent-teal: #009688;
+            --accent-green: #4caf50;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            font-family: 'Noto Serif SC', serif;
             min-height: 100vh;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 25%, var(--dream-mint) 50%, var(--dream-peach) 75%, var(--dream-pink) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            position: relative;
+            overflow-x: hidden;
         }
-        
-        /* 头部区域 */
+
+        /* 梦幻气泡背景 */
+        .floating-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #ffb3d9, transparent);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #b3d9ff, transparent);
+            top: 30%;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #b3ffe0, transparent);
+            bottom: -50px;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        .orb-4 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #ffe0b3, transparent);
+            bottom: 20%;
+            right: 20%;
+            animation-delay: -7s;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部设计 */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
         }
-        
+
         .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: rgba(255,255,255,0.9);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            color: var(--text-light);
             text-decoration: none;
-            font-size: 16px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            background-color: rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            padding: 12px 28px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .back-link:hover {
-            background-color: rgba(255,255,255,0.2);
-            text-decoration: none;
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(-5px);
+            box-shadow: 0 8px 32px rgba(156, 39, 176, 0.15);
         }
-        
-        .worldview-btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.5);
-            border-radius: 20px;
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            margin-left: 8px;
+
+        .header h1 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: 6px;
+            text-shadow: 0 0 40px rgba(156, 39, 176, 0.3);
         }
-        
-        .worldview-btn:hover {
-            background-color: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+
+        /* 玻璃卡片通用样式 */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            padding: 35px;
+            margin-bottom: 30px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
         }
-        
-        /* 章节列表操作按钮组样式 */
-        .section-actions {
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+
+        .section-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.6rem;
+            color: var(--text-dark);
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-left: auto;
+            gap: 12px;
         }
-        
-        .action-btn {
-            display: inline-flex;
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(156, 39, 176, 0.3), transparent);
+        }
+
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background-color: var(--light-bg);
-            color: var(--secondary-color);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-        
-        .action-btn:hover {
-            background-color: var(--primary-color);
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 12px;
             color: white;
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            font-size: 1.1rem;
         }
-        
-        .add-chapter-btn {
-            background-color: var(--success-color);
-            color: white;
-            padding: 10px 20px;
-            font-size: 14px;
-            border-radius: 6px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+
+        /* 按钮样式 */
+        .dream-btn {
+            padding: 12px 28px;
             border: none;
-        }
-        
-        .add-chapter-btn:hover {
-            background-color: #229954;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
-        }
-        
-        .novel-header {
-            padding: 30px 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .novel-title {
-            font-size: 28px;
-            color: var(--secondary-color);
-            margin-bottom: 15px;
+            border-radius: 50px;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 0.9rem;
             font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
         }
-        
+
+        .dream-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .dream-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .dream-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .dream-btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4);
+        }
+
+        .dream-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(156, 39, 176, 0.5);
+        }
+
+        .dream-btn-secondary {
+            background: linear-gradient(135deg, var(--accent-teal), #4db6ac);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 150, 136, 0.4);
+        }
+
+        .dream-btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 150, 136, 0.5);
+        }
+
+        .dream-btn-success {
+            background: linear-gradient(135deg, var(--accent-green), #66bb6a);
+            color: white;
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .dream-btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.5);
+        }
+
+        .dream-btn-warning {
+            background: linear-gradient(135deg, #ffa726, #fb8c00);
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+        }
+
+        .dream-btn-warning:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 152, 0, 0.5);
+        }
+
+        .dream-btn-danger {
+            background: linear-gradient(135deg, #ef5350, #e53935);
+            color: white;
+            box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
+        }
+
+        .dream-btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(244, 67, 54, 0.5);
+        }
+
+        .dream-btn-ghost {
+            background: transparent;
+            border: 2px solid var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .dream-btn-ghost:hover {
+            background: var(--accent-purple);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        /* 小说头部 */
+        .novel-header {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .novel-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        /* 封面图片 */
+        .cover-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cover-wrapper {
+            width: 100%;
+            max-width: 280px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .cover-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cover-wrapper:hover .cover-image {
+            transform: scale(1.05);
+        }
+
+        .cover-placeholder {
+            width: 100%;
+            aspect-ratio: 2/3;
+            background: linear-gradient(135deg, var(--dream-lavender), var(--dream-mint));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 3.5rem;
+            gap: 15px;
+        }
+
+        .cover-placeholder span {
+            font-size: 1rem;
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .cover-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 小说信息 */
+        .novel-info-section {
+            padding: 10px 0;
+        }
+
+        .novel-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 2.2rem;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
         .novel-meta {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            color: var(--text-light);
+            font-size: 0.95rem;
         }
-        
-        .novel-description {
-            color: var(--secondary-color);
-            font-size: 16px;
-            line-height: 1.7;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: var(--light-bg);
-            border-radius: 8px;
-        }
-        
-        /* 内容区域 */
-        .content {
-            padding: 20px;
-        }
-        
-        .section-title {
-            font-size: 22px;
-            color: var(--secondary-color);
-            margin: 0 0 20px 0;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--primary-color);
+
+        .meta-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-        
-        /* 章节列表 - 移动端优化 */
+
+        .novel-description {
+            color: var(--text-dark);
+            font-size: 1rem;
+            line-height: 1.9;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(156, 39, 176, 0.1);
+        }
+
+        /* 操作按钮组 */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        /* 章节列表 */
         .chapter-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 18px;
         }
-        
+
         .chapter-item {
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            background-color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(156, 39, 176, 0.15);
+            border-radius: 18px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .chapter-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-color: var(--primary-color);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+            border-color: rgba(156, 39, 176, 0.3);
         }
-        
+
         .chapter-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 15px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
         }
-        
+
         .chapter-title {
-            font-weight: 600;
-            color: var(--secondary-color);
-            font-size: 18px;
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.3rem;
+            color: var(--text-dark);
             flex: 1;
             min-width: 200px;
         }
-        
+
         .chapter-number {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
             color: white;
-            padding: 4px 12px;
+            padding: 6px 16px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 0.85rem;
             font-weight: 600;
+            letter-spacing: 1px;
+            white-space: nowrap;
         }
-        
+
         .chapter-meta {
             display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            color: #7f8c8d;
-            margin-bottom: 15px;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 12px;
             flex-wrap: wrap;
-            gap: 10px;
         }
-        
-        .chapter-date {
-            font-size: 12px;
-            color: #95a5a6;
-        }
-        
+
         .chapter-preview {
-            color: #555;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            /* 移除了行数限制，让内容完全显示 */
-            white-space: normal;
-            word-wrap: break-word;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 18px;
+            opacity: 0.85;
         }
-        
-        /* 按钮样式 */
+
         .chapter-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-        
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-            font-weight: 500;
+
+        .chapter-actions .dream-btn {
             flex: 1;
-            min-width: 80px;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-            transform: translateY(-1px);
-        }
-        
-        .btn-edit {
-            background-color: var(--warning-color);
-            color: white;
-        }
-        
-        .btn-edit:hover {
-            background-color: #e67e22;
-            transform: translateY(-1px);
-        }
-        
-        .btn-delete {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .btn-delete:hover {
-            background-color: #c0392b;
-            transform: translateY(-1px);
-        }
-        
-        .add-chapter-btn {
-            background-color: var(--success-color);
-            color: white;
+            min-width: 100px;
             padding: 10px 20px;
-            font-size: 14px;
-            border-radius: 6px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
-            border: none;
-            margin-left: 15px;
+            font-size: 0.85rem;
         }
-        
-        .add-chapter-btn:hover {
-            background-color: #229954;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
-        }
-        
-        /* 模态框样式 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 25px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-        
-        .close:hover {
-            color: #333;
-        }
-        
-        textarea, input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 14px;
-            resize: vertical;
-            transition: border-color 0.3s ease;
-        }
-        
-        textarea:focus, input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--secondary-color);
-        }
-        
-        /* 空状态样式 */
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: #7f8c8d;
-        }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .chapter-preview {
-                font-size: 13px;
-                line-height: 1.5;
-            }
-            
-            .story-summary {
-                padding: 10px 12px;
-                margin: 12px 0;
-            }
-            
-            .summary-label {
-                font-size: 12px;
-            }
-            
-            .summary-content {
-                font-size: 12px;
-            }
-            
-            .container {
-                margin: 0;
-                box-shadow: none;
-            }
-            
-            .content {
-                padding: 15px;
-            }
-            
-            .novel-header {
-                padding: 20px 15px;
-            }
-            
-            .novel-title {
-                font-size: 24px;
-            }
-            
-            .section-title {
-                font-size: 20px;
-            }
-            
-            .chapter-item {
-                padding: 15px;
-            }
-            
-            .chapter-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            
-            .chapter-title {
-                font-size: 16px;
-            }
-            
-            .chapter-actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                padding: 12px;
-                font-size: 15px;
-            }
-            
-            .modal-content {
-                margin: 10% auto;
-                width: 95%;
-                padding: 20px;
-            }
-            
-            /* 移动端按钮组适配 */
-            .section-actions {
-                flex-wrap: wrap;
-                margin-top: 10px;
-                width: 100%;
-            }
-            
-            .action-btn,
-            .add-chapter-btn {
-                flex: 1 1 calc(50% - 5px);
-                min-width: calc(50% - 5px);
-                justify-content: center;
-                text-align: center;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .novel-title {
-                font-size: 22px;
-            }
-            
-            .section-title {
-                font-size: 18px;
-            }
-            
-            .chapter-item {
-                padding: 12px;
-            }
-            
-            .chapter-title {
-                font-size: 15px;
-            }
-            
-            .btn {
-                padding: 10px;
-                font-size: 14px;
-            }
-            
-            .add-chapter-btn {
-                padding: 10px 20px;
-                font-size: 15px;
-            }
-        }
-        
-        /* 封面图片样式 */
-        .cover-image-container {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        
-        .cover-image-wrapper {
-            display: inline-block;
-            max-width: 300px;
-            margin-bottom: 15px;
-        }
-        
-        .cover-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            object-fit: contain;
-        }
-        
-        .cover-placeholder {
-            display: inline-block;
-            width: 200px;
-            height: 250px;
-            background-color: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-        
-        .image-upload-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .upload-btn, .delete-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-        }
-        
-        .upload-btn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .upload-btn:hover {
-            background-color: #2980b9;
-            transform: translateY(-1px);
-        }
-        
-        .delete-btn {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .delete-btn:hover {
-            background-color: #c0392b;
-            transform: translateY(-1px);
-        }
-        
-        /* 文件上传控件样式 */
-        .file-input {
-            display: none;
-        }
-        
-        /* 章节标签样式优化 */
+
+        /* 章节标签 */
         .chapter-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin: 15px 0;
-            padding: 10px 0;
+            margin: 12px 0;
         }
-        
+
         .chapter-tag {
             display: inline-flex;
             align-items: center;
             padding: 6px 14px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 0.8rem;
             font-weight: 600;
             color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
@@ -651,7 +587,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .chapter-tag::before {
             content: '';
             position: absolute;
@@ -662,48 +598,109 @@
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
             transition: left 0.5s;
         }
-        
+
         .chapter-tag:hover {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-        
+
         .chapter-tag:hover::before {
             left: 100%;
         }
-        
+
         .tag-punishment {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            border: 1px solid #c0392b;
+            background: linear-gradient(135deg, #ef5350, #e53935);
         }
-        
+
         .tag-reward {
-            background: linear-gradient(135deg, #27ae60, #229954);
-            border: 1px solid #229954;
+            background: linear-gradient(135deg, #66bb6a, #43a047);
         }
-        
+
         .tag-training {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            border: 1px solid #2980b9;
+            background: linear-gradient(135deg, #42a5f5, #1e88e5);
         }
-        
+
         .tag-discipline {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            border: 1px solid #8e44ad;
+            background: linear-gradient(135deg, #ab47bc, #8e24aa);
         }
-        
-        /* 加载动画 */
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            animation: fadeInUp 0.8s ease-out;
         }
-        
-        .loading {
-            animation: pulse 1.5s ease-in-out infinite;
+
+        .empty-icon {
+            font-size: 4.5rem;
+            margin-bottom: 25px;
+            opacity: 0.5;
         }
-        
-        /* 世界观弹窗样式 */
+
+        .empty-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.6rem;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .empty-desc {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .dream-input,
+        .dream-textarea,
+        .dream-select {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid transparent;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+
+        .dream-textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.8;
+        }
+
+        .dream-input:focus,
+        .dream-textarea:focus,
+        .dream-select:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 6px rgba(156, 39, 176, 0.1), 0 8px 24px rgba(156, 39, 176, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            opacity: 0.7;
+        }
+
+        /* 模态框样式 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -713,427 +710,662 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-out;
         }
-        
+
         .modal-overlay.active {
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         .modal-content {
-            background-color: white;
-            border-radius: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border-radius: 24px;
             width: 90%;
-            max-width: 600px;
+            max-width: 650px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.25);
             position: relative;
+            border: 1px solid var(--glass-border);
+            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-large {
+            max-width: 950px;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(156, 39, 176, 0.15);
         }
-        
+
         .modal-title {
-            font-size: 20px;
-            color: var(--secondary-color);
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.4rem;
+            color: var(--text-dark);
             margin: 0;
         }
-        
+
         .modal-close {
             background: none;
             border: none;
-            font-size: 28px;
-            color: #aaa;
+            font-size: 2rem;
+            color: var(--text-light);
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             padding: 0;
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 50%;
         }
-        
+
         .modal-close:hover {
-            color: #333;
+            color: var(--text-dark);
+            background: rgba(156, 39, 176, 0.1);
         }
-        
+
         .modal-body {
-            padding: 20px;
+            padding: 30px;
         }
-        
+
         .modal-footer {
             display: flex;
             justify-content: flex-end;
-            padding: 15px 20px;
-            border-top: 1px solid var(--border-color);
+            gap: 12px;
+            padding: 20px 30px;
+            border-top: 1px solid rgba(156, 39, 176, 0.15);
         }
-        
-        .modal-ok-btn {
-            padding: 8px 24px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .modal-ok-btn:hover {
-            background-color: #2980b9;
-            transform: translateY(-1px);
-        }
-        
-        /* 角色卡相关样式 */
-        .modal-large {
-            max-width: 900px;
-        }
-        
+
+        /* 角色卡样式 */
         .character-cards-toolbar {
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(156, 39, 176, 0.15);
         }
-        
-        .character-cards-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .markdown-content {
-            line-height: 1.8;
-            color: var(--secondary-color);
-        }
-        
-        .markdown-content h1,
-        .markdown-content h2,
-        .markdown-content h3,
-        .markdown-content h4,
-        .markdown-content h5,
-        .markdown-content h6 {
-            margin-top: 24px;
-            margin-bottom: 16px;
-            font-weight: 600;
-            line-height: 1.25;
-            color: var(--secondary-color);
-        }
-        
-        .markdown-content h1 {
-            font-size: 24px;
-            padding-bottom: 0.3em;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .markdown-content h2 {
-            font-size: 20px;
-            padding-bottom: 0.25em;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .markdown-content h3 {
-            font-size: 18px;
-        }
-        
-        .markdown-content p {
-            margin-bottom: 16px;
-        }
-        
-        .markdown-content strong {
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-        
-        .markdown-content ul,
-        .markdown-content ol {
-            padding-left: 2em;
-            margin-bottom: 16px;
-        }
-        
-        .markdown-content li {
-            margin-bottom: 8px;
-        }
-        
-        .markdown-content blockquote {
-            padding: 0 1em;
-            color: #6a737d;
-            border-left: 0.25em solid var(--border-color);
-            margin: 16px 0;
-        }
-        
-        .markdown-content pre {
-            background-color: var(--light-bg);
-            padding: 16px;
-            border-radius: 6px;
-            overflow: auto;
-            margin: 16px 0;
-        }
-        
-        .markdown-content code {
-            background-color: rgba(27,31,35,0.05);
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 85%;
-        }
-        
-        .markdown-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 16px 0;
-        }
-        
-        .markdown-content th,
-        .markdown-content td {
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            text-align: left;
-        }
-        
-        .markdown-content th {
-            background-color: var(--light-bg);
-            font-weight: 600;
-        }
-        
-        .markdown-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 6px;
-            margin: 16px 0;
-        }
-        
-        /* 角色卡列表样式 */
+
         .character-cards-list {
-            display: grid;
+            display: inline;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
+            gap: 18px;
         }
-        
+
         .character-card-item {
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
-            background-color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(156, 39, 176, 0.15);
+            border-radius: 18px;
+            padding: 18px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            position: relative;
             display: flex;
             align-items: flex-start;
             gap: 15px;
         }
-        
+
         .character-card-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-color: var(--primary-color);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+            border-color: rgba(156, 39, 176, 0.3);
         }
-        
+
+        .character-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
         .character-card-name {
+            font-family: 'ZCOOL XiaoWei', serif;
             font-weight: 600;
-            color: var(--secondary-color);
-            font-size: 16px;
-            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-size: 1.15rem;
+            margin-bottom: 6px;
         }
-        
+
         .character-card-id {
-            font-size: 12px;
-            color: #7f8c8d;
+            font-size: 0.8rem;
+            color: var(--text-light);
             margin-bottom: 8px;
         }
-        
+
         .character-card-meta {
             display: flex;
             gap: 10px;
-            font-size: 13px;
-            color: #7f8c8d;
+            font-size: 0.85rem;
+            color: var(--text-light);
             margin-bottom: 8px;
+            flex-wrap: wrap;
         }
-        
+
         .character-card-occupation {
-            font-size: 13px;
-            color: var(--primary-color);
+            font-size: 0.85rem;
+            color: var(--accent-purple);
             margin-bottom: 8px;
         }
-        
+
         .character-card-preview {
-            font-size: 12px;
-            color: #555;
-            line-height: 1.5;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            line-height: 1.6;
             overflow: hidden;
             text-overflow: ellipsis;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
+            opacity: 0.8;
         }
-        
-        .character-card-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+
+        .character-card-thumbnail {
+            width: 70px;
+            height: 70px;
+            flex-shrink: 0;
+            border-radius: 14px;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--dream-lavender), var(--dream-mint));
         }
-        
-        .character-card-item:hover .character-card-actions {
-            opacity: 1;
+
+        .character-card-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
-        
-        .character-card-actions button {
-            flex: 1;
-            padding: 6px;
-            font-size: 12px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-view {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-view:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-delete-character {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .btn-delete-character:hover {
-            background-color: #c0392b;
-        }
-        
-        /* 角色卡详情视图 */
+
         .character-detail-section {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
-        
+
         .character-detail-title {
             font-weight: 600;
-            color: var(--secondary-color);
-            margin-bottom: 8px;
-            font-size: 14px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-size: 0.95rem;
         }
-        
+
         .character-detail-content {
-            font-size: 13px;
-            color: #555;
-            line-height: 1.6;
-            padding: 10px;
-            background-color: var(--light-bg);
-            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            line-height: 1.7;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(156, 39, 176, 0.1);
+        }
+
+        .two-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .three-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .two-grid, .three-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fieldset {
+            border: 2px solid rgba(156, 39, 176, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .fieldset legend {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-weight: 600;
+            color: var(--text-dark);
+            padding: 0 15px;
+        }
+
+        .markdown-content {
+            line-height: 1.9;
+            color: var(--text-dark);
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-dark);
+            font-family: 'ZCOOL XiaoWei', serif;
+        }
+
+        .markdown-content h1 { font-size: 1.6rem; }
+        .markdown-content h2 { font-size: 1.4rem; }
+        .markdown-content h3 { font-size: 1.2rem; }
+
+        .markdown-content p { margin-bottom: 16px; }
+        .markdown-content strong { font-weight: 600; color: var(--accent-purple); }
+        .markdown-content ul, .markdown-content ol { padding-left: 2em; margin-bottom: 16px; }
+        .markdown-content li { margin-bottom: 8px; }
+
+        /* 图片预览 */
+        .image-preview-box {
+            border: 2px dashed rgba(156, 39, 176, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .image-preview {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        /* 加载动画 */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .dream-spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .spinner-ring:nth-child(1) {
+            border-top-color: var(--accent-purple);
+            animation-delay: 0s;
+        }
+
+        .spinner-ring:nth-child(2) {
+            width: 45px;
+            height: 45px;
+            top: 7.5px;
+            left: 7.5px;
+            border-right-color: var(--accent-blue);
+            animation-delay: 0.15s;
+            animation-direction: reverse;
+        }
+
+        .spinner-ring:nth-child(3) {
+            width: 30px;
+            height: 30px;
+            top: 15px;
+            left: 15px;
+            border-bottom-color: var(--accent-teal);
+            animation-delay: 0.3s;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .loading-text {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            margin-top: 25px;
+            max-width: 350px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(156, 39, 176, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            margin-top: 10px;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        /* 提示框 */
+        .alert {
+            padding: 16px 22px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.4s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-error {
+            background: rgba(255, 235, 238, 0.85);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #c62828;
+        }
+
+        .alert-success {
+            background: rgba(232, 245, 233, 0.85);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #2e7d32;
+        }
+
+        /* 图片结果 */
+        .result-image-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .result-image {
+            width: 100%;
+            display: block;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .result-image-wrapper:hover .result-image {
+            transform: scale(1.02);
+        }
+
+        /* 尺寸选择器 */
+        .size-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .size-option {
+            padding: 18px 12px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .size-option:hover {
+            transform: translateY(-2px);
+            border-color: rgba(156, 39, 176, 0.3);
+        }
+
+        .size-option.selected {
+            border-color: var(--accent-purple);
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.15), rgba(63, 81, 181, 0.15));
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.2);
+        }
+
+        .size-ratio {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .size-name {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+                letter-spacing: 4px;
+            }
+
+            .glass-card {
+                padding: 25px 20px;
+            }
+
+            .section-title {
+                font-size: 1.3rem;
+            }
+
+            .novel-title {
+                font-size: 1.8rem;
+            }
+
+            .size-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .character-cards-list {
+                grid-template-columns: 1fr;
+            }
+
+            .chapter-actions .dream-btn {
+                flex: 1 1 100%;
+            }
+        }
+
+        /* 分隔线装饰 */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.3), transparent);
+            margin: 30px 0;
         }
     </style>
 </head>
 <body>
+    <!-- 梦幻背景装饰 -->
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
     <div class="container">
-        <div class="header">
-            <a href="/" class="back-link">← 返回首页</a>
-            <h1 th:text="${novel.title}" style="display: inline;">小说标题</h1>
+        <!-- 头部 -->
+        <header class="header">
+            <a href="/" class="back-link">
+                <span>←</span>
+                <span>返回梦境文阁</span>
+            </a>
+            <h1 th:text="${novel.title}">小说标题</h1>
+        </header>
+
+        <!-- 小说信息卡片 -->
+        <div class="glass-card">
+            <div class="novel-header">
+                <!-- 封面区域 -->
+                <div class="cover-section">
+                    <div class="cover-wrapper">
+                        <div th:if="${novel.coverImage}">
+                            <img th:src="${novel.coverImage}" alt="小说封面" class="cover-image">
+                        </div>
+                        <div th:unless="${novel.coverImage}" class="cover-placeholder">
+                            📖
+                            <span>暂无封面</span>
+                        </div>
+                    </div>
+                    <div class="cover-actions">
+                        <input type="file" id="coverImageInput" class="file-input" accept="image/*">
+                        <button type="button" class="dream-btn dream-btn-primary" onclick="document.getElementById('coverImageInput').click()">
+                            <span>📤</span>
+                            <span>上传封面</span>
+                        </button>
+                        <button th:if="${novel.coverImage}" type="button" class="dream-btn dream-btn-danger" onclick="deleteCoverImage()">
+                            <span>🗑️</span>
+                            <span>删除封面</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 小说信息 -->
+                <div class="novel-info-section">
+                    <h2 class="novel-title" th:text="${novel.title}">小说标题</h2>
+                    <div class="novel-meta">
+                        <span th:if="${novel.author}" class="meta-item">
+                            <span>✍️</span>
+                            <span th:text="'作者: ' + ${novel.author}">作者</span>
+                        </span>
+                        <span class="meta-item">
+                            <span>📄</span>
+                            <span th:text="'章节: ' + ${novel.chaptersCount} + ' 章'">章节数</span>
+                        </span>
+                        <span class="meta-item">
+                            <span>🕐</span>
+                            <span th:text="'创建: ' + ${novel.formattedCreateTime}">创建时间</span>
+                        </span>
+                    </div>
+                    <div th:if="${novel.description}" class="novel-description" th:text="${novel.description}">
+                        小说描述
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="novel-header">
-            <!-- 封面图片区域 -->
-            <div class="cover-image-container">
-                <div th:if="${novel.coverImage}" class="cover-image-wrapper">
-                    <img th:src="${novel.coverImage}" alt="小说封面" class="cover-image">
-                </div>
-                <div th:unless="${novel.coverImage}" class="cover-placeholder">
-                    📖<br>暂无封面<br>点击上传
-                </div>
-                <div class="image-upload-controls">
-                    <input type="file" id="coverImageInput" class="file-input" accept="image/*">
-                    <button type="button" class="upload-btn" onclick="document.getElementById('coverImageInput').click()">
-                        📤 上传封面
-                    </button>
-                    <button th:if="${novel.coverImage}" type="button" class="delete-btn" onclick="deleteCoverImage()">
-                        🗑️ 删除封面
-                    </button>
-                </div>
-            </div>
-            
-            <h1 class="novel-title" th:text="${novel.title}">小说标题</h1>
-            <div class="novel-meta">
-                <span th:if="${novel.author}" th:text="'作者: ' + ${novel.author}">作者</span>
-                <span th:text="'章节数: ' + ${novel.chaptersCount}">章节数</span>
-                <span th:text="'创建时间: ' + ${novel.formattedCreateTime}">创建时间</span>
-            </div>
-            <div th:if="${novel.description}" class="novel-description" th:text="${novel.description}">小说描述</div>
+
+        <!-- 操作栏 -->
+        <div class="action-bar">
+            <button type="button" class="dream-btn dream-btn-primary" onclick="showWorldViewModal()">
+                <span>📖</span>
+                <span>世界观</span>
+            </button>
+            <button type="button" class="dream-btn dream-btn-secondary" onclick="showCharacterCardsModal()">
+                <span>👥</span>
+                <span>角色卡</span>
+            </button>
+            <button type="button" class="dream-btn dream-btn-pink" onclick="showImageGenerationPanel()">
+                <span>🎨</span>
+                <span>AI 绘画</span>
+            </button>
+            <a th:href="@{/novel/{novelId}/chapter/add(novelId=${novel.id})}" class="dream-btn dream-btn-success">
+                <span>➕</span>
+                <span>添加章节</span>
+            </a>
         </div>
-        
-        <div class="content">
-            <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                <h2 class="section-title" style="margin: 0;">📖 章节列表</h2>
-                <div class="section-actions">
-                    <button type="button" class="action-btn" onclick="showWorldViewModal()">
-                        📖 世界观
-                    </button>
-                    <button type="button" class="action-btn" onclick="showCharacterCardsModal()">
-                        👥 角色卡
-                    </button>
-                    <button type="button" class="action-btn" onclick="showImageGenerationPanel()">
-                        🎨 AI 绘画
-                    </button>
-                    <a th:href="@{/novel/{novelId}/chapter/add(novelId=${novel.id})}" class="add-chapter-btn">
-                        ➕ 添加章节
-                    </a>
-                </div>
-            </div>
-            
+
+        <!-- 章节列表卡片 -->
+        <div class="glass-card">
+            <h2 class="section-title">
+                <span class="section-icon">📜</span>
+                <span>章节列表</span>
+            </h2>
+
+            <!-- 空状态 -->
             <div th:if="${#lists.isEmpty(novel.chapters)}" class="empty-state">
-                <div class="empty-state-icon">📚</div>
-                <h3>暂无章节</h3>
-                <p>点击上方按钮添加第一个章节开始创作吧！</p>
+                <div class="empty-icon">📚</div>
+                <h3 class="empty-title">文阁空空如也</h3>
+                <p class="empty-desc">还没有章节在这里栖息，添加第一个章节开始创作吧</p>
             </div>
-            
-            <div class="chapter-list">
+
+            <!-- 章节列表 -->
+            <div class="chapter-list" th:unless="${#lists.isEmpty(novel.chapters)}">
                 <div th:each="chapterWithTags : ${chaptersWithTags}" class="chapter-item">
                     <div class="chapter-header">
                         <div class="chapter-title" th:text="${chapterWithTags.chapter.title}">章节标题</div>
                         <div class="chapter-number" th:text="'第' + ${chapterWithTags.chapter.chapterNumber} + '章'">第X章</div>
                     </div>
-                    
+
                     <!-- 章节标签 -->
                     <div th:if="${not #lists.isEmpty(chapterWithTags.tags)}" class="chapter-tags">
-                        <span th:each="tag : ${chapterWithTags.tags}" 
-                              th:class="'chapter-tag tag-' + ${tag.tagType}" 
+                        <span th:each="tag : ${chapterWithTags.tags}"
+                              th:class="'chapter-tag tag-' + ${tag.tagType}"
                               th:text="${tag.tagValue}">
                             标签
                         </span>
                     </div>
-                    
+
                     <div class="chapter-meta">
-                        <span class="chapter-date" th:text="${chapterWithTags.chapter.formattedCreateTime}">创建时间</span>
-                        <span th:if="${#strings.length(chapterWithTags.chapter.content) > 50}" 
+                        <span th:text="${chapterWithTags.chapter.formattedCreateTime}">创建时间</span>
+                        <span th:if="${#strings.length(chapterWithTags.chapter.content) > 50}"
                               th:text="'字数: ' + ${#strings.length(chapterWithTags.chapter.content)} + '字'">字数统计</span>
                     </div>
-                    
-                    <div th:if="${chapterWithTags.chapter.content}" class="chapter-preview" 
+
+                    <div th:if="${chapterWithTags.chapter.content}" class="chapter-preview"
                          th:text="${chapterWithTags.chapter.storySummary}">章节预览内容</div>
-                    
+
                     <div class="chapter-actions">
                         <a th:href="@{/novel/{novelId}/chapter/{chapterId}(novelId=${novel.id}, chapterId=${chapterWithTags.chapter.id})}"
-                           class="btn btn-primary">📖 阅读</a>
-                        <button th:data-chapter-id="${chapterWithTags.chapter.id}" th:data-chapter-title="${chapterWithTags.chapter.title}"
-                                onclick="editChapter(this.getAttribute('data-chapter-id'), this.getAttribute('data-chapter-title'))" 
-                                class="btn btn-edit">✏️ 编辑</button>
+                           class="dream-btn dream-btn-primary">
+                            <span>📖</span>
+                            <span>阅读</span>
+                        </a>
                         <button th:data-chapter-id="${chapterWithTags.chapter.id}"
-                                onclick="deleteChapter(this.getAttribute('data-chapter-id'))" 
-                                class="btn btn-delete">🗑️ 删除</button>
+                                th:data-chapter-title="${chapterWithTags.chapter.title}"
+                                onclick="editChapter(this.getAttribute('data-chapter-id'), this.getAttribute('data-chapter-title'))"
+                                class="dream-btn dream-btn-warning">
+                            <span>✏️</span>
+                            <span>编辑</span>
+                        </button>
+                        <button th:data-chapter-id="${chapterWithTags.chapter.id}"
+                                onclick="deleteChapter(this.getAttribute('data-chapter-id'))"
+                                class="dream-btn dream-btn-danger">
+                            <span>🗑️</span>
+                            <span>删除</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1141,22 +1373,32 @@
     </div>
 
     <!-- 编辑章节内容模态框 -->
-    <div id="editModal" class="modal">
+    <div id="editModal" class="modal-overlay">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>📝 编辑章节内容</h2>
-            <form id="editChapterForm">
-                <input type="hidden" id="chapterId" name="chapterId">
-                <div class="form-group">
-                    <label class="form-label" for="chapterTitle">章节标题:</label>
-                    <input type="text" id="chapterTitle" name="title" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="chapterContent">章节内容:</label>
-                    <textarea id="chapterContent" name="content" placeholder="请输入章节内容..." required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">💾 保存修改</button>
-            </form>
+            <div class="modal-header">
+                <h3 class="modal-title">📝 编辑章节</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editChapterForm">
+                    <input type="hidden" id="chapterId" name="chapterId">
+                    <div class="form-group">
+                        <label class="form-label" for="chapterTitle">章节标题</label>
+                        <input type="text" id="chapterTitle" name="title" class="dream-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="chapterContent">章节内容</label>
+                        <textarea id="chapterContent" name="content" class="dream-textarea" rows="12" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="dream-btn dream-btn-ghost" onclick="closeEditModal()">取消</button>
+                <button type="button" class="dream-btn dream-btn-primary" onclick="submitEditForm()">
+                    <span>💾</span>
+                    <span>保存修改</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1164,182 +1406,287 @@
     <div id="worldViewModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">📖 小说世界观</h3>
+                <h3 class="modal-title">📖 世界观设定</h3>
                 <button class="modal-close" onclick="closeWorldViewModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="worldViewContent" class="worldview-content markdown-content">
-                    <p style="text-align: center; color: #6c757d;">暂无世界观内容</p>
+                <div id="worldViewContent" class="markdown-content">
+                    <p style="text-align: center; color: var(--text-light);">正在加载世界观内容...</p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="modal-ok-btn" onclick="closeWorldViewModal()">确定</button>
+                <button class="dream-btn dream-btn-primary" onclick="closeWorldViewModal()">确定</button>
             </div>
         </div>
     </div>
 
     <!-- 角色卡模态框 -->
-    <div id="characterCardsModal" class="modal">
+    <div id="characterCardsModal" class="modal-overlay">
         <div class="modal-content modal-large">
-            <span class="close" onclick="closeCharacterCardsModal()">&times;</span>
-            <h2 style="margin-top: 0;">👥 小说角色卡</h2>
-            
-            <!-- 角色卡列表视图 -->
-            <div id="characterCardsListContainer">
-                <div class="character-cards-toolbar">
-                    <button type="button" class="btn btn-primary" onclick="showAddCharacterCardForm()">
-                        ➕ 新增角色卡
-                    </button>
+            <div class="modal-header">
+                <h3 class="modal-title">👥 角色卡管理</h3>
+                <button class="modal-close" onclick="closeCharacterCardsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- 角色卡列表视图 -->
+                <div id="characterCardsListContainer">
+                    <div class="character-cards-toolbar">
+                        <button type="button" class="dream-btn dream-btn-success" onclick="showAddCharacterCardForm()">
+                            <span>➕</span>
+                            <span>新增角色卡</span>
+                        </button>
+                    </div>
+
+                    <!-- 角色卡列表 -->
+                    <div id="characterCardsList" class="character-cards-list" style="margin-top: 20px;">
+                        <!-- 动态加载角色卡 -->
+                    </div>
                 </div>
-                
-                <!-- 角色卡列表 -->
-                <div id="characterCardsList"  style="margin-top: 20px;">
-                    <!-- 动态加载角色卡 -->
+
+                <!-- 添加/编辑角色卡表单 -->
+                <div id="characterCardFormContainer" style="display: none;">
+                    <h3 id="formTitle" style="margin-top: 0; margin-bottom: 25px; font-family: 'ZCOOL XiaoWei', serif; color: var(--text-dark);">➕ 新增角色卡</h3>
+                    <form id="characterCardForm">
+                        <input type="hidden" id="editIndex" value="-1">
+
+                        <div class="two-grid">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="cardId">角色 ID</label>
+                                <input type="text" id="cardId" name="id" class="dream-input" required placeholder="例如：char-001">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="cardName">角色姓名</label>
+                                <input type="text" id="cardName" name="name" class="dream-input" required placeholder="请输入角色姓名">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="alternativeNames">别名（多个用逗号分隔）</label>
+                            <input type="text" id="alternativeNames" name="alternativeNames" class="dream-input" placeholder="例如：小明，阿明">
+                        </div>
+
+                        <div class="three-grid">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="cardAge">年龄</label>
+                                <input type="number" id="cardAge" name="age" class="dream-input" placeholder="0">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="cardGender">性别</label>
+                                <input type="text" id="cardGender" name="gender" class="dream-input" placeholder="男/女">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="cardOccupation">职业</label>
+                                <input type="text" id="cardOccupation" name="occupation" class="dream-input" placeholder="请输入职业">
+                            </div>
+                        </div>
+
+                        <fieldset class="fieldset">
+                            <legend>🎨 外貌特征</legend>
+                            <div class="two-grid">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceHeight">身高</label>
+                                    <input type="text" id="appearanceHeight" name="height" class="dream-input" placeholder="例如：175cm">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceHair">发色</label>
+                                    <input type="text" id="appearanceHair" name="hair" class="dream-input" placeholder="例如：黑色">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceEyes">瞳色</label>
+                                    <input type="text" id="appearanceEyes" name="eyes" class="dream-input" placeholder="例如：棕色">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceBuild">体型</label>
+                                    <input type="text" id="appearanceBuild" name="build" class="dream-input" placeholder="例如：匀称">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="appearanceFeatures">显著特征</label>
+                                <textarea id="appearanceFeatures" name="distinguishingFeatures" class="dream-textarea" rows="2" placeholder="例如：左眉有一道疤痕..."></textarea>
+                            </div>
+                        </fieldset>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cardPersonality">性格描述</label>
+                            <textarea id="cardPersonality" name="personality" class="dream-textarea" rows="3" placeholder="请输入性格描述..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cardBackground">背景故事</label>
+                            <textarea id="cardBackground" name="background" class="dream-textarea" rows="4" placeholder="请输入背景故事..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cardNotes">备注</label>
+                            <textarea id="cardNotes" name="notes" class="dream-textarea" rows="2" placeholder="其他需要说明的信息..."></textarea>
+                        </div>
+
+                        <!-- AI 绘画提示词 -->
+                        <div class="form-group">
+                            <label class="form-label" for="appearanceDescription">🤖 AI 绘画提示词（外貌描述）</label>
+                            <textarea id="appearanceDescription" name="appearanceDescription" class="dream-textarea" rows="4"
+                                      placeholder="请输入用于 AI 文生图的外貌描述，例如：一位黑发棕瞳的少年，身穿蓝色校服，面容清秀..."
+                                      oninput="updateCharacterCount('appearanceDescription', 'appearanceDescriptionCount')"></textarea>
+                            <div class="char-count" id="appearanceDescriptionCount">0/2000</div>
+                            <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-light);">
+                                💡 提示：这个字段将用于提供给 AI 进行角色图像生成，建议详细描述外貌特征
+                            </div>
+                        </div>
+
+                        <!-- 角色卡图片上传区域 -->
+                        <div class="form-group">
+                            <label class="form-label">🖼️ 角色卡图片</label>
+                            <div class="image-preview-box">
+                                <div id="characterImagePreview" style="margin-bottom: 15px;">
+                                    <div style="color: var(--text-light); font-size: 0.9rem;">暂无图片</div>
+                                </div>
+                                <input type="file" id="characterImageInput" accept="image/*" style="display: none;" onchange="previewCharacterImage(this)">
+                                <button type="button" class="dream-btn dream-btn-ghost" onclick="document.getElementById('characterImageInput').click()">
+                                    <span>📷</span>
+                                    <span>选择图片</span>
+                                </button>
+                                <button type="button" class="dream-btn dream-btn-primary" onclick="uploadCharacterImage()" style="margin-left: 10px;">
+                                    <span>💾</span>
+                                    <span>上传图片</span>
+                                </button>
+                                <button type="button" class="dream-btn dream-btn-ghost" onclick="clearCharacterImage()" style="margin-left: 10px;">
+                                    <span>❌</span>
+                                    <span>清除</span>
+                                </button>
+                                <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-light);">
+                                    💡 支持 JPG、PNG 格式，最大 5MB
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="btn-group">
+                            <button type="submit" class="dream-btn dream-btn-success">
+                                <span>💾</span>
+                                <span>保存</span>
+                            </button>
+                            <button type="button" class="dream-btn dream-btn-ghost" onclick="hideCharacterCardForm()">
+                                <span>❌</span>
+                                <span>取消</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            
-            <!-- 添加/编辑角色卡表单 -->
-            <div id="characterCardFormContainer" style="display: none;">
-                <h3 id="formTitle" style="margin-top: 20px;">➕ 新增角色卡</h3>
-                <form id="characterCardForm">
-                    <input type="hidden" id="editIndex" value="-1">
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="cardId">角色 ID:</label>
-                            <input type="text" id="cardId" name="id" required placeholder="例如：char-001">
+        </div>
+    </div>
+
+    <!-- AI 绘画面板 -->
+    <div id="imageGenerationPanel" class="modal-overlay">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title">🎨 AI 绘画工坊</h3>
+                <button class="modal-close" onclick="closeImageGenerationPanel()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">梦境描述</label>
+                    <textarea id="imagePrompt" class="dream-textarea" rows="4" placeholder="请描述你想生成的图片内容，例如：一位古装女子在桃花树下..." oninput="updateCharacterCount('imagePrompt', 'imagePromptCount')"></textarea>
+                    <div class="char-count" id="imagePromptCount">0/2000</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">画幅比例</label>
+                    <div class="size-selector">
+                        <div class="size-option" data-size="16:9" onclick="selectSize(this)">
+                            <div class="size-ratio">16:9</div>
+                            <div class="size-name">宽屏梦境</div>
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="cardName">角色姓名:</label>
-                            <input type="text" id="cardName" name="name" required placeholder="请输入角色姓名">
+                        <div class="size-option" data-size="3:4" onclick="selectSize(this)">
+                            <div class="size-ratio">3:4</div>
+                            <div class="size-name">竖幅画卷</div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="alternativeNames">别名 (多个用逗号分隔):</label>
-                        <input type="text" id="alternativeNames" name="alternativeNames" placeholder="例如：小明，阿明">
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="cardAge">年龄:</label>
-                            <input type="number" id="cardAge" name="age" placeholder="0">
+                        <div class="size-option" data-size="1:1" onclick="selectSize(this)">
+                            <div class="size-ratio">1:1</div>
+                            <div class="size-name">方圆之间</div>
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="cardGender">性别:</label>
-                            <input type="text" id="cardGender" name="gender" placeholder="男/女">
+                        <div class="size-option selected" data-size="9:16" onclick="selectSize(this)">
+                            <div class="size-ratio">9:16</div>
+                            <div class="size-name">手机画幅</div>
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="cardOccupation">职业:</label>
-                            <input type="text" id="cardOccupation" name="occupation" placeholder="请输入职业">
+                        <div class="size-option" data-size="4:3" onclick="selectSize(this)">
+                            <div class="size-ratio">4:3</div>
+                            <div class="size-name">经典比例</div>
                         </div>
-                    </div>
-                    
-                    <fieldset style="border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-                        <legend style="font-weight: 600; color: var(--secondary-color); padding: 0 10px;">🎨 外貌特征</legend>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label" for="appearanceHeight">身高:</label>
-                                <input type="text" id="appearanceHeight" name="height" placeholder="例如：175cm">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label" for="appearanceHair">发色:</label>
-                                <input type="text" id="appearanceHair" name="hair" placeholder="例如：黑色">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label" for="appearanceEyes">瞳色:</label>
-                                <input type="text" id="appearanceEyes" name="eyes" placeholder="例如：棕色">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label" for="appearanceBuild">体型:</label>
-                                <input type="text" id="appearanceBuild" name="build" placeholder="例如：匀称">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="appearanceFeatures">显著特征:</label>
-                            <textarea id="appearanceFeatures" name="distinguishingFeatures" rows="2" placeholder="例如：左眉有一道疤痕..."></textarea>
-                        </div>
-                    </fieldset>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="cardPersonality">性格描述:</label>
-                        <textarea id="cardPersonality" name="personality" rows="3" placeholder="请输入性格描述..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="cardBackground">背景故事:</label>
-                        <textarea id="cardBackground" name="background" rows="4" placeholder="请输入背景故事..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="cardNotes">备注:</label>
-                        <textarea id="cardNotes" name="notes" rows="2" placeholder="其他需要说明的信息..."></textarea>
-                    </div>
-                    
-                    <!-- AI 绘画提示词移到最后 -->
-                    <div class="form-group">
-                        <label class="form-label" for="appearanceDescription">🤖 AI 绘画提示词 (外貌描述):</label>
-                        <textarea id="appearanceDescription" name="appearanceDescription" rows="4"
-                                  placeholder="请输入用于 AI 文生图的外貌描述，例如：一位黑发棕瞳的少年，身穿蓝色校服，面容清秀，左眉有一道明显的疤痕，身材匀称..." oninput="updateCharacterCount('appearanceDescription', 'appearanceDescriptionCount')"></textarea>
-                        <div class="character-count" id="appearanceDescriptionCount" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
-                        <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
-                            <small style="color: #6c757d; font-size: 12px; flex: 1;">
-                                💡 提示：这个字段将用于提供给 AI 进行角色图像生成，建议详细描述外貌特征
-                            </small>
+                        <div class="size-option" data-size="2:3" onclick="selectSize(this)">
+                            <div class="size-ratio">2:3</div>
+                            <div class="size-name">人像特写</div>
                         </div>
                     </div>
-                    
-                    <!-- 角色卡图片上传区域 -->
-                    <div class="form-group">
-                        <label class="form-label">🖼️ 角色卡图片:</label>
-                        <div style="border: 2px dashed var(--border-color); border-radius: 6px; padding: 20px; text-align: center; background-color: #f8f9fa;">
-                            <div id="characterImagePreview" style="margin-bottom: 15px;">
-                                <div style="color: #999; font-size: 14px;">暂无图片</div>
-                            </div>
-                            <input type="file" id="characterImageInput" accept="image/*" style="display: none;" onchange="previewCharacterImage(this)">
-                            <button type="button" class="btn" onclick="document.getElementById('characterImageInput').click()">
-                                📷 选择图片
-                            </button>
-                            <button type="button" class="btn btn-primary" onclick="uploadCharacterImage()" style="margin-left: 10px;">
-                                💾 上传图片
-                            </button>
-                            <button type="button" class="btn" onclick="clearCharacterImage()" style="margin-left: 10px;">
-                                ❌ 清除
-                            </button>
-                            <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
-                                💡 支持 JPG、PNG 格式，最大 5MB
-                            </div>
-                        </div>
+                </div>
+
+                <div class="alert alert-error" id="imageError"></div>
+                <div class="alert alert-success" id="imageSuccess"></div>
+
+                <!-- 加载状态 -->
+                <div id="generationLoading" class="loading-container" style="display: none;">
+                    <div class="dream-spinner">
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
                     </div>
-                    
-                    <div class="character-cards-actions">
-                        <button type="submit" class="btn btn-primary">
-                            💾 保存
+                    <p class="loading-text">画师正在精心绘制...</p>
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">进度：0%</p>
+                    </div>
+                </div>
+
+                <!-- 图片结果 -->
+                <div id="imageResult" style="display: none; margin-top: 25px;">
+                    <div class="result-image-wrapper" style="cursor: pointer;" onclick="viewImageFullscreen()">
+                        <img id="generatedImage" class="result-image" src="" alt="梦境画作">
+                    </div>
+                    <div class="btn-group" style="justify-content: center; margin-top: 25px;">
+                        <button class="dream-btn dream-btn-ghost" onclick="downloadImage()">
+                            <span>⬇️</span>
+                            <span>珍藏画作</span>
                         </button>
-                        <button type="button" class="btn" onclick="hideCharacterCardForm()">
-                            ❌ 取消
+                        <button class="dream-btn dream-btn-primary" onclick="regenerateImage()" id="regenerateBtn">
+                            <span>🔄</span>
+                            <span>再绘一梦</span>
                         </button>
                     </div>
-                </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="dream-btn dream-btn-ghost" onclick="closeImageGenerationPanel()">关闭</button>
+                <button class="dream-btn dream-btn-primary" onclick="generateImage()" id="generateImageBtn">
+                    <span>🌙</span>
+                    <span>开始绘梦</span>
+                </button>
             </div>
         </div>
     </div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-        // 获取小说 ID（使用 Thymeleaf 内联语法）
+        // 获取小说 ID
         var novelId = /*[[${novel.id}]]*/ null;
-                
-        // 验证小说 ID
+
         if (!novelId) {
-            console.error('警告：小说 ID 为 null，请检查页面是否正确传递了 novel 对象');
+            console.error('警告：小说 ID 为 null');
         } else {
             console.log('小说 ID:', novelId);
         }
-        
-        // 全局变量存储角色卡数据
+
+        // 全局变量
         var characterCardsData = [];
-        
+        var selectedCharacterImageFile = null;
+        var currentEditIndex = -1;
+        var currentTaskId = null;
+        var pollInterval = null;
+        var selectedSize = '9:16';
+        var isGenerating = false;
+
         // 封面图片上传处理
         document.getElementById('coverImageInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -1347,17 +1694,16 @@
                 uploadCoverImage(file, novelId);
             }
         });
-        
+
         function uploadCoverImage(file, novelId) {
             const formData = new FormData();
             formData.append('file', file);
-            
-            // 显示上传状态
-            const uploadBtn = document.querySelector('.upload-btn');
+
+            const uploadBtn = event.target;
             const originalText = uploadBtn.innerHTML;
-            uploadBtn.innerHTML = '📤 上传中...';
+            uploadBtn.innerHTML = '<span>📤</span><span>上传中...</span>';
             uploadBtn.disabled = true;
-            
+
             fetch(`/api/images/novel/${novelId}/cover`, {
                 method: 'POST',
                 body: formData
@@ -1380,61 +1726,42 @@
                 document.getElementById('coverImageInput').value = '';
             });
         }
-        
+
         function deleteCoverImage() {
-            if (confirm('确定要删除封面图片吗？')) {
-                // 显示删除状态
-                const deleteBtn = document.querySelector('.delete-btn');
-                const originalText = deleteBtn.innerHTML;
-                deleteBtn.innerHTML = '🗑️ 删除中...';
-                deleteBtn.disabled = true;
-                
-                fetch(`/api/images/novel/${novelId}/cover`, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('删除失败: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('删除失败:', error);
-                    alert('删除失败');
-                })
-                .finally(() => {
-                    deleteBtn.innerHTML = originalText;
-                    deleteBtn.disabled = false;
-                });
-            }
-        }
-        
-        // 获取模态框元素
-        const modal = document.getElementById('editModal');
-        const span = document.getElementsByClassName('close')[0];
-        const editForm = document.getElementById('editChapterForm');
+            if (!confirm('确定要让封面从梦境中消失吗？')) return;
 
-        // 关闭模态框
-        span.onclick = function() {
-            modal.style.display = 'none';
-        }
+            const deleteBtn = event.target;
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.innerHTML = '<span>🗑️</span><span>删除中...</span>';
+            deleteBtn.disabled = true;
 
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
+            fetch(`/api/images/novel/${novelId}/cover`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('删除失败:', error);
+                alert('删除失败');
+            })
+            .finally(() => {
+                deleteBtn.innerHTML = originalText;
+                deleteBtn.disabled = false;
+            });
         }
 
         // 编辑章节
         function editChapter(chapterId, chapterTitle) {
-            // 显示加载状态
             const contentField = document.getElementById('chapterContent');
             contentField.placeholder = '正在加载内容...';
             contentField.classList.add('loading');
-            
-            // 先获取章节内容
+
             fetch(`/api/chapters/${chapterId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -1443,7 +1770,7 @@
                     document.getElementById('chapterContent').value = data.content || '';
                     document.getElementById('chapterContent').placeholder = '请输入章节内容...';
                     document.getElementById('chapterContent').classList.remove('loading');
-                    modal.style.display = 'block';
+                    document.getElementById('editModal').classList.add('active');
                 })
                 .catch(error => {
                     console.error('获取章节内容失败:', error);
@@ -1452,33 +1779,28 @@
                 });
         }
 
-        // 提交编辑表单
-        editForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function submitEditForm() {
             const chapterId = document.getElementById('chapterId').value;
             const title = document.getElementById('chapterTitle').value;
             const content = document.getElementById('chapterContent').value;
-            
-            // 显示提交状态
-            const submitBtn = editForm.querySelector('button[type="submit"]');
+
+            const submitBtn = event.target;
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '🔄 保存中...';
+            submitBtn.innerHTML = '<span>🔄</span><span>保存中...</span>';
             submitBtn.disabled = true;
-            
+
             fetch(`/api/chapters/${chapterId}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: title,
-                    content: content
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, content: content })
             })
             .then(response => {
                 if (response.ok) {
-                    modal.style.display = 'none';
+                    closeEditModal();
                     location.reload();
                 } else {
                     throw new Error('更新失败');
@@ -1489,116 +1811,92 @@
                 alert('更新章节失败');
             })
             .finally(() => {
-                // 恢复按钮状态
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             });
-        });
+        }
 
         // 删除章节
         function deleteChapter(chapterId) {
-            if (confirm('确定要删除这个章节吗？此操作不可撤销！')) {
-                // 显示删除状态
-                const deleteButtons = document.querySelectorAll(`button[data-chapter-id="${chapterId}"]`);
+            if (!confirm('确定要让这个章节从梦境中消失吗？此操作不可撤销！')) return;
+
+            const deleteButtons = document.querySelectorAll(`button[data-chapter-id="${chapterId}"]`);
+            deleteButtons.forEach(btn => {
+                btn.innerHTML = '<span>🗑️</span><span>删除中...</span>';
+                btn.disabled = true;
+            });
+
+            fetch(`/api/chapters/${chapterId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    throw new Error('删除失败');
+                }
+            })
+            .catch(error => {
+                console.error('删除章节失败:', error);
+                alert('删除章节失败');
                 deleteButtons.forEach(btn => {
-                    btn.innerHTML = '🗑️ 删除中...';
-                    btn.disabled = true;
+                    btn.innerHTML = '<span>🗑️</span><span>删除</span>';
+                    btn.disabled = false;
                 });
-                
-                fetch(`/api/chapters/${chapterId}`, {
-                    method: 'DELETE'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        throw new Error('删除失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('删除章节失败:', error);
-                    alert('删除章节失败');
-                    // 恢复按钮状态
-                    deleteButtons.forEach(btn => {
-                        btn.innerHTML = '🗑️ 删除';
-                        btn.disabled = false;
-                    });
-                });
-            }
+            });
         }
-        
+
         // ========== 世界观相关功能 ==========
-        
-        // 显示世界观弹窗
+
         function showWorldViewModal() {
             const modal = document.getElementById('worldViewModal');
-            if (!modal) {
-                console.error('世界观弹窗未找到');
-                return;
-            }
-            
             const contentDiv = document.getElementById('worldViewContent');
-            
-            // 显示加载状态
-            contentDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">正在加载世界观内容...</p>';
+
+            contentDiv.innerHTML = '<p style="text-align: center; color: var(--text-light);">正在加载世界观内容...</p>';
             modal.classList.add('active');
-            
-            // 获取世界观数据
+
             fetch(`/api/novels/${novelId}/worldview`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         if (data.worldView && data.worldView.trim()) {
-                            // 简单的 Markdown 支持：换行转<br>，**粗体**转<strong>
                             let formattedText = data.worldView
                                 .replace(/\n/g, '<br>')
                                 .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                            contentDiv.innerHTML = '<div style="white-space: pre-wrap; line-height: 1.8;">' + formattedText + '</div>';
+                            contentDiv.innerHTML = '<div style="white-space: pre-wrap; line-height: 1.9;">' + formattedText + '</div>';
                         } else {
-                            contentDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无世界观内容</p>';
+                            contentDiv.innerHTML = '<p style="text-align: center; color: var(--text-light);">暂无世界观内容</p>';
                         }
                     } else {
-                        contentDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败：' + (data.message || '未知错误') + '</p>';
+                        contentDiv.innerHTML = '<p style="text-align: center; color: #c62828;">加载失败：' + (data.message || '未知错误') + '</p>';
                     }
                 })
                 .catch(error => {
                     console.error('获取世界观失败:', error);
-                    contentDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                    contentDiv.innerHTML = '<p style="text-align: center; color: #c62828;">加载失败，请稍后重试</p>';
                 });
         }
-        
-        // 关闭世界观弹窗
+
         function closeWorldViewModal() {
-            const modal = document.getElementById('worldViewModal');
-            if (modal) {
-                modal.classList.remove('active');
-            }
+            document.getElementById('worldViewModal').classList.remove('active');
         }
-        
+
         // ========== 角色卡相关功能 ==========
-                
-        // 显示角色卡弹窗
+
         function showCharacterCardsModal() {
-            const modal = document.getElementById('characterCardsModal');
-            modal.style.display = 'block';
-                    
-            // 加载角色卡列表
+            document.getElementById('characterCardsModal').classList.add('active');
             loadCharacterCards();
         }
-                
-        // 关闭角色卡弹窗
+
         function closeCharacterCardsModal() {
-            const modal = document.getElementById('characterCardsModal');
-            modal.style.display = 'none';
-            // 重置为列表视图
+            document.getElementById('characterCardsModal').classList.remove('active');
             hideCharacterCardForm();
         }
-                
-        // 加载角色卡列表
+
         function loadCharacterCards() {
             const listDiv = document.getElementById('characterCardsList');
-            listDiv.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 40px;">正在加载角色卡...</p>';
-                    
+            listDiv.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-light);">正在加载角色卡...</div>';
+
             fetch(`/api/novels/${novelId}/character-cards/list`)
                 .then(response => response.json())
                 .then(data => {
@@ -1606,61 +1904,43 @@
                         characterCardsData = data.characterCards || [];
                         renderCharacterCardsList();
                     } else {
-                        listDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败：' + (data.message || '未知错误') + '</p>';
+                        listDiv.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #c62828;">加载失败：' + (data.message || '未知错误') + '</div>';
                     }
                 })
                 .catch(error => {
                     console.error('获取角色卡失败:', error);
-                    listDiv.innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                    listDiv.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #c62828;">加载失败，请稍后重试</div>';
                 });
         }
-                
-        // 转换图片路径为 Web URL
+
         function convertImageUrlToWebUrl(url) {
             if (!url) return null;
-            
-            // 如果已经是完整的 http/https URL，直接返回
-            if (url.startsWith('http://') || url.startsWith('https://')) {
-                return url;
-            }
-            
-            // 处理路径：将 /uploads/images/xxx 转换为 /images/xxx
-            // 因为 WebConfig 配置了 /images/** 映射到 file:uploads/images/
-            if (url.startsWith('/uploads/images/')) {
-                return url.replace('/uploads/images/', '/images/');
-            }
-            
-            // 如果没有前缀，尝试添加
-            if (url.startsWith('uploads/images/')) {
-                return url.replace('uploads/images/', '/images/');
-            }
-            
-            // 其他情况，直接返回
+            if (url.startsWith('http://') || url.startsWith('https://')) return url;
+            if (url.startsWith('/uploads/images/')) return url.replace('/uploads/images/', '/images/');
+            if (url.startsWith('uploads/images/')) return url.replace('uploads/images/', '/images/');
             return url;
         }
-        
-        // 渲染角色卡列表
+
         function renderCharacterCardsList() {
             const listDiv = document.getElementById('characterCardsList');
-                    
+
             if (characterCardsData.length === 0) {
-                listDiv.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 40px; grid-column: 1/-1;">暂无角色卡，点击“新增角色卡”按钮添加</p>';
+                listDiv.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-light);">暂无角色卡，点击"新增角色卡"按钮添加</div>';
                 return;
             }
-                    
+
             let html = '';
             characterCardsData.forEach((card, index) => {
                 const imageUrl = convertImageUrlToWebUrl(card.generatedImageUrl);
                 html += `
                     <div class="character-card-item" onclick="viewCharacterCard(${index})">
                         ${imageUrl ? `
-                            <div style="width: 80px; height: 80px; flex-shrink: 0; overflow: hidden; border-radius: 6px; margin-right: 15px;">
-                                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.name)}" 
-                                     style="width: 100%; height: 100%; object-fit: cover;" 
-                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f0f0f0; color: #999; font-size: 12px;'>暂无图片</div>';" />
+                            <div class="character-card-thumbnail">
+                                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.name)}"
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 0.8rem;\\'>暂无图片</div>';" />
                             </div>
                         ` : ''}
-                        <div style="flex: 1; min-width: 0;">
+                        <div class="character-card-info">
                             <div class="character-card-name">${escapeHtml(card.name || '无名')}</div>
                             <div class="character-card-id">ID: ${escapeHtml(card.id || 'N/A')}</div>
                             <div class="character-card-meta">
@@ -1673,102 +1953,101 @@
                     </div>
                 `;
             });
-                    
+
             listDiv.innerHTML = html;
         }
-                
-        // 显示添加角色卡表单
+
         function showAddCharacterCardForm() {
             document.getElementById('characterCardsListContainer').style.display = 'none';
             document.getElementById('characterCardFormContainer').style.display = 'block';
             document.getElementById('formTitle').textContent = '➕ 新增角色卡';
             document.getElementById('characterCardForm').reset();
             document.getElementById('editIndex').value = '-1';
+            clearCharacterImage();
         }
-                
-        // 隐藏表单，返回列表视图
+
         function hideCharacterCardForm() {
             document.getElementById('characterCardFormContainer').style.display = 'none';
             document.getElementById('characterCardsListContainer').style.display = 'block';
         }
-                
-        // 查看角色卡详情
+
         function viewCharacterCard(index) {
             const card = characterCardsData[index];
-            
-            // 验证角色卡是否存在
             if (!card) {
                 console.error('角色卡不存在，索引:', index);
                 alert('⚠️ 角色卡数据不存在，请刷新页面重试');
                 return;
             }
-            
+
             const listDiv = document.getElementById('characterCardsList');
             const imageUrl = convertImageUrlToWebUrl(card.generatedImageUrl || '');
-                    
+
             let html = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="margin: 0; color: var(--secondary-color);">${escapeHtml(card.name)}</h3>
+                <div style="padding: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="margin: 0; font-family: 'ZCOOL XiaoWei', serif; color: var(--text-dark); font-size: 1.5rem;">${escapeHtml(card.name)}</h3>
                         <div style="display: flex; gap: 10px;">
-                            <button type="button" class="btn" style="padding: 6px 16px; font-size: 13px;" onclick="editCharacterCard(${index})">
-                                ✏️ 编辑
+                            <button type="button" class="dream-btn dream-btn-warning" style="padding: 8px 20px; font-size: 0.85rem;" onclick="editCharacterCard(${index})">
+                                <span>✏️</span>
+                                <span>编辑</span>
                             </button>
-                            <button type="button" class="btn btn-primary" style="padding: 6px 16px; font-size: 13px;" onclick="loadCharacterCards()">
-                                ← 返回
+                            <button type="button" class="dream-btn dream-btn-ghost" style="padding: 8px 20px; font-size: 0.85rem;" onclick="loadCharacterCards()">
+                                <span>←</span>
+                                <span>返回</span>
                             </button>
                         </div>
                     </div>
-                    <div style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">ID: ${escapeHtml(card.id)}</div>
-                            
+                    <div style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 20px;">ID: ${escapeHtml(card.id)}</div>
+
                     ${card.alternativeNames && card.alternativeNames.length > 0 ? `
                         <div class="character-detail-section">
                             <div class="character-detail-title">别名</div>
                             <div class="character-detail-content">${card.alternativeNames.map(n => escapeHtml(n)).join(', ')}</div>
                         </div>
                     ` : ''}
-                            
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-                        <div class="character-detail-section">
+
+                    <div class="three-grid" style="margin-bottom: 20px;">
+                        <div class="character-detail-section" style="margin-bottom: 0;">
                             <div class="character-detail-title">年龄</div>
                             <div class="character-detail-content">${card.age !== undefined ? card.age + '岁' : '未知'}</div>
                         </div>
-                        <div class="character-detail-section">
+                        <div class="character-detail-section" style="margin-bottom: 0;">
                             <div class="character-detail-title">性别</div>
                             <div class="character-detail-content">${escapeHtml(card.gender || '未知')}</div>
                         </div>
-                        <div class="character-detail-section">
+                        <div class="character-detail-section" style="margin-bottom: 0;">
                             <div class="character-detail-title">职业</div>
                             <div class="character-detail-content">${escapeHtml(card.occupation || '无')}</div>
                         </div>
                     </div>
-                            
+
                     ${card.appearance ? `
                         <div class="character-detail-section">
                             <div class="character-detail-title">🎨 外貌特征</div>
                             <div class="character-detail-content">
-                                ${card.appearance.height ? `<div><strong>身高:</strong>${escapeHtml(card.appearance.height)}</div>` : ''}
-                                ${card.appearance.hair ? `<div><strong>发色:</strong>${escapeHtml(card.appearance.hair)}</div>` : ''}
-                                ${card.appearance.eyes ? `<div><strong>瞳色:</strong>${escapeHtml(card.appearance.eyes)}</div>` : ''}
-                                ${card.appearance.build ? `<div><strong>体型:</strong>${escapeHtml(card.appearance.build)}</div>` : ''}
-                                ${card.appearance.distinguishingFeatures ? `<div><strong>显著特征:</strong>${escapeHtml(card.appearance.distinguishingFeatures)}</div>` : ''}
+                                ${card.appearance.height ? `<div><strong>身高:</strong> ${escapeHtml(card.appearance.height)}</div>` : ''}
+                                ${card.appearance.hair ? `<div><strong>发色:</strong> ${escapeHtml(card.appearance.hair)}</div>` : ''}
+                                ${card.appearance.eyes ? `<div><strong>瞳色:</strong> ${escapeHtml(card.appearance.eyes)}</div>` : ''}
+                                ${card.appearance.build ? `<div><strong>体型:</strong> ${escapeHtml(card.appearance.build)}</div>` : ''}
+                                ${card.appearance.distinguishingFeatures ? `<div><strong>显著特征:</strong> ${escapeHtml(card.appearance.distinguishingFeatures)}</div>` : ''}
                             </div>
                         </div>
                     ` : ''}
-                    
+
                     ${imageUrl ? `
                         <div class="character-detail-section">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <div class="character-detail-title" style="margin: 0;">🖼️ 角色图片</div>
-                                <button type="button" class="btn" style="padding: 4px 12px; font-size: 12px;" onclick="regenerateCharacterImage(${index})">
-                                    🔄 重新生成图片
+                                <button type="button" class="dream-btn dream-btn-ghost" style="padding: 6px 16px; font-size: 0.8rem;" onclick="regenerateCharacterImage(${index})">
+                                    <span>🔄</span>
+                                    <span>重新生成</span>
                                 </button>
                             </div>
                             <div class="character-detail-content">
-                                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.name)}" 
-                                     style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" 
-                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'padding: 20px; text-align: center; background-color: #f0f0f0; border-radius: 8px; color: #999;\'>图片加载失败，请重试</div>';" />
-                                <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.name)}"
+                                     style="max-width: 100%; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);"
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'padding: 30px; text-align: center; background: rgba(255,255,255,0.5); border-radius: 12px; color: var(--text-light);\\'>图片加载失败，请重试</div>';" />
+                                <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-light);">
                                     💡 图片有效期 24 小时，可重新生成
                                 </div>
                             </div>
@@ -1776,155 +2055,138 @@
                     ` : `
                         <div class="character-detail-section">
                             <div class="character-detail-title">🖼️ 角色图片</div>
-                            <div class="character-detail-content" style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-                                <div style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">暂无图片</div>
+                            <div class="character-detail-content" style="text-align: center; padding: 30px;">
+                                <div style="color: var(--text-light); font-size: 0.95rem; margin-bottom: 15px;">暂无图片</div>
                                 ${card.appearanceDescription ? `
-                                    <button type="button" class="btn btn-primary" style="padding: 6px 16px; font-size: 13px;" onclick="generateCharacterImage(${index})">
-                                        ✨ 生成角色图片
+                                    <button type="button" class="dream-btn dream-btn-primary" style="padding: 8px 20px; font-size: 0.85rem;" onclick="generateCharacterImage(${index})">
+                                        <span>✨</span>
+                                        <span>生成角色图片</span>
                                     </button>
                                 ` : `
-                                    <div style="font-size: 12px; color: #ffc107;">
+                                    <div style="font-size: 0.85rem; color: #ffa726;">
                                         ⚠️ 请先填写 AI 绘画提示词再生成图片
                                     </div>
                                 `}
                             </div>
                         </div>
                     `}
-                            
+
                     ${card.personality ? `
                         <div class="character-detail-section">
                             <div class="character-detail-title">💖 性格描述</div>
                             <div class="character-detail-content">${escapeHtml(card.personality)}</div>
                         </div>
                     ` : ''}
-                            
+
                     ${card.background ? `
                         <div class="character-detail-section">
                             <div class="character-detail-title">📜 背景故事</div>
                             <div class="character-detail-content" style="white-space: pre-wrap;">${escapeHtml(card.background)}</div>
                         </div>
                     ` : ''}
-                            
-                    ${card.relationships && card.relationships.length > 0 ? `
-                        <div class="character-detail-section">
-                            <div class="character-detail-title">🔗 人际关系</div>
-                            <div class="character-detail-content">
-                                ${card.relationships.map(rel => 
-                                    `<div>${escapeHtml(rel.targetName)} - ${escapeHtml(rel.relationship)}</div>`
-                                ).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                            
+
                     ${card.notes ? `
                         <div class="character-detail-section">
                             <div class="character-detail-title">📝 备注</div>
                             <div class="character-detail-content">${escapeHtml(card.notes)}</div>
                         </div>
                     ` : ''}
-                    
-                    <!-- AI 绘画提示词移到最后 -->
+
                     ${card.appearanceDescription ? `
                         <div class="character-detail-section">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                                 <div class="character-detail-title" style="margin: 0;">🤖 AI 绘画提示词</div>
                                 <div style="display: flex; gap: 8px;">
-                                    <button type="button" class="btn" style="padding: 4px 12px; font-size: 12px;" onclick="regenerateAIPrompt(${index})">
-                                        🔄 重新生成
-                                    </button>
-                                    <button type="button" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;" onclick="regenerateAIPrompt(${index})">
-                                        ✨ 自动生成
+                                    <button type="button" class="dream-btn dream-btn-ghost" style="padding: 5px 14px; font-size: 0.75rem;" onclick="regenerateAIPrompt(${index})">
+                                        <span>✨</span>
+                                        <span>自动生成</span>
                                     </button>
                                 </div>
                             </div>
-                            <div class="character-detail-content" style="background-color: #f8f9fa; border-left: 3px solid var(--primary-color); padding: 10px;">
+                            <div class="character-detail-content" style="background: rgba(255,255,255,0.6); border-left: 3px solid var(--accent-purple); padding: 15px;">
                                 ${escapeHtml(card.appearanceDescription)}
                             </div>
-                            <div style="margin-top: 8px; font-size: 12px; color: #6c757d;">
+                            <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-light);">
                                 💡 这是用于 AI 生成角色图片的描述词，可以在编辑时修改
                             </div>
                         </div>
                     ` : `
                         <div class="character-detail-section">
                             <div class="character-detail-title">🤖 AI 绘画提示词</div>
-                            <div class="character-detail-content" style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-                                <div style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">暂无 AI 绘画提示词</div>
-                                <button type="button" class="btn btn-primary" style="padding: 8px 20px; font-size: 13px;" onclick="regenerateAIPrompt(${index})">
-                                    ✨ 根据外貌特征生成
+                            <div class="character-detail-content" style="text-align: center; padding: 30px;">
+                                <div style="color: var(--text-light); font-size: 0.95rem; margin-bottom: 15px;">暂无 AI 绘画提示词</div>
+                                <button type="button" class="dream-btn dream-btn-primary" style="padding: 8px 20px; font-size: 0.85rem;" onclick="regenerateAIPrompt(${index})">
+                                    <span>✨</span>
+                                    <span>根据外貌特征生成</span>
                                 </button>
-                                <div style="margin-top: 10px; font-size: 12px; color: #999;">
-                                    💡 或者点击“编辑”手动填写提示词
+                                <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-light);">
+                                    💡 或者点击"编辑"手动填写提示词
                                 </div>
                             </div>
                         </div>
                     `}
-                            
-                    <div style="margin-top: 20px; text-align: center; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                        <button type="button" class="btn btn-secondary" style="padding: 8px 24px; font-size: 14px;" onclick="loadCharacterCards()">
-                            ← 返回列表
+
+                    <div class="divider"></div>
+                    <div style="text-align: center;">
+                        <button type="button" class="dream-btn dream-btn-ghost" onclick="loadCharacterCards()">
+                            <span>←</span>
+                            <span>返回列表</span>
                         </button>
                     </div>
                 </div>
             `;
-                    
+
             listDiv.innerHTML = html;
         }
-                
-        // 编辑角色卡
+
         function editCharacterCard(index) {
             const card = characterCardsData[index];
-            
-            // 验证角色卡是否存在
             if (!card) {
                 console.error('角色卡不存在，索引:', index);
                 alert('⚠️ 角色卡数据不存在，请刷新页面重试');
                 return;
             }
-                    
-            currentEditIndex = index;  // 设置当前编辑索引
+
+            currentEditIndex = index;
             document.getElementById('characterCardFormContainer').style.display = 'block';
+            document.getElementById('characterCardsListContainer').style.display = 'none';
             document.getElementById('formTitle').textContent = '✏️ 编辑角色卡';
             document.getElementById('editIndex').value = index;
-                    
-            // 填充表单数据
+
             document.getElementById('cardId').value = card.id || '';
             document.getElementById('cardName').value = card.name || '';
             document.getElementById('alternativeNames').value = card.alternativeNames ? card.alternativeNames.join(',') : '';
             document.getElementById('cardAge').value = card.age || '';
             document.getElementById('cardGender').value = card.gender || '';
             document.getElementById('cardOccupation').value = card.occupation || '';
-                    
+
             if (card.appearance) {
                 document.getElementById('appearanceHeight').value = card.appearance.height || '';
                 document.getElementById('appearanceHair').value = card.appearance.hair || '';
                 document.getElementById('appearanceEyes').value = card.appearance.eyes || '';
                 document.getElementById('appearanceBuild').value = card.appearance.build || '';
                 document.getElementById('appearanceFeatures').value = card.appearance.distinguishingFeatures || '';
+            } else {
+                document.getElementById('appearanceHeight').value = '';
+                document.getElementById('appearanceHair').value = '';
+                document.getElementById('appearanceEyes').value = '';
+                document.getElementById('appearanceBuild').value = '';
+                document.getElementById('appearanceFeatures').value = '';
             }
-                    
+
             document.getElementById('cardPersonality').value = card.personality || '';
             document.getElementById('cardBackground').value = card.background || '';
             document.getElementById('cardNotes').value = card.notes || '';
             document.getElementById('appearanceDescription').value = card.appearanceDescription || '';
-        }
-                
-        // 删除角色卡（从列表中移除）
-        function deleteCharacterCardFromList(index) {
-            if (confirm('确定要删除这个角色卡吗？')) {
-                characterCardsData.splice(index, 1);
-                saveAllCharacterCards();
-            }
-        }
-                
 
-                
-        // 保存单个角色卡（新增或更新）
+            displayCharacterImagePreview(card.generatedImageUrl);
+            updateCharacterCount('appearanceDescription', 'appearanceDescriptionCount');
+        }
+
         function saveSingleCharacterCard(cardData, callback) {
             fetch(`/api/novels/${novelId}/character-cards/save`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(cardData)
             })
             .then(response => response.json())
@@ -1942,46 +2204,11 @@
                 callback(false, null);
             });
         }
-        
-        // 保存所有角色卡
-        function saveAllCharacterCards() {
-            fetch(`/api/novels/${novelId}/character-cards/batch`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(characterCardsData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('角色卡保存成功！');
-                    loadCharacterCards();
-                } else {
-                    alert('保存失败：' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('保存角色卡失败:', error);
-                alert('保存失败，请稍后重试');
-            });
-        }
-                
-        // HTML 转义辅助函数
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // ========== 角色卡图片上传相关函数 ==========
-        
+
         // 预览选择的图片
         function previewCharacterImage(input) {
             const file = input.files[0];
             if (file) {
-                // 检查文件大小（最大 5MB）
                 if (file.size > 5 * 1024 * 1024) {
                     alert('⚠️ 图片大小超过 5MB，请选择更小的文件');
                     input.value = '';
@@ -1989,8 +2216,7 @@
                     displayCharacterImagePreview(null);
                     return;
                 }
-                
-                // 检查文件类型
+
                 if (!file.type.startsWith('image/')) {
                     alert('⚠️ 请选择图片文件');
                     input.value = '';
@@ -1998,17 +2224,15 @@
                     displayCharacterImagePreview(null);
                     return;
                 }
-                
+
                 selectedCharacterImageFile = file;
-                
-                // 读取并预览图片
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const previewDiv = document.getElementById('characterImagePreview');
                     previewDiv.innerHTML = `
-                        <img src="${e.target.result}" alt="预览图片" 
-                             style="max-width: 300px; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-                        <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+                        <img src="${e.target.result}" alt="预览图片" class="image-preview" />
+                        <div style="font-size: 0.85rem; color: var(--text-light);">
                             📷 已选择：${file.name} (${(file.size / 1024).toFixed(1)} KB)
                         </div>
                     `;
@@ -2016,60 +2240,54 @@
                 reader.readAsDataURL(file);
             }
         }
-        
-        // 显示角色卡现有图片预览
+
         function displayCharacterImagePreview(imageUrl) {
             const previewDiv = document.getElementById('characterImagePreview');
             if (imageUrl) {
                 const webImageUrl = convertImageUrlToWebUrl(imageUrl);
                 previewDiv.innerHTML = `
-                    <img src="${escapeHtml(webImageUrl)}" alt="角色卡图片" 
-                         style="max-width: 300px; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-                    <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+                    <img src="${escapeHtml(webImageUrl)}" alt="角色卡图片" class="image-preview"
+                         onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'color: var(--text-light); font-size: 0.9rem;\\'>暂无图片</div>';" />
+                    <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 10px;">
                         💡 当前已有图片，可以上传新图片替换
                     </div>
                 `;
             } else {
-                previewDiv.innerHTML = '<div style="color: #999; font-size: 14px;">暂无图片</div>';
+                previewDiv.innerHTML = '<div style="color: var(--text-light); font-size: 0.9rem;">暂无图片</div>';
             }
         }
-        
-        // 清除图片选择
+
         function clearCharacterImage() {
             document.getElementById('characterImageInput').value = '';
             selectedCharacterImageFile = null;
             displayCharacterImagePreview(null);
         }
-        
-        // 上传角色卡图片
+
         function uploadCharacterImage() {
             if (!selectedCharacterImageFile) {
                 alert('⚠️ 请先选择要上传的图片');
                 return;
             }
-            
+
             if (currentEditIndex < 0) {
                 alert('⚠️ 请先选择要编辑的角色卡');
                 return;
             }
-            
+
             const card = characterCardsData[currentEditIndex];
             if (!card.id) {
                 alert('⚠️ 角色卡 ID 不存在，请先保存角色卡');
                 return;
             }
-            
-            // 构建 FormData
+
             const formData = new FormData();
             formData.append('file', selectedCharacterImageFile);
-            
-            // 显示上传状态
+
             const uploadBtn = event.target;
             const originalText = uploadBtn.innerHTML;
-            uploadBtn.innerHTML = '📤 上传中...';
+            uploadBtn.innerHTML = '<span>📤</span><span>上传中...</span>';
             uploadBtn.disabled = true;
-            
-            // 调用后端 API 上传图片
+
             fetch(`/api/images/character/${card.id}/upload`, {
                 method: 'POST',
                 body: formData
@@ -2078,18 +2296,10 @@
             .then(data => {
                 if (data.success) {
                     alert('✅ 图片上传成功！');
-                    
-                    // 更新本地数据
                     characterCardsData[currentEditIndex].generatedImageUrl = data.data.imageUrl;
-                    
-                    // 更新预览
                     displayCharacterImagePreview(data.data.imageUrl);
-                    
-                    // 清空文件选择
                     document.getElementById('characterImageInput').value = '';
                     selectedCharacterImageFile = null;
-                    
-                    // 重新加载角色卡列表
                     loadCharacterCards();
                 } else {
                     alert('❌ 上传失败：' + data.message);
@@ -2104,33 +2314,19 @@
                 uploadBtn.disabled = false;
             });
         }
-        
 
-        
-        // 重新生成 AI 绘画提示词（调用后端 API）
         function regenerateAIPrompt(index) {
             const card = characterCardsData[index];
             if (!card.id) {
                 alert('⚠️ 角色卡 ID 不存在');
                 return;
             }
-            
-            // 获取当前按钮并设置加载状态
+
             const button = event.target;
             const originalText = button.innerHTML;
-            button.innerHTML = '⏳ 生成中...';
+            button.innerHTML = '<span>⏳</span><span>生成中...</span>';
             button.disabled = true;
-            
-            // 立即更新页面显示，提示正在生成
-            const promptSection = document.querySelector('.character-detail-section:nth-last-child(2)');
-            if (promptSection) {
-                const contentDiv = promptSection.querySelector('.character-detail-content');
-                if (contentDiv) {
-                    contentDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;">⏳ 正在为角色生成提示词，请稍候...</div>';
-                }
-            }
-            
-            // 第一步：发送生成请求
+
             fetch(`/api/novels/${novelId}/character-cards/${card.id}/generate-prompt`, {
                 method: 'POST'
             })
@@ -2138,8 +2334,7 @@
             .then(data => {
                 if (data.success && data.taskId) {
                     console.log('已创建任务，taskId:', data.taskId);
-                    // 第二步：轮询查询任务状态
-                    pollTaskStatus(data.taskId, index, button, originalText);
+                    pollPromptTaskStatus(data.taskId, index, button, originalText);
                 } else {
                     throw new Error(data.message || '创建任务失败');
                 }
@@ -2147,20 +2342,17 @@
             .catch(error => {
                 console.error('创建任务失败:', error);
                 alert('❌ 创建任务失败：' + error.message);
-                // 恢复原始视图
                 viewCharacterCard(index);
                 button.innerHTML = originalText;
                 button.disabled = false;
             });
         }
-        
-        // 轮询任务状态
-        function pollTaskStatus(taskId, index, button, originalText) {
+
+        function pollPromptTaskStatus(taskId, index, button, originalText) {
             const startTime = Date.now();
-            const maxWaitTime = 120000; // 最多等待 2 分钟
-            
+            const maxWaitTime = 120000;
+
             function checkStatus() {
-                // 检查是否超时
                 if (Date.now() - startTime > maxWaitTime) {
                     alert('⏰ 生成超时，请稍后重试');
                     viewCharacterCard(index);
@@ -2168,42 +2360,29 @@
                     button.disabled = false;
                     return;
                 }
-                
-                // 查询任务状态（长轮询，阻塞 30 秒）
+
                 fetch(`/api/novels/${novelId}/character-cards/tasks/${taskId}/status?timeout=30`, {
                     method: 'GET'
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        console.log('任务状态:', data.state, data.message);
-                        
+                        console.log('任务状态:', data.state);
+
                         if (data.state === 'COMPLETED' && data.data) {
-                            // 任务完成，更新数据
-                            const updatedCard = data.data;
-                            characterCardsData[index] = updatedCard;
-                            
-                            // 重新渲染详情视图
+                            characterCardsData[index] = data.data;
                             viewCharacterCard(index);
-                            
-                            // 显示成功提示
-                            alert('✨ AI 绘画提示词重新生成成功！\n新提示词已应用到角色卡');
-                            
-                            // 恢复按钮状态
+                            alert('✨ AI 绘画提示词重新生成成功！');
                             button.innerHTML = originalText;
                             button.disabled = false;
                         } else if (data.state === 'FAILED') {
-                            // 任务失败
                             alert('❌ 生成失败：' + (data.message || '未知错误'));
                             viewCharacterCard(index);
                             button.innerHTML = originalText;
                             button.disabled = false;
                         } else if (data.state === 'RUNNING' || data.state === 'PENDING') {
-                            // 任务还在进行中，继续轮询
-                            console.log('任务仍在执行，继续等待...');
-                            setTimeout(checkStatus, 100); // 短暂延迟后继续
+                            setTimeout(checkStatus, 100);
                         } else {
-                            // 其他状态，继续等待
                             setTimeout(checkStatus, 100);
                         }
                     } else {
@@ -2218,43 +2397,35 @@
                     button.disabled = false;
                 });
             }
-            
-            // 开始第一次检查
+
             checkStatus();
         }
-        
-        // 生成角色图片
+
         function generateCharacterImage(index) {
             const card = characterCardsData[index];
             if (!card.id) {
                 alert('角色卡 ID 不存在');
                 return;
             }
-            
+
             if (!card.appearanceDescription) {
                 alert('请先为角色卡生成 AI 绘画提示词');
                 return;
             }
-            
-            // 显示加载状态
+
             const button = event.target;
             const originalText = button.innerHTML;
-            button.innerHTML = '⏳ 生成中...';
+            button.innerHTML = '<span>⏳</span><span>生成中...</span>';
             button.disabled = true;
-            
+
             fetch(`/api/novels/${novelId}/character-cards/${card.id}/generate-image`, {
                 method: 'POST'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 更新本地数据
-                    const updatedCard = data.data;
-                    characterCardsData[index] = updatedCard;
-                    
-                    // 重新渲染详情视图
+                    characterCardsData[index] = data.data;
                     viewCharacterCard(index);
-                    
                     alert('🎨 角色图片生成成功！');
                 } else {
                     alert('生成失败：' + data.message);
@@ -2269,43 +2440,34 @@
                 button.disabled = false;
             });
         }
-        
-        // 重新生成角色图片
+
         function regenerateCharacterImage(index) {
             const card = characterCardsData[index];
             if (!card.id) {
                 alert('角色卡 ID 不存在');
                 return;
             }
-            
-            if (!confirm('确定要重新生成角色图片吗？这将覆盖当前的图片。')) {
-                return;
-            }
-            
+
+            if (!confirm('确定要重新生成角色图片吗？这将覆盖当前的图片。')) return;
+
             if (!card.appearanceDescription) {
                 alert('请先为角色卡生成 AI 绘画提示词');
                 return;
             }
-            
-            // 显示加载状态
+
             const button = event.target;
             const originalText = button.innerHTML;
-            button.innerHTML = '⏳ 生成中...';
+            button.innerHTML = '<span>⏳</span><span>生成中...</span>';
             button.disabled = true;
-            
+
             fetch(`/api/novels/${novelId}/character-cards/${card.id}/generate-image`, {
                 method: 'POST'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 更新本地数据
-                    const updatedCard = data.data;
-                    characterCardsData[index] = updatedCard;
-                    
-                    // 重新渲染详情视图
+                    characterCardsData[index] = data.data;
                     viewCharacterCard(index);
-                    
                     alert('🎨 角色图片重新生成成功！');
                 } else {
                     alert('重新生成失败：' + data.message);
@@ -2320,18 +2482,16 @@
                 button.disabled = false;
             });
         }
-                
-        // 表单提交处理
+
         document.getElementById('characterCardForm').addEventListener('submit', function(e) {
             e.preventDefault();
-                    
+
             const editIndex = parseInt(document.getElementById('editIndex').value);
-                    
-            // 构建角色卡对象
+
             const cardData = {
                 id: document.getElementById('cardId').value,
                 name: document.getElementById('cardName').value,
-                alternativeNames: document.getElementById('alternativeNames').value ? 
+                alternativeNames: document.getElementById('alternativeNames').value ?
                     document.getElementById('alternativeNames').value.split(/[,]/).map(s => s.trim()).filter(s => s) : [],
                 age: document.getElementById('cardAge').value ? parseInt(document.getElementById('cardAge').value) : undefined,
                 gender: document.getElementById('cardGender').value,
@@ -2348,149 +2508,58 @@
                 background: document.getElementById('cardBackground').value,
                 notes: document.getElementById('cardNotes').value
             };
-                    
-            // 清理空字段
-            if (!cardData.appearance.height && !cardData.appearance.hair && 
-                !cardData.appearance.eyes && !cardData.appearance.build && 
+
+            if (!cardData.appearance.height && !cardData.appearance.hair &&
+                !cardData.appearance.eyes && !cardData.appearance.build &&
                 !cardData.appearance.distinguishingFeatures) {
                 cardData.appearance = undefined;
             }
-                    
+
             if (editIndex >= 0) {
-                // 更新现有角色卡 - 只保存当前这一个角色卡
                 saveSingleCharacterCard(cardData, function(success, savedCard) {
                     if (success) {
-                        // 更新本地数据（包括可能的新 ID 和版本号）
                         characterCardsData[editIndex] = savedCard;
                         alert('✨ 角色卡更新成功！');
                         hideCharacterCardForm();
-                        loadCharacterCards(); // 重新加载列表以显示最新数据
+                        loadCharacterCards();
                     }
                 });
             } else {
-                // 添加新角色卡 - 保存到数据库
                 saveSingleCharacterCard(cardData, function(success, savedCard) {
                     if (success) {
-                        // 添加到本地数据
                         characterCardsData.push(savedCard);
                         alert('✅ 角色卡创建成功！');
                         hideCharacterCardForm();
-                        loadCharacterCards(); // 重新加载列表以显示最新数据
+                        loadCharacterCards();
                     }
                 });
             }
         });
-    </script>
 
-    <!-- AI 绘画面板 -->
-    <div id="imageGenerationPanel" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h3 class="modal-title">🎨 AI 图片生成</h3>
-                <button class="modal-close" onclick="closeImageGenerationPanel()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">提示词:</label>
-                    <textarea id="imagePrompt" rows="4" placeholder="请描述你想生成的图片内容，例如：一只可爱的猫咪在阳光下玩耍..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" oninput="updateCharacterCount('imagePrompt', 'imagePromptCount')"></textarea>
-                    <div class="character-count" id="imagePromptCount" style="text-align: right; font-size: 12px; color: #666; margin-top: 4px;">0/2000</div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">图片尺寸:</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div>
-                            <label style="font-size: 13px; color: #666;">预设比例:</label>
-                            <select id="sizeRatio" onchange="onSizeRatioChange()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
-                                <option value="16:9">16:9 (宽屏)</option>
-                                <option value="9:16">9:16 (竖屏)</option>
-                                <option value="1:1">1:1 (正方形)</option>
-                                <option value="4:3">4:3 (标准)</option>
-                                <option value="3:4">3:4 (纵向)</option>
-                                <option value="3:2">3:2 (风景)</option>
-                                <option value="2:3">2:3 (人像)</option>
-                                <option value="1:2">1:2 (长竖屏)</option>
-                                <option value="2:1">2:1 (超宽屏)</option>
-                                <option value="custom">自定义尺寸</option>
-                            </select>
-                        </div>
-                        <div id="customSizeDiv" style="display: none;">
-                            <label style="font-size: 13px; color: #666;">自定义尺寸 (宽 x 高):</label>
-                            <input type="text" id="customSize" placeholder="1024x768" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
-                            <div style="font-size: 12px; color: #999; margin-top: 4px;">范围：376-1536 像素</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="generationStatus" style="display: none; margin-top: 20px;">
-                    <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <div class="spinner" style="width: 20px; height: 20px; border: 3px solid #3498db; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                            <span id="statusText" style="color: #2c3e50; font-weight: 600;">正在生成图片...</span>
-                        </div>
-                        <div style="background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                            <div id="progressBar" style="background: linear-gradient(90deg, #3498db, #2ecc71); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
-                        </div>
-                        <div id="progressText" style="text-align: center; margin-top: 8px; font-size: 13px; color: #666;">进度：0%</div>
-                    </div>
-                </div>
-                
-                <div id="imageResult" style="display: none; margin-top: 20px; text-align: center;">
-                    <img id="generatedImage" src="" alt="Generated Image" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                    <div style="margin-top: 15px;">
-                        <a id="downloadLink" href="" download class="btn btn-primary" style="display: inline-block; padding: 10px 20px;">⬇️ 下载图片</a>
-                        <button onclick="generateImage()" class="btn btn-primary" style="margin-left: 10px;">🔄 重新生成</button>
-                    </div>
-                </div>
-                
-                <div id="errorMessage" style="display: none; margin-top: 20px; background: #fee; padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c; color: #c0392b;"></div>
-            </div>
-            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="modal-cancel-btn" onclick="closeImageGenerationPanel()" style="padding: 10px 20px;">关闭</button>
-                <button id="generateBtn" class="modal-ok-btn" onclick="generateImage()" style="padding: 10px 30px;">✨ 开始生成</button>
-            </div>
-        </div>
-    </div>
+        // ========== AI 绘画功能 ==========
 
-    <style>
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        function showImageGenerationPanel() {
+            document.getElementById('imageGenerationPanel').classList.add('active');
+            document.getElementById('imageResult').style.display = 'none';
+            document.getElementById('generationLoading').style.display = 'none';
+            hideAlert('imageError');
+            hideAlert('imageSuccess');
         }
-        .modal-cancel-btn {
-            background: #95a5a6;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .modal-cancel-btn:hover {
-            background: #7f8c8d;
-        }
-        .modal-ok-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .modal-ok-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        .modal-ok-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-    </style>
 
-    <script>
-        let currentTaskId = null;
-        let pollInterval = null;
+        function closeImageGenerationPanel() {
+            document.getElementById('imageGenerationPanel').classList.remove('active');
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
 
-        // 更新字数显示
+        function selectSize(element) {
+            document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedSize = element.getAttribute('data-size');
+        }
+
         function updateCharacterCount(textareaId, countId) {
             const textarea = document.getElementById(textareaId);
             const countDiv = document.getElementById(countId);
@@ -2498,186 +2567,188 @@
                 const length = textarea.value.length;
                 countDiv.textContent = length + '/2000';
                 if (length > 2000) {
-                    countDiv.style.color = '#dc3545';
-                    countDiv.style.fontWeight = 'bold';
+                    countDiv.style.color = '#c62828';
+                    countDiv.style.fontWeight = '600';
                 } else if (length > 1800) {
-                    countDiv.style.color = '#ffc107';
-                    countDiv.style.fontWeight = 'bold';
+                    countDiv.style.color = '#f57c00';
+                    countDiv.style.fontWeight = '600';
                 } else {
-                    countDiv.style.color = '#666';
+                    countDiv.style.color = 'var(--text-light)';
                     countDiv.style.fontWeight = 'normal';
                 }
             }
         }
 
-        // 页面加载时初始化字数显示
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCharacterCount('imagePrompt', 'imagePromptCount');
-            updateCharacterCount('appearanceDescription', 'appearanceDescriptionCount');
-        });
-        
-        function showImageGenerationPanel() {
-            document.getElementById('imageGenerationPanel').style.display = 'block';
-            resetImageGenerationPanel();
-        }
-        
-        function closeImageGenerationPanel() {
-            document.getElementById('imageGenerationPanel').style.display = 'none';
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
-        }
-        
-        function resetImageGenerationPanel() {
-            document.getElementById('imagePrompt').value = '';
-            document.getElementById('sizeRatio').value = '16:9';
-            document.getElementById('customSizeDiv').style.display = 'none';
-            document.getElementById('generationStatus').style.display = 'none';
-            document.getElementById('imageResult').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('generateBtn').disabled = false;
-            currentTaskId = null;
-        }
-        
-        function onSizeRatioChange() {
-            const ratio = document.getElementById('sizeRatio').value;
-            const customDiv = document.getElementById('customSizeDiv');
-            customDiv.style.display = (ratio === 'custom') ? 'block' : 'none';
-        }
-        
-        function getSizeValue() {
-            const ratio = document.getElementById('sizeRatio').value;
-            if (ratio === 'custom') {
-                return document.getElementById('customSize').value.trim();
-            }
-            return ratio;
-        }
-        
-        async function generateImage() {
+        function generateImage() {
             const prompt = document.getElementById('imagePrompt').value.trim();
             if (!prompt) {
-                alert('请输入提示词！');
+                showAlert('imageError', '请描述您的梦境 🎨');
                 return;
             }
-            
-            const size = getSizeValue();
-            if (size && !validateSize(size)) {
-                alert('无效的尺寸格式！请使用预设比例或输入有效的自定义尺寸 (如 1024x768)');
+
+            if (isGenerating) {
+                showAlert('imageError', '⏳ 画师正在创作中，请耐心等待...');
                 return;
             }
-            
-            // 禁用按钮
-            document.getElementById('generateBtn').disabled = true;
-            
-            try {
-                // 创建任务
-                const response = await fetch('/api/image/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, size })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    currentTaskId = data.taskId;
-                    startPolling(currentTaskId);
+
+            hideAlert('imageError');
+            hideAlert('imageSuccess');
+            isGenerating = true;
+            updateGenerateButtonState();
+
+            document.getElementById('imageResult').style.display = 'none';
+            document.getElementById('generationLoading').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = '进度：0%';
+
+            fetch('/api/image/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt, size: selectedSize })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('创建任务失败');
+                return response.json();
+            })
+            .then(result => {
+                if (result.success && result.taskId) {
+                    currentTaskId = result.taskId;
+                    pollTaskStatus();
                 } else {
-                    showError(data.error || '创建任务失败');
-                    document.getElementById('generateBtn').disabled = false;
+                    throw new Error(result.error || '创建任务失败');
+                }
+            })
+            .catch(error => {
+                showAlert('imageError', '绘梦失败：' + error.message);
+                isGenerating = false;
+                updateGenerateButtonState();
+                document.getElementById('generationLoading').style.display = 'none';
+            });
+        }
+
+        async function pollTaskStatus() {
+            if (!currentTaskId) return;
+
+            try {
+                const response = await fetch(`/api/image/status/${currentTaskId}`);
+                if (!response.ok) throw new Error('查询状态失败');
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const progress = result.progress || 0;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    document.getElementById('progressText').textContent = `进度：${progress}%`;
+
+                    if (result.status === 'completed' && result.imageUrl) {
+                        clearInterval(pollInterval);
+                        isGenerating = false;
+                        updateGenerateButtonState();
+                        showGeneratedImage(result.imageUrl);
+                    } else if (result.status === 'failed') {
+                        clearInterval(pollInterval);
+                        isGenerating = false;
+                        updateGenerateButtonState();
+                        showAlert('imageError', result.error || '画作未能完成');
+                        document.getElementById('generationLoading').style.display = 'none';
+                    }
                 }
             } catch (error) {
-                showError('网络错误：' + error.message);
-                document.getElementById('generateBtn').disabled = false;
+                console.error('轮询失败:', error);
             }
+
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(pollTaskStatus, 2000);
         }
-        
-        function startPolling(taskId) {
-            document.getElementById('generationStatus').style.display = 'block';
-            document.getElementById('imageResult').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'none';
-            
-            pollInterval = setInterval(async () => {
-                try {
-                    const response = await fetch(`/api/image/status/${taskId}`);
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        updateProgress(data.status, data.progress);
-                        
-                        if (data.status === 'completed') {
-                            clearInterval(pollInterval);
-                            showImage(data.imageUrl);
-                            document.getElementById('generateBtn').disabled = false;
-                        } else if (data.status === 'failed') {
-                            clearInterval(pollInterval);
-                            showError(data.error || '生成失败');
-                            document.getElementById('generateBtn').disabled = false;
-                        }
-                    } else {
-                        clearInterval(pollInterval);
-                        showError(data.error || '查询状态失败');
-                        document.getElementById('generateBtn').disabled = false;
-                    }
-                } catch (error) {
-                    clearInterval(pollInterval);
-                    showError('查询状态失败：' + error.message);
-                    document.getElementById('generateBtn').disabled = false;
-                }
-            }, 5000); // 每 5 秒查询一次
-        }
-        
-        function updateProgress(status, progress) {
-            const statusMap = {
-                'pending': '准备中...',
-                'processing': '正在绘制中...',
-                'completed': '生成完成!',
-                'failed': '生成失败'
-            };
-            document.getElementById('statusText').textContent = statusMap[status] || status;
-            document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressText').textContent = '进度：' + progress + '%';
-        }
-        
-        function showImage(imageUrl) {
-            document.getElementById('generationStatus').style.display = 'none';
-            document.getElementById('imageResult').style.display = 'block';
+
+        function showGeneratedImage(imageUrl) {
             document.getElementById('generatedImage').src = imageUrl;
-            document.getElementById('downloadLink').href = imageUrl;
+            document.getElementById('imageResult').style.display = 'block';
+            document.getElementById('generationLoading').style.display = 'none';
+            updateGenerateButtonState();
+            showAlert('imageSuccess', '✨ 梦境画作已完成！');
         }
-        
-        function showError(message) {
-            document.getElementById('generationStatus').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('errorMessage').textContent = '❌ ' + message;
+
+        function downloadImage() {
+            const imageUrl = document.getElementById('generatedImage').src;
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'dream_art_' + Date.now() + '.png';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-        
-        function validateSize(size) {
-            if (!size) return false;
-            
-            // 检查比例格式
-            if (size.includes(':')) {
-                const validRatios = ['1:1', '2:3', '3:2', '3:4', '4:3', '9:16', '16:9', '1:2', '2:1'];
-                return validRatios.includes(size);
-            }
-            
-            // 检查自定义尺寸
-            if (size.includes('x')) {
-                const parts = size.split('x');
-                if (parts.length !== 2) return false;
-                
-                try {
-                    const width = parseInt(parts[0]);
-                    const height = parseInt(parts[1]);
-                    return width >= 376 && width <= 1536 && height >= 376 && height <= 1536;
-                } catch (e) {
-                    return false;
+
+        function viewImageFullscreen() {
+            const imageUrl = document.getElementById('generatedImage').src;
+            if (!imageUrl) return;
+
+            const fullscreenDiv = document.createElement('div');
+            fullscreenDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:fadeIn 0.3s ease-out;';
+            fullscreenDiv.onclick = function() { document.body.removeChild(fullscreenDiv); };
+
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;border-radius:8px;box-shadow:0 0 50px rgba(156,39,176,0.3);';
+
+            fullscreenDiv.appendChild(img);
+            document.body.appendChild(fullscreenDiv);
+
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(fullscreenDiv);
+                    document.removeEventListener('keydown', escHandler);
                 }
-            }
-            
-            return false;
+            };
+            document.addEventListener('keydown', escHandler);
         }
+
+        function regenerateImage() {
+            if (isGenerating) {
+                showAlert('imageError', '⏳ 画师正在创作中，请耐心等待...');
+                return;
+            }
+            generateImage();
+        }
+
+        function updateGenerateButtonState() {
+            const generateBtn = document.getElementById('generateImageBtn');
+            const regenerateBtn = document.getElementById('regenerateBtn');
+
+            if (isGenerating) {
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = '<span>⏳</span><span>绘梦中...</span>';
+                if (regenerateBtn) regenerateBtn.disabled = true;
+            } else {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<span>🌙</span><span>开始绘梦</span>';
+                if (regenerateBtn) regenerateBtn.disabled = false;
+            }
+        }
+
+        function showAlert(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function hideAlert(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCharacterCount('imagePrompt', 'imagePromptCount');
+        });
+        /*]]>*/
     </script>
 </body>
 </html>

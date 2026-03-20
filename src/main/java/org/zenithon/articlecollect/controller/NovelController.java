@@ -811,7 +811,7 @@ public class NovelController {
     public ResponseEntity<Map<String, Object>> getCharacterCardImage(
             @PathVariable Long novelId,
             @PathVariable Long characterId) {
-        
+
         Novel novel = novelService.getNovelById(novelId);
         if (novel == null) {
             Map<String, Object> response = new HashMap<>();
@@ -819,30 +819,61 @@ public class NovelController {
             response.put("message", "小说不存在，ID: " + novelId);
             return ResponseEntity.status(404).body(response);
         }
-        
+
         try {
             // 直接通过 ID 获取角色卡
             CharacterCard targetCard = characterCardService.getCharacterCardById(characterId);
-            
+
             if (targetCard == null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "角色卡不存在，ID: " + characterId);
                 return ResponseEntity.status(404).body(response);
             }
-            
+
             // 返回角色卡的图片 URL
             Map<String, Object> response = new HashMap<>();
             String imageUrl = targetCard.getGeneratedImageUrl();
             response.put("success", true);
             response.put("imageUrl", imageUrl != null ? imageUrl : "");
             response.put("characterId", characterId);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "获取角色卡图片失败：" + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 获取所有小说及其角色卡（用于梦境画坊选择角色）
+     * GET /api/novels-with-character-cards
+     * 返回：[{"novel": {小说对象}, "characterCards": [{角色卡对象}...]}, ...]
+     */
+    @GetMapping("/novels-with-character-cards")
+    public ResponseEntity<Map<String, Object>> getAllNovelsWithCharacterCards() {
+        try {
+            List<Novel> novels = novelService.getAllNovels();
+            List<Map<String, Object>> result = new ArrayList<>();
+
+            for (Novel novel : novels) {
+                List<CharacterCard> characterCards = novelService.getCharacterCardsList(novel.getId());
+                Map<String, Object> novelWithCards = new HashMap<>();
+                novelWithCards.put("novel", novel);
+                novelWithCards.put("characterCards", characterCards);
+                result.add(novelWithCards);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", result);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "获取数据失败：" + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

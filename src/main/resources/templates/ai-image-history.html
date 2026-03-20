@@ -3,126 +3,526 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI图片历史 - 小说收藏系统</title>
+    <title>梦境画廊 · 历史记录</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --accent-teal: #009688;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
         }
 
+        body {
+            font-family: 'Noto Serif SC', serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 25%, var(--dream-mint) 50%, var(--dream-peach) 75%, var(--dream-pink) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 梦幻气泡背景 */
+        .floating-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #ffb3d9, transparent);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #b3d9ff, transparent);
+            top: 30%;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #b3ffe0, transparent);
+            bottom: -50px;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        .orb-4 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #ffe0b3, transparent);
+            bottom: 20%;
+            right: 20%;
+            animation-delay: -7s;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        /* 主容器 */
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
         }
 
-        h1 {
-            color: #333;
+        /* 头部设计 */
+        .header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 50px;
+            animation: fadeInDown 1s ease-out;
         }
 
-        .header-actions {
+        .header h1 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: 6px;
+            text-shadow: 0 0 40px rgba(156, 39, 176, 0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 12px 28px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(-5px);
+            box-shadow: 0 8px 32px rgba(156, 39, 176, 0.15);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 工具栏 - 玻璃态 */
+        .toolbar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toolbar-title {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .count-badge {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 按钮样式 */
+        .dream-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dream-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .dream-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .dream-btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4);
+        }
+
+        .dream-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(156, 39, 176, 0.5);
+        }
+
+        .dream-btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: white;
+            box-shadow: 0 8px 25px rgba(238, 90, 90, 0.4);
+            padding: 8px 18px;
+            font-size: 0.85rem;
+        }
+
+        .dream-btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(238, 90, 90, 0.5);
+        }
+
+        .dream-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* 加载状态 */
+        .loading-state {
             text-align: center;
+            padding: 80px 20px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .dream-spinner {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .spinner-ring:nth-child(1) {
+            border-top-color: var(--accent-purple);
+            animation-delay: 0s;
+        }
+
+        .spinner-ring:nth-child(2) {
+            width: 52px;
+            height: 52px;
+            top: 9px;
+            left: 9px;
+            border-right-color: var(--accent-blue);
+            animation-delay: 0.15s;
+            animation-direction: reverse;
+        }
+
+        .spinner-ring:nth-child(3) {
+            width: 34px;
+            height: 34px;
+            top: 18px;
+            left: 18px;
+            border-bottom-color: var(--accent-teal);
+            animation-delay: 0.3s;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-light);
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            opacity: 0.6;
+        }
+
+        .empty-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .empty-desc {
+            color: var(--text-light);
+            font-size: 1rem;
             margin-bottom: 30px;
         }
 
-        .back-btn {
-            background-color: #6c757d;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            display: inline-block;
-            transition: background-color 0.3s;
-        }
-
-        .back-btn:hover {
-            background-color: #5a6268;
-        }
-
+        /* 图片网格 */
         .image-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 28px;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
         }
 
+        /* 图片卡片 - 玻璃态 */
         .image-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
             overflow: hidden;
-            background-color: #fff;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+
+        .image-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .image-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
         }
 
+        .image-card:hover::before {
+            opacity: 1;
+        }
+
+        /* 图片缩略图 */
         .image-thumbnail {
             width: 100%;
             aspect-ratio: 4/3;
             object-fit: cover;
             cursor: pointer;
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, var(--dream-lavender), var(--dream-mint));
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .image-card:hover .image-thumbnail {
+            transform: scale(1.05);
+        }
+
+        .image-wrapper {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.6));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .image-wrapper:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .view-hint {
+            color: white;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        /* 图片信息 */
         .image-info {
-            padding: 15px;
+            padding: 22px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
         }
 
-        .info-item {
-            font-size: 13px;
-            line-height: 1.5;
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .info-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
         }
 
         .info-label {
-            font-weight: bold;
-            color: #495057;
-            margin-right: 5px;
+            color: var(--text-dark);
+            font-weight: 600;
+            flex-shrink: 0;
         }
 
         .info-value {
-            color: #6c757d;
+            color: var(--text-light);
         }
 
-        .novel-link, .chapter-link {
-            color: #007bff;
+        .info-link {
+            color: var(--accent-purple);
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
-        .novel-link:hover, .chapter-link:hover {
+        .info-link:hover {
+            color: var(--accent-blue);
             text-decoration: underline;
         }
 
+        /* 提示词区域 */
+        .prompt-section {
+            margin-top: 8px;
+        }
+
+        .prompt-label {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .prompt-text {
-            max-height: 80px;
+            max-height: 90px;
             overflow-y: auto;
-            background-color: #f8f9fa;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #495057;
-            line-height: 1.4;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            line-height: 1.7;
             word-break: break-word;
         }
 
@@ -131,72 +531,30 @@
         }
 
         .prompt-text::-webkit-scrollbar-track {
-            background: #e9ecef;
+            background: rgba(156, 39, 176, 0.1);
             border-radius: 2px;
         }
 
         .prompt-text::-webkit-scrollbar-thumb {
-            background: #adb5bd;
+            background: rgba(156, 39, 176, 0.4);
             border-radius: 2px;
         }
 
-        .content-text {
-            max-height: 100px;
-            overflow-y: auto;
-            background-color: #fff3cd;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #856404;
-            line-height: 1.5;
-            word-break: break-word;
-            border: 1px solid #ffeeba;
-        }
-
-        .content-text::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .content-text::-webkit-scrollbar-track {
-            background: #ffeeba;
-            border-radius: 2px;
-        }
-
-        .content-text::-webkit-scrollbar-thumb {
-            background: #c9a854;
-            border-radius: 2px;
+        /* 底部操作区 */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 10px;
         }
 
         .create-time {
-            font-size: 12px;
-            color: #adb5bd;
-            margin-top: auto;
-        }
-
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 8px;
-            transition: background-color 0.3s;
-        }
-
-        .delete-btn:hover {
-            background-color: #c82333;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
-        }
-
-        .empty-state h3 {
-            margin-bottom: 10px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         /* 图片放大模态框 */
@@ -207,94 +565,160 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 9999;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 30px;
+            animation: fadeIn 0.3s ease-out;
         }
 
         .modal-overlay.active {
             display: flex;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         .modal-image {
-            max-width: 90%;
-            max-height: 90%;
+            max-width: 92%;
+            max-height: 92%;
             object-fit: contain;
-            border-radius: 4px;
+            border-radius: 12px;
+            box-shadow: 0 0 60px rgba(156, 39, 176, 0.4);
+            animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .modal-close {
             position: absolute;
-            top: 20px;
-            right: 30px;
+            top: 25px;
+            right: 35px;
             color: white;
-            font-size: 40px;
-            font-weight: bold;
+            font-size: 42px;
+            font-weight: 300;
             cursor: pointer;
             line-height: 1;
-            transition: color 0.3s;
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
         }
 
         .modal-close:hover {
-            color: #ccc;
-        }
-
-        /* 加载状态 */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007bff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
         }
 
         /* 响应式优化 */
+        @media (max-width: 1024px) {
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 22px;
+            }
+        }
+
         @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2rem;
+                letter-spacing: 4px;
+            }
+
             .container {
-                padding: 15px;
+                padding: 20px 15px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
             }
 
             .image-grid {
                 grid-template-columns: 1fr;
-                gap: 15px;
+                gap: 20px;
+            }
+
+            .modal-close {
+                top: 15px;
+                right: 15px;
+                font-size: 32px;
+                width: 40px;
+                height: 40px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- 梦幻背景装饰 -->
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
     <div class="container">
-        <h1>📷 AI图片历史记录</h1>
+        <!-- 头部 -->
+        <header class="header">
+            <h1>梦境画廊</h1>
+            <p class="subtitle">珍藏每一个灵感绽放的瞬间</p>
+            <a href="/" class="back-link">
+                <span>←</span>
+                <span>返回首页</span>
+            </a>
+        </header>
 
-        <div class="header-actions">
-            <a href="/" class="back-btn">← 返回首页</a>
+        <!-- 工具栏 -->
+        <div class="toolbar" id="toolbar" style="display: none;">
+            <div class="toolbar-left">
+                <span class="toolbar-title">藏品集</span>
+                <span class="count-badge" id="countBadge">0 幅</span>
+            </div>
+            <button class="dream-btn dream-btn-primary" onclick="loadHistory()">
+                <span>🔄</span>
+                <span>刷新画廊</span>
+            </button>
         </div>
 
-        <div id="loadingState" class="loading">
-            <div class="loading-spinner"></div>
-            <p>加载中...</p>
+        <!-- 加载状态 -->
+        <div id="loadingState" class="loading-state">
+            <div class="dream-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <p class="loading-text">正在唤醒梦境记忆...</p>
         </div>
 
+        <!-- 空状态 -->
         <div id="emptyState" class="empty-state" style="display: none;">
-            <h3>暂无历史图片</h3>
-            <p>你还没有生成过任何图片</p>
+            <div class="empty-icon">🖼️</div>
+            <h2 class="empty-title">画廊空空如也</h2>
+            <p class="empty-desc">还没有梦境画作被创作出来</p>
+            <a href="/ai-image-generator" class="dream-btn dream-btn-primary">
+                <span>✨</span>
+                <span>开始创作</span>
+            </a>
         </div>
 
+        <!-- 图片网格 -->
         <div id="imageGrid" class="image-grid" style="display: none;">
             <!-- 图片卡片将在这里动态加载 -->
         </div>
@@ -303,7 +727,7 @@
     <!-- 图片放大模态框 -->
     <div id="imageModal" class="modal-overlay" onclick="closeImageModal()">
         <span class="modal-close">&times;</span>
-        <img id="modalImage" class="modal-image" src="" alt="放大图片">
+        <img id="modalImage" class="modal-image" src="" alt="梦境画作">
     </div>
 
     <script>
@@ -314,32 +738,48 @@
 
         // 加载历史记录
         function loadHistory() {
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const imageGrid = document.getElementById('imageGrid');
+            const toolbar = document.getElementById('toolbar');
+
+            loadingState.style.display = 'block';
+            emptyState.style.display = 'none';
+            imageGrid.style.display = 'none';
+            toolbar.style.display = 'none';
+
             fetch('/api/image/history')
                 .then(response => response.json())
                 .then(history => {
-                    const loadingState = document.getElementById('loadingState');
-                    const emptyState = document.getElementById('emptyState');
-                    const imageGrid = document.getElementById('imageGrid');
-
                     loadingState.style.display = 'none';
 
-                    if (history.length === 0) {
+                    // 去重：使用 Map 按 imageUrl 去重
+                    const uniqueMap = new Map();
+                    history.forEach(item => {
+                        if (!uniqueMap.has(item.imageUrl)) {
+                            uniqueMap.set(item.imageUrl, item);
+                        }
+                    });
+                    const uniqueHistory = Array.from(uniqueMap.values());
+                    uniqueHistory.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
+
+                    if (uniqueHistory.length === 0) {
                         emptyState.style.display = 'block';
-                        imageGrid.style.display = 'none';
                         return;
                     }
 
-                    emptyState.style.display = 'none';
+                    toolbar.style.display = 'flex';
                     imageGrid.style.display = 'grid';
+                    document.getElementById('countBadge').textContent = uniqueHistory.length + ' 幅';
 
                     let html = '';
-                    history.forEach(item => {
+                    uniqueHistory.forEach(item => {
                         const novelLink = item.novelId
-                            ? `<a href="/novel/${item.novelId}" class="novel-link" target="_blank">${escapeHtml(item.novelTitle || '未知小说')}</a>`
+                            ? `<a href="/novel/${item.novelId}" class="info-link" target="_blank">${escapeHtml(item.novelTitle || '未知小说')}</a>`
                             : '<span class="info-value">-</span>';
 
                         const chapterLink = item.novelId && item.chapterId
-                            ? `<a href="/novel/${item.novelId}/chapter/${item.chapterId}" class="chapter-link" target="_blank">${escapeHtml(item.chapterTitle || '未知章节')}</a>`
+                            ? `<a href="/novel/${item.novelId}/chapter/${item.chapterId}" class="info-link" target="_blank">${escapeHtml(item.chapterTitle || '未知章节')}</a>`
                             : '<span class="info-value">-</span>';
 
                         const createTime = item.createTime
@@ -348,22 +788,40 @@
 
                         html += `
                             <div class="image-card">
-                                <img src="${escapeHtml(item.imageUrl)}" alt="历史图片" class="image-thumbnail" onclick="openImageModal('${escapeHtml(item.imageUrl)}')">
+                                <div class="image-wrapper">
+                                    <img src="${escapeHtml(item.imageUrl)}" alt="梦境画作" class="image-thumbnail" onclick="openImageModal('${escapeHtml(item.imageUrl)}')">
+                                    <div class="image-overlay" onclick="openImageModal('${escapeHtml(item.imageUrl)}')">
+                                        <span class="view-hint">🔍 点击查看大图</span>
+                                    </div>
+                                </div>
                                 <div class="image-info">
-                                    <div class="info-item">
-                                        <span class="info-label">📚 小说:</span>
-                                        ${novelLink}
+                                    <div class="info-row">
+                                        <span class="info-icon">📚</span>
+                                        <span class="info-label">小说:</span>
+                                        <span class="info-value">${novelLink}</span>
                                     </div>
-                                    <div class="info-item">
-                                        <span class="info-label">📖 章节:</span>
-                                        ${chapterLink}
+                                    <div class="info-row">
+                                        <span class="info-icon">📖</span>
+                                        <span class="info-label">章节:</span>
+                                        <span class="info-value">${chapterLink}</span>
                                     </div>
-                                    <div class="info-item">
-                                        <span class="info-label">💡 提示词:</span>
+                                    <div class="prompt-section">
+                                        <div class="prompt-label">
+                                            <span>💡</span>
+                                            <span>梦境咒语</span>
+                                        </div>
+                                        <div class="prompt-text">${escapeHtml(item.prompt)}</div>
                                     </div>
-                                    <div class="prompt-text">${escapeHtml(item.prompt)}</div>
-                                    <div class="create-time">🕐 ${createTime}</div>
-                                    <button class="delete-btn" onclick="deleteHistory(${item.id})">🗑️ 删除</button>
+                                    <div class="card-footer">
+                                        <span class="create-time">
+                                            <span>🕐</span>
+                                            <span>${createTime}</span>
+                                        </span>
+                                        <button class="dream-btn dream-btn-danger" onclick="deleteHistory(event, ${item.id})">
+                                            <span>🗑️</span>
+                                            <span>删除</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -373,8 +831,7 @@
                 })
                 .catch(error => {
                     console.error('加载历史记录失败:', error);
-                    const loadingState = document.getElementById('loadingState');
-                    loadingState.innerHTML = '<p style="color: #dc3545;">加载失败，请刷新页面重试</p>';
+                    loadingState.innerHTML = '<p style="color: #c62828;">梦境记忆丢失了，请刷新页面重试</p>';
                 });
         }
 
@@ -394,8 +851,9 @@
         }
 
         // 删除历史记录
-        function deleteHistory(id) {
-            if (!confirm('确定要删除这张图片吗？')) {
+        function deleteHistory(event, id) {
+            event.stopPropagation();
+            if (!confirm('确定要将这幅画作从梦境画廊中移除吗？')) {
                 return;
             }
 
@@ -406,12 +864,12 @@
                 if (response.ok) {
                     loadHistory();
                 } else {
-                    alert('删除失败');
+                    alert('删除失败，画作不愿离开...');
                 }
             })
             .catch(error => {
                 console.error('删除失败:', error);
-                alert('删除失败');
+                alert('删除失败，画作不愿离开...');
             });
         }
 

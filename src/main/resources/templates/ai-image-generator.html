@@ -761,6 +761,263 @@
             background: linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.3), transparent);
             margin: 40px 0;
         }
+
+        /* 角色选择器样式 */
+        .character-selector {
+            margin-bottom: 28px;
+        }
+
+        .novel-select-wrapper {
+            margin-bottom: 16px;
+        }
+
+        .dream-select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .dream-select:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 6px rgba(156, 39, 176, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 8px 4px;
+        }
+
+        .character-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .character-grid::-webkit-scrollbar-track {
+            background: rgba(156, 39, 176, 0.1);
+            border-radius: 3px;
+        }
+
+        .character-grid::-webkit-scrollbar-thumb {
+            background: rgba(156, 39, 176, 0.3);
+            border-radius: 3px;
+        }
+
+        .character-card-item {
+            position: relative;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .character-card-item:hover {
+            transform: translateY(-3px);
+            border-color: rgba(156, 39, 176, 0.3);
+            box-shadow: 0 8px 20px rgba(156, 39, 176, 0.15);
+        }
+
+        .character-card-item.selected {
+            border-color: var(--accent-purple);
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.15), rgba(63, 81, 181, 0.15));
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.2);
+        }
+
+        .character-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 8px;
+            background: linear-gradient(135deg, var(--dream-lavender), var(--dream-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            overflow: hidden;
+        }
+
+        .character-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .character-name {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .character-info {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .character-checkbox {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--accent-purple);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--accent-purple);
+        }
+
+        .character-card-item.selected .character-checkbox {
+            display: flex;
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .selected-characters-summary {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(156, 39, 176, 0.08);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+
+        .selected-characters-summary strong {
+            color: var(--accent-purple);
+        }
+
+        .empty-characters {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* 世界观选项 */
+        .worldview-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(0, 150, 136, 0.08);
+            border-radius: 12px;
+        }
+
+        .worldview-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent-teal);
+        }
+
+        .worldview-label {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .worldview-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* 故事生成区域 */
+        .story-box {
+            position: relative;
+            margin-top: 20px;
+            display: none;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .story-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(135deg, var(--accent-teal), #4db6ac);
+            color: white;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            z-index: 1;
+        }
+
+        .story-textarea {
+            width: 100%;
+            min-height: 160px;
+            padding: 30px 24px 24px;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            background: rgba(224, 247, 250, 0.5);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            line-height: 1.9;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            resize: vertical;
+        }
+
+        .story-textarea:focus {
+            border-color: var(--accent-teal);
+            box-shadow: 0 0 0 6px rgba(0, 150, 136, 0.1);
+            background: rgba(224, 247, 250, 0.7);
+        }
+
+        .generating-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .generating-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .generating-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-teal);
+            border-radius: 50%;
+            animation: dotPulse 1.4s infinite ease-in-out;
+        }
+
+        .generating-dots span:nth-child(1) { animation-delay: 0s; }
+        .generating-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .generating-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dotPulse {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -792,6 +1049,36 @@
                     <span>灵感咒语</span>
                 </h2>
 
+                <!-- 角色卡选择器 -->
+                <div class="character-selector">
+                    <label class="form-label">选择角色（可选）</label>
+                    <div class="novel-select-wrapper">
+                        <select id="novelSelect" class="dream-select" onchange="loadCharactersForNovel()">
+                            <option value="">-- 请先选择小说 --</option>
+                        </select>
+                    </div>
+                    <div id="characterGrid" class="character-grid" style="display: none;">
+                        <!-- 角色卡将在这里动态加载 -->
+                    </div>
+                    <div id="emptyCharacters" class="empty-characters" style="display: none;">
+                        这本小说还没有创建角色卡
+                    </div>
+                    <div id="selectedCharactersSummary" class="selected-characters-summary" style="display: none;">
+                        已选择：<strong id="selectedCount">0</strong> 个角色
+                    </div>
+
+                    <!-- 世界观选项 -->
+                    <div id="worldviewOption" class="worldview-option" style="display: none;">
+                        <input type="checkbox" id="includeWorldview" class="worldview-checkbox" checked>
+                        <label for="includeWorldview" class="worldview-label">
+                            包含世界观设定
+                        </label>
+                    </div>
+                    <div id="worldviewHint" class="worldview-hint" style="display: none;">
+                        💡 选择多个角色时，会自动结合他们的背景故事和关系
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">输入您的关键词</label>
                     <textarea
@@ -813,6 +1100,24 @@
                         <div class="spinner-ring"></div>
                     </div>
                     <p class="loading-text">正在唤醒灵感...</p>
+                </div>
+
+                <!-- 故事生成区域 -->
+                <div class="story-box" id="storyBox">
+                    <span class="story-label">梦境脚本</span>
+                    <div id="storyGenerating" class="generating-indicator" style="display: none;">
+                        <div class="generating-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <span>正在创作梦境脚本...</span>
+                    </div>
+                    <textarea
+                        id="generatedStory"
+                        class="story-textarea"
+                        placeholder="AI 生成的故事将在这里显示..."
+                        style="display: none;"></textarea>
                 </div>
 
                 <div class="result-box" style="margin-top: 30px;">
@@ -954,12 +1259,180 @@
         let pollInterval = null;
         let selectedSize = '9:16';
         let isGenerating = false;
+        let allNovelsData = [];
+        let selectedCharacterCards = new Map(); // key: characterId, value: characterCard
+        let currentSelectedNovel = null; // 当前选中的小说数据
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadHistory();
             updateCharacterCount('imagePrompt', 'imagePromptCount');
+            loadAllNovelsWithCharacterCards();
         });
+
+        // 加载所有小说及其角色卡
+        async function loadAllNovelsWithCharacterCards() {
+            try {
+                const response = await fetch('/api/novels-with-character-cards');
+                if (!response.ok) throw new Error('加载数据失败');
+
+                const result = await response.json();
+                if (result.success && result.data) {
+                    allNovelsData = result.data;
+                    populateNovelSelect();
+                }
+            } catch (error) {
+                console.error('加载小说和角色卡失败:', error);
+            }
+        }
+
+        // 填充小说选择下拉框
+        function populateNovelSelect() {
+            const novelSelect = document.getElementById('novelSelect');
+            novelSelect.innerHTML = '<option value="">-- 请选择小说 --</option>';
+
+            allNovelsData.forEach(item => {
+                const novel = item.novel;
+                const characterCount = item.characterCards ? item.characterCards.length : 0;
+                const option = document.createElement('option');
+                option.value = novel.id;
+                option.textContent = `${novel.title} (${characterCount}个角色)`;
+                novelSelect.appendChild(option);
+            });
+        }
+
+        // 加载选中小说的角色卡
+        function loadCharactersForNovel() {
+            const novelId = document.getElementById('novelSelect').value;
+            const characterGrid = document.getElementById('characterGrid');
+            const emptyCharacters = document.getElementById('emptyCharacters');
+            const worldviewOption = document.getElementById('worldviewOption');
+            const worldviewHint = document.getElementById('worldviewHint');
+
+            // 清空之前的选择
+            selectedCharacterCards.clear();
+            currentSelectedNovel = null;
+
+            if (!novelId) {
+                characterGrid.style.display = 'none';
+                emptyCharacters.style.display = 'none';
+                worldviewOption.style.display = 'none';
+                worldviewHint.style.display = 'none';
+                updateSelectedSummary();
+                return;
+            }
+
+            const novelData = allNovelsData.find(item => item.novel.id == novelId);
+            currentSelectedNovel = novelData ? novelData.novel : null;
+            const characters = novelData ? novelData.characterCards : [];
+
+            // 显示世界观选项（如果小说有世界观）
+            if (currentSelectedNovel && currentSelectedNovel.worldView) {
+                worldviewOption.style.display = 'flex';
+            } else {
+                worldviewOption.style.display = 'none';
+            }
+            worldviewHint.style.display = 'block';
+
+            if (!characters || characters.length === 0) {
+                characterGrid.style.display = 'none';
+                emptyCharacters.style.display = 'block';
+                updateSelectedSummary();
+                return;
+            }
+
+            emptyCharacters.style.display = 'none';
+            characterGrid.style.display = 'grid';
+            characterGrid.innerHTML = '';
+
+            characters.forEach(character => {
+                const card = createCharacterCardElement(character);
+                characterGrid.appendChild(card);
+            });
+
+            updateSelectedSummary();
+        }
+
+        // 创建角色卡元素
+        function createCharacterCardElement(character) {
+            const div = document.createElement('div');
+            div.className = 'character-card-item';
+            div.dataset.characterId = character.id;
+
+            if (selectedCharacterCards.has(character.id)) {
+                div.classList.add('selected');
+            }
+
+            div.onclick = () => toggleCharacterSelection(character, div);
+
+            const avatar = document.createElement('div');
+            avatar.className = 'character-avatar';
+            if (character.generatedImageUrl) {
+                const img = document.createElement('img');
+                img.src = character.generatedImageUrl;
+                img.alt = character.name;
+                avatar.appendChild(img);
+            } else {
+                avatar.textContent = character.name ? character.name.charAt(0) : '?';
+            }
+
+            const checkbox = document.createElement('div');
+            checkbox.className = 'character-checkbox';
+            checkbox.textContent = '✓';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'character-name';
+            nameDiv.textContent = character.name || '未知角色';
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'character-info';
+            let infoText = [];
+            if (character.gender) infoText.push(character.gender);
+            if (character.age) infoText.push(character.age + '岁');
+            if (character.occupation) infoText.push(character.occupation);
+            infoDiv.textContent = infoText.join(' · ');
+
+            div.appendChild(checkbox);
+            div.appendChild(avatar);
+            div.appendChild(nameDiv);
+            div.appendChild(infoDiv);
+
+            return div;
+        }
+
+        // 切换角色选择状态
+        function toggleCharacterSelection(character, element) {
+            const characterId = character.id;
+
+            if (selectedCharacterCards.has(characterId)) {
+                selectedCharacterCards.delete(characterId);
+                element.classList.remove('selected');
+            } else {
+                selectedCharacterCards.set(characterId, character);
+                element.classList.add('selected');
+            }
+
+            updateSelectedSummary();
+        }
+
+        // 更新已选角色摘要
+        function updateSelectedSummary() {
+            const summary = document.getElementById('selectedCharactersSummary');
+            const countSpan = document.getElementById('selectedCount');
+            const count = selectedCharacterCards.size;
+
+            if (count > 0) {
+                summary.style.display = 'block';
+                countSpan.textContent = count;
+
+                const names = Array.from(selectedCharacterCards.values())
+                    .map(c => c.name)
+                    .join('、');
+                summary.title = names;
+            } else {
+                summary.style.display = 'none';
+            }
+        }
 
         // 更新字数显示
         function updateCharacterCount(textareaId, countId) {
@@ -988,11 +1461,28 @@
             selectedSize = element.getAttribute('data-size');
         }
 
+        // 调用AI聊天API的辅助函数
+        async function callAIChat(prompt) {
+            const response = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+            if (!response.ok) throw new Error('AI请求失败');
+            const result = await response.json();
+            return result.response || result.content || result.message || '';
+        }
+
         // 生成提示词
         async function generatePrompt() {
             const keyword = document.getElementById('keywordInput').value.trim();
-            if (!keyword) {
-                showAlert('promptError', '请输入关键词，让灵感开始流动 ✨');
+            const hasCharacters = selectedCharacterCards.size > 0;
+            const characterCount = selectedCharacterCards.size;
+            const includeWorldview = document.getElementById('includeWorldview')?.checked ?? true;
+            const shouldUseTwoStepProcess = characterCount >= 2 && includeWorldview && currentSelectedNovel && currentSelectedNovel.worldView;
+
+            if (!keyword && !hasCharacters) {
+                showAlert('promptError', '请输入关键词或选择角色，让灵感开始流动 ✨');
                 return;
             }
 
@@ -1003,18 +1493,151 @@
             document.getElementById('generatedPrompt').value = '';
             document.getElementById('usePromptGroup').style.display = 'none';
 
+            // 重置故事区域
+            const storyBox = document.getElementById('storyBox');
+            const storyGenerating = document.getElementById('storyGenerating');
+            const generatedStory = document.getElementById('generatedStory');
+            storyBox.style.display = 'none';
+            storyGenerating.style.display = 'none';
+            generatedStory.style.display = 'none';
+            generatedStory.value = '';
+
             try {
-                const response = await fetch('/api/ai/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: `# Role: Cinematic Scene Visualist
+                // 构建角色描述（包含背景和关系）
+                let characterDescription = '';
+                let relationshipDescription = '';
+                let worldViewDescription = '';
+                let charactersInfo = [];
+
+                if (hasCharacters) {
+                    const characters = Array.from(selectedCharacterCards.values());
+                    charactersInfo = characters;
+
+                    // 构建每个角色的详细描述
+                    characterDescription = characters.map(char => {
+                        let desc = `Name: ${char.name || 'Unknown'}`;
+                        if (char.gender) desc += `, Gender: ${char.gender}`;
+                        if (char.age) desc += `, Age: ${char.age}`;
+                        if (char.occupation) desc += `, Occupation: ${char.occupation}`;
+                        if (char.appearanceDescription) desc += `, Appearance: ${char.appearanceDescription}`;
+                        if (char.personality) desc += `, Personality: ${char.personality}`;
+                        if (char.background) desc += `, Background: ${char.background}`;
+                        return `{${desc}}`;
+                    }).join('; ');
+
+                    // 提取角色间的关系
+                    if (characterCount >= 2) {
+                        const relationships = [];
+                        characters.forEach(char => {
+                            if (char.relationships && char.relationships.length > 0) {
+                                char.relationships.forEach(rel => {
+                                    const otherCharName = rel.targetName || rel.targetCharacterName;
+                                    const otherCharSelected = characters.some(c =>
+                                        c.name === otherCharName ||
+                                        (c.alternativeNames && c.alternativeNames.includes(otherCharName))
+                                    );
+                                    if (otherCharSelected && otherCharName) {
+                                        relationships.push(`${char.name} and ${otherCharName}: ${rel.relationshipType || rel.type} - ${rel.description || rel.details || ''}`);
+                                    }
+                                });
+                            }
+                        });
+                        if (relationships.length > 0) {
+                            relationshipDescription = relationships.join('; ');
+                        }
+                    }
+
+                    // 添加世界观
+                    if (includeWorldview && currentSelectedNovel && currentSelectedNovel.worldView) {
+                        worldViewDescription = currentSelectedNovel.worldView;
+                    }
+                }
+
+                let finalPromptInput = '';
+
+                // 两步处理：先生成故事，再生成提示词（仅当多个角色+世界观时）
+                if (shouldUseTwoStepProcess) {
+                    storyBox.style.display = 'block';
+                    storyGenerating.style.display = 'flex';
+
+                    // 第一步：生成故事
+                    const storyPrompt = `# Role: Story Visual Scene Writer
+
+## Task
+Write a vivid, cinematic scene (150-250 words) featuring the characters below. The scene should be highly visual and descriptive, focusing on:
+
+1. **FACIAL FEATURES & EXPRESSIONS**: Detailed descriptions of each character's face, eyes, micro-expressions
+2. **BODY LANGUAGE & ACTIONS**: How they move, gesture, touch, posture, physical interaction
+3. **EMOTIONAL DYNAMICS**: The tension, warmth, or emotion between them shown through action
+4. **VISUAL DETAILS**: Clothing textures, environment, lighting, atmosphere
+
+## World Setting
+${worldViewDescription}
+
+## Characters
+${characterDescription}
+
+## Character Relationships
+${relationshipDescription || 'No specific relationship defined'}
+
+## Scene Context
+${keyword || 'Create an meaningful interaction between these characters'}
+
+## Requirements
+- Write in CHINESE
+- Focus on what can be SEEN in a painting - actions, expressions, environments
+- Include detailed facial descriptions for each character
+- Show their relationship through actions and body language, not just telling
+- 150-250 words, vivid and cinematic
+
+【Important】Only output the scene story, no explanations.`;
+
+                    const story = await callAIChat(storyPrompt);
+                    storyGenerating.style.display = 'none';
+                    generatedStory.style.display = 'block';
+                    generatedStory.value = story;
+                    finalPromptInput = story;
+                } else {
+                    // 单步处理：直接构建提示词输入
+                    let fullPromptParts = [];
+                    if (keyword) fullPromptParts.push(keyword);
+                    if (hasCharacters) fullPromptParts.push(`featuring characters: ${characterDescription}`);
+                    if (relationshipDescription) fullPromptParts.push(`[Relationships: ${relationshipDescription}]`);
+                    if (worldViewDescription) fullPromptParts.push(`[World: ${worldViewDescription}]`);
+                    finalPromptInput = fullPromptParts.join(', ');
+                }
+
+                // 最后一步：生成AI绘画提示词
+                let systemPrompt = '';
+
+                if (shouldUseTwoStepProcess) {
+                    systemPrompt = `# Role: Master Cinematic Art Director
+
+## Task
+Transform this scene description into an exceptional AI image generation prompt in ENGLISH.
+
+## Scene Description
+${finalPromptInput}
+
+## Your Output Should Include:
+1. **Composition & Shot**: What camera angle, shot type (wide/medium/close-up/two-shot)
+2. **Characters**: Full appearance descriptions, facial expressions, poses, clothing
+3. **Environment**: Detailed setting, time of day, weather, atmosphere
+4. **Lighting**: Specific lighting style, mood, colors
+5. **Art Style**: Choose an appropriate beautiful art style
+6. **Mood & Emotion**: The overall feeling of the piece
+
+Make it rich, detailed, and cinematic.
+
+【Important】Only output the final English prompt, ready for AI image generation. No explanations.`;
+                } else if (characterCount === 1) {
+                    systemPrompt = `# Role: Cinematic Scene Visualist
 
 ## 1. Core Task
 I will deconstruct the user's simple statement into its core "Narrative DNA" and "Emotional DNA". Then, I will act as a professional art director, cinematographer, and scene designer to reconstruct these elements into a rich, atmospheric, and highly detailed image generation prompt. The final output must be a ready-to-use AI painting prompt in English.
 
 ## 2. Deconstruction Phase (Internal Monologue)
-- **Narrative DNA **(User Input): ${keyword}
+- **Narrative DNA **(User Input): ${finalPromptInput}
 - **Core Emotion**: What unspoken feeling lies beneath these keywords? (freedom/joy, lonely ceremony, mysterious atmosphere, epic sense, etc.)
 - **Key Entities & Actions**:
   - **Subject**: [Main object extracted from keywords]
@@ -1041,14 +1664,33 @@ Based on the deconstructed DNA, I will build a complete scene through specific a
 ## 4. Final Prompt Synthesis
 Integrate all elements above into a coherent, comma-separated string of keywords and phrases. Output the final result in English only.
 
-【Important】Please directly output the final image generation instruction in English. Do not include any analysis process, phase descriptions, or additional explanations. Only output the usable prompt.`
-                    })
-                });
+【Important】Please directly output the final image generation instruction in English. Do not include any analysis process, phase descriptions, or additional explanations. Only output the usable prompt.`;
+                } else {
+                    systemPrompt = `# Role: Cinematic Scene Visualist for Multiple Characters
 
-                if (!response.ok) throw new Error('请求失败');
+## 1. Core Task
+Create a vivid image generation prompt featuring MULTIPLE CHARACTERS interacting. Focus on their relationships, body language, and emotional dynamics. Create a cohesive, cinematic scene in English.
 
-                const result = await response.json();
-                const generatedText = result.response || result.content || result.message || '';
+## 2. Key Elements to Highlight
+- **Narrative DNA** (User Input): ${finalPromptInput}
+- **Character Interaction**: Show the characters together, their body language, eye contact, physical distance, how they relate to each other
+- **Emotional Dynamics**: The mood between them - tension, warmth, romance, conflict, friendship, etc.
+- **Scene Context**: Place them in an environment that fits their world setting and backgrounds
+
+## 3. Art Direction Guidance
+- **Composition**: Arrange multiple characters in a natural, balanced composition
+- **Camera & Cinematography**: Choose an appropriate shot (medium shot, wide shot, two-shot, etc.) that shows all characters
+- **Lighting**: Lighting that complements the emotional mood (warm for intimacy, dramatic for conflict, etc.)
+- **Environment**: A setting that makes sense for the world setting and the characters' relationship
+- **Style**: Choose an appropriate art style
+
+## 4. Final Prompt
+Output a cohesive, detailed AI painting prompt in English. Include: environment, all characters with their appearance, their interaction/relationship, lighting, atmosphere, art style.
+
+【Important】Only output the final usable prompt in English. No explanations.`;
+                }
+
+                const generatedText = await callAIChat(systemPrompt);
                 document.getElementById('generatedPrompt').value = generatedText;
 
                 if (generatedText) {
