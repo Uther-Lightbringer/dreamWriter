@@ -1018,6 +1018,116 @@
             0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
             40% { transform: scale(1); opacity: 1; }
         }
+
+        /* 布局选择器 */
+        .layout-selector {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+
+        .layout-option {
+            padding: 16px 10px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .layout-option:hover {
+            transform: translateY(-3px);
+            border-color: rgba(156, 39, 176, 0.3);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .layout-option.selected {
+            border-color: var(--accent-purple);
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.15), rgba(63, 81, 181, 0.15));
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.2);
+        }
+
+        .layout-icon {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+        }
+
+        .layout-name {
+            font-size: 0.8rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* 风格选择器 */
+        .style-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .style-option {
+            padding: 14px 12px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .style-option:hover {
+            transform: translateY(-3px);
+            border-color: rgba(63, 81, 181, 0.3);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .style-option.selected {
+            border-color: var(--accent-blue);
+            background: linear-gradient(135deg, rgba(63, 81, 181, 0.15), rgba(0, 150, 136, 0.15));
+            box-shadow: 0 6px 20px rgba(63, 81, 181, 0.2);
+        }
+
+        .style-icon {
+            font-size: 1.2rem;
+        }
+
+        .style-name {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* 参数提示 */
+        .param-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .layout-selector {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .style-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .layout-option {
+                padding: 12px 8px;
+            }
+
+            .style-option {
+                padding: 12px 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1085,6 +1195,93 @@
                         id="keywordInput"
                         class="dream-textarea"
                         placeholder="例如：古装女子、桃花树、月光、唯美..."></textarea>
+                </div>
+
+                <!-- 布局选择器 -->
+                <div class="form-group">
+                    <label class="form-label">画面布局</label>
+                    <div class="layout-selector">
+                        <div class="layout-option" data-layout="single" onclick="selectLayout(this)">
+                            <div class="layout-icon">🖼️</div>
+                            <div class="layout-name">单图</div>
+                        </div>
+                        <div class="layout-option selected" data-layout="3-panel" onclick="selectLayout(this)">
+                            <div class="layout-icon">📸</div>
+                            <div class="layout-name">三宫格</div>
+                        </div>
+                        <div class="layout-option" data-layout="4-panel" onclick="selectLayout(this)">
+                            <div class="layout-icon">🎞️</div>
+                            <div class="layout-name">四格漫画</div>
+                        </div>
+                        <div class="layout-option" data-layout="long" onclick="selectLayout(this)">
+                            <div class="layout-icon">📱</div>
+                            <div class="layout-name">长图</div>
+                        </div>
+                        <div class="layout-option" data-layout="horizontal" onclick="selectLayout(this)">
+                            <div class="layout-icon">↔️</div>
+                            <div class="layout-name">横向拼接</div>
+                        </div>
+                        <div class="layout-option" data-layout="vertical" onclick="selectLayout(this)">
+                            <div class="layout-icon">↕️</div>
+                            <div class="layout-name">纵向拼接</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 风格选择器 -->
+                <div class="form-group">
+                    <label class="form-label">艺术风格</label>
+                    <div class="style-selector">
+                        <div class="style-option" data-style="photorealistic" onclick="selectStyle(this)">
+                            <span class="style-icon">📷</span>
+                            <span class="style-name">写实摄影</span>
+                        </div>
+                        <div class="style-option selected" data-style="anime" onclick="selectStyle(this)">
+                            <span class="style-icon">🎌</span>
+                            <span class="style-name">动漫</span>
+                        </div>
+                        <div class="style-option" data-style="watercolor" onclick="selectStyle(this)">
+                            <span class="style-icon">🎨</span>
+                            <span class="style-name">水彩</span>
+                        </div>
+                        <div class="style-option" data-style="oil-painting" onclick="selectStyle(this)">
+                            <span class="style-icon">🖼️</span>
+                            <span class="style-name">油画</span>
+                        </div>
+                        <div class="style-option" data-style="cyberpunk" onclick="selectStyle(this)">
+                            <span class="style-icon">🌃</span>
+                            <span class="style-name">赛博朋克</span>
+                        </div>
+                        <div class="style-option" data-style="fantasy" onclick="selectStyle(this)">
+                            <span class="style-icon">✨</span>
+                            <span class="style-name">奇幻</span>
+                        </div>
+                        <div class="style-option" data-style="chinese-ink" onclick="selectStyle(this)">
+                            <span class="style-icon">🖌️</span>
+                            <span class="style-name">水墨</span>
+                        </div>
+                        <div class="style-option" data-style="cinematic" onclick="selectStyle(this)">
+                            <span class="style-icon">🎬</span>
+                            <span class="style-name">电影感</span>
+                        </div>
+                        <div class="style-option" data-style="unsafe" onclick="selectStyle(this)">
+                            <span class="style-icon">🎬</span>
+                            <span class="style-name">NFSW</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 额外参数输入 -->
+                <div class="form-group">
+                    <label class="form-label">额外参数（可选）</label>
+                    <input
+                        type="text"
+                        id="extraParams"
+                        class="dream-input"
+                        placeholder="例如：柔和光线、暖色调、电影级调色、柔焦效果...">
+                    <div class="param-hint">
+                        💡 这些参数会直接追加到提示词末尾，用于细化您的画面要求
+                    </div>
                 </div>
 
                 <button class="dream-btn dream-btn-primary" onclick="generatePrompt()" id="generatePromptBtn">
@@ -1258,6 +1455,8 @@
         let currentTaskId = null;
         let pollInterval = null;
         let selectedSize = '9:16';
+        let selectedLayout = '3-panel'; // 默认三宫格
+        let selectedStyle = 'anime'; // 默认动漫风格
         let isGenerating = false;
         let allNovelsData = [];
         let selectedCharacterCards = new Map(); // key: characterId, value: characterCard
@@ -1461,6 +1660,20 @@
             selectedSize = element.getAttribute('data-size');
         }
 
+        // 选择布局
+        function selectLayout(element) {
+            document.querySelectorAll('.layout-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedLayout = element.getAttribute('data-layout');
+        }
+
+        // 选择风格
+        function selectStyle(element) {
+            document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedStyle = element.getAttribute('data-style');
+        }
+
         // 调用AI聊天API的辅助函数
         async function callAIChat(prompt) {
             const response = await fetch('/api/ai/chat', {
@@ -1537,7 +1750,7 @@
                                         (c.alternativeNames && c.alternativeNames.includes(otherCharName))
                                     );
                                     if (otherCharSelected && otherCharName) {
-                                        relationships.push(`${char.name} and ${otherCharName}: ${rel.relationshipType || rel.type} - ${rel.description || rel.details || ''}`);
+                                        relationships.push(`${char.name} and ${otherCharName}: ${rel.relationship} - ${rel.description || ''}`);
                                     }
                                 });
                             }
@@ -1561,36 +1774,36 @@
                     storyGenerating.style.display = 'flex';
 
                     // 第一步：生成故事
-                    const storyPrompt = `# Role: Story Visual Scene Writer
+                    const storyPrompt = `# 角色：故事视觉场景作家
 
-## Task
-Write a vivid, cinematic scene (150-250 words) featuring the characters below. The scene should be highly visual and descriptive, focusing on:
+## 任务
+为以下角色编写一个生动、电影感的场景（150-250字）。场景应该非常视觉化和具有描述性，重点关注：
 
-1. **FACIAL FEATURES & EXPRESSIONS**: Detailed descriptions of each character's face, eyes, micro-expressions
-2. **BODY LANGUAGE & ACTIONS**: How they move, gesture, touch, posture, physical interaction
-3. **EMOTIONAL DYNAMICS**: The tension, warmth, or emotion between them shown through action
-4. **VISUAL DETAILS**: Clothing textures, environment, lighting, atmosphere
+1. **面部特征与表情**：每个角色面部、眼睛、微表情的详细描述
+2. **肢体语言与动作**：他们如何移动、手势、触摸、姿势、物理互动
+3. **情感动态**：通过动作展示他们之间的紧张、温暖或情感
+4. **视觉细节**：服装纹理、环境、光线、氛围
 
-## World Setting
+## 世界观设定
 ${worldViewDescription}
 
-## Characters
+## 角色
 ${characterDescription}
 
-## Character Relationships
-${relationshipDescription || 'No specific relationship defined'}
+## 角色关系
+${relationshipDescription || '没有特定的关系定义'}
 
-## Scene Context
-${keyword || 'Create an meaningful interaction between these characters'}
+## 场景背景
+${keyword || '在这些角色之间创造有意义的互动'}
 
-## Requirements
-- Write in CHINESE
-- Focus on what can be SEEN in a painting - actions, expressions, environments
-- Include detailed facial descriptions for each character
-- Show their relationship through actions and body language, not just telling
-- 150-250 words, vivid and cinematic
+## 要求
+- 用中文写作
+- 专注于画作中能看到的——动作、表情、环境
+- 为每个角色包含详细的面部描述
+- 通过动作和肢体语言展示他们的关系，而不仅仅是叙述
+- 150-250字，生动且具有电影感
 
-【Important】Only output the scene story, no explanations.`;
+【重要】只输出场景故事，不要有任何解释。`;
 
                     const story = await callAIChat(storyPrompt);
                     storyGenerating.style.display = 'none';
@@ -1611,87 +1824,134 @@ ${keyword || 'Create an meaningful interaction between these characters'}
                 let systemPrompt = '';
 
                 if (shouldUseTwoStepProcess) {
-                    systemPrompt = `# Role: Master Cinematic Art Director
+                    systemPrompt = `# 角色：电影级艺术总监
 
-## Task
-Transform this scene description into an exceptional AI image generation prompt in ENGLISH.
+## 任务
+将以下场景描述转化为高质量的AI绘画中文提示词。
 
-## Scene Description
+## 场景描述
 ${finalPromptInput}
 
-## Your Output Should Include:
-1. **Composition & Shot**: What camera angle, shot type (wide/medium/close-up/two-shot)
-2. **Characters**: Full appearance descriptions, facial expressions, poses, clothing
-3. **Environment**: Detailed setting, time of day, weather, atmosphere
-4. **Lighting**: Specific lighting style, mood, colors
-5. **Art Style**: Choose an appropriate beautiful art style
-6. **Mood & Emotion**: The overall feeling of the piece
+## 输出要求：
+1. **构图与镜头**：相机角度、镜头类型（全景/中景/特写/双镜头）
+2. **角色**：完整的外观描述、面部表情、姿势、服装
+3. **环境**：详细的场景设定、时间、天气、氛围
+4. **光线**：具体的光线风格、情绪、色彩
+5. **艺术风格**：选择合适的美丽艺术风格
+6. **情绪与情感**：作品的总体感觉
 
-Make it rich, detailed, and cinematic.
+请生成丰富、详细、具有电影感的提示词。
 
-【Important】Only output the final English prompt, ready for AI image generation. No explanations.`;
+【重要】只需输出最终的中文提示词，不要有任何解释。`;
                 } else if (characterCount === 1) {
-                    systemPrompt = `# Role: Cinematic Scene Visualist
+                    systemPrompt = `# 角色：电影场景视觉艺术家
 
-## 1. Core Task
-I will deconstruct the user's simple statement into its core "Narrative DNA" and "Emotional DNA". Then, I will act as a professional art director, cinematographer, and scene designer to reconstruct these elements into a rich, atmospheric, and highly detailed image generation prompt. The final output must be a ready-to-use AI painting prompt in English.
+## 1. 核心任务
+将用户的简单描述解构为其核心"叙事DNA"和"情感DNA"。然后，作为专业的艺术总监、电影摄影师和场景设计师，将这些元素重建为丰富、有氛围且细节详尽的AI绘画提示词。最终输出必须是可直接使用的中文提示词。
 
-## 2. Deconstruction Phase (Internal Monologue)
-- **Narrative DNA **(User Input): ${finalPromptInput}
-- **Core Emotion**: What unspoken feeling lies beneath these keywords? (freedom/joy, lonely ceremony, mysterious atmosphere, epic sense, etc.)
-- **Key Entities & Actions**:
-  - **Subject**: [Main object extracted from keywords]
-  - **Action/State**: [Possible action or state]
-  - **Objects/Environment**: [Surroundings, props, background]
+## 2. 解构阶段（内心独白）
+- **叙事DNA**（用户输入）：${finalPromptInput}
+- **核心情感**：这些关键词背后隐藏着怎样的未言之感？（自由/欢乐、孤独的仪式、神秘氛围、史诗感等）
+- **关键实体与动作**：
+  - **主体**：[从关键词中提取的主体]
+  - **动作/状态**：[可能的动作或状态]
+  - **物体/环境**：[周围环境、道具、背景]
 
-## 3. Reconstruction Phase (Art Direction)
-Based on the deconstructed DNA, I will build a complete scene through specific artistic choices.
+## 3. 重建阶段（艺术指导）
+基于解构的DNA，通过具体的艺术选择构建完整场景。
 
-- **Scene & Atmosphere**:
-  - **Specific Environment**: Where exactly are we? (indoor/outdoor, urban/natural, specific location features)
-  - **Time & Weather**: (dawn/dusk/night, sunny/rainy/foggy, seasonal characteristics)
-  - **Overall Mood**: What feeling to create? (peaceful, epic, melancholic, dreamy, tense, etc.)
+- **场景与氛围**：
+  - **具体环境**：我们在哪里？（室内/室外、城市/自然、具体地点特征）
+  - **时间与天气**：（黎明/黄昏/夜晚、晴天/雨天/雾天、季节特征）
+  - **整体情绪**：要创造什么感觉？（平静、史诗、忧郁、梦幻、紧张等）
 
-- **Camera & Composition**:
-  - **Cinematography**: (wide-angle, low-angle shot, medium shot, close-up, tracking shot)
-  - **Lighting Design**: (backlight, diffused light, Rembrandt lighting, natural light, dramatic lighting)
-  - **Color Palette**: (high saturation, vintage monochrome, cool blue-gray tones, warm golden tones)
+- **相机与构图**：
+  - **摄影指导**：（广角、低角度拍摄、中景、特写、跟拍）
+  - **光线设计**：（逆光、散射光、伦勃朗光、自然光、戏剧性光线）
+  - **色彩调色板**：（高饱和度、复古单色、冷蓝灰色调、暖金色调）
 
-- **Style & Medium**:
-  - **Art Style**: (Miyazaki animation style, surrealist digital painting, 35mm film photography, impressionist oil painting, National Geographic photography)
-  - **Textures & Details**: (clothing folds, skin texture, object quality, environmental details, lighting effects)
+- **风格与媒介**：
+  - **艺术风格**：（宫崎骏动画风格、超现实主义数字绘画、35mm胶片摄影、印象派油画、国家地理摄影）
+  - **纹理与细节**：（服装褶皱、皮肤纹理、物体质量、环境细节、光线效果）
 
-## 4. Final Prompt Synthesis
-Integrate all elements above into a coherent, comma-separated string of keywords and phrases. Output the final result in English only.
+## 4. 最终提示词合成
+将上述所有元素整合成连贯的、以逗号分隔的关键词和短语。只输出英文结果。
 
-【Important】Please directly output the final image generation instruction in English. Do not include any analysis process, phase descriptions, or additional explanations. Only output the usable prompt.`;
+【重要】请直接输出最终的英文绘画提示词。不要包含任何分析过程、阶段描述或额外解释。只输出可用的提示词。`;
                 } else {
-                    systemPrompt = `# Role: Cinematic Scene Visualist for Multiple Characters
+                    systemPrompt = `# 角色：多角色电影场景视觉艺术家
 
-## 1. Core Task
-Create a vivid image generation prompt featuring MULTIPLE CHARACTERS interacting. Focus on their relationships, body language, and emotional dynamics. Create a cohesive, cinematic scene in English.
+## 1. 核心任务
+创建一个生动的AI绘画提示词，重点展示多个互动角色。关注他们的关系、肢体语言和情感动态。创建连贯的、电影感的英文场景描述。
 
-## 2. Key Elements to Highlight
-- **Narrative DNA** (User Input): ${finalPromptInput}
-- **Character Interaction**: Show the characters together, their body language, eye contact, physical distance, how they relate to each other
-- **Emotional Dynamics**: The mood between them - tension, warmth, romance, conflict, friendship, etc.
-- **Scene Context**: Place them in an environment that fits their world setting and backgrounds
+## 2. 需要突出的关键元素
+- **叙事DNA**（用户输入）：${finalPromptInput}
+- **角色互动**：展示角色在一起的画面、他们的肢体语言、眼神交流、物理距离、他们如何相互关联
+- **情感动态**：他们之间的情绪——紧张、温暖、浪漫、冲突、友谊等
+- **场景背景**：将它们置于符合其世界设定和背景的环境中
 
-## 3. Art Direction Guidance
-- **Composition**: Arrange multiple characters in a natural, balanced composition
-- **Camera & Cinematography**: Choose an appropriate shot (medium shot, wide shot, two-shot, etc.) that shows all characters
-- **Lighting**: Lighting that complements the emotional mood (warm for intimacy, dramatic for conflict, etc.)
-- **Environment**: A setting that makes sense for the world setting and the characters' relationship
-- **Style**: Choose an appropriate art style
+## 3. 艺术指导指南
+- **构图**：以自然、平衡的方式安排多个角色
+- **相机与摄影**：选择合适的镜头（中景、全景、双镜头等）来展示所有角色
+- **光线**：补充情感氛围的光线（亲密用暖光、冲突用戏剧性光等）
+- **环境**：符合世界设定和角色关系的场景设置
+- **风格**：选择合适的艺术风格
 
-## 4. Final Prompt
-Output a cohesive, detailed AI painting prompt in English. Include: environment, all characters with their appearance, their interaction/relationship, lighting, atmosphere, art style.
+## 4. 最终提示词
+输出连贯、详细的AI绘画中文提示词。包括：环境、所有角色的外貌、他们的互动/关系、光线、氛围、艺术风格。
 
-【Important】Only output the final usable prompt in English. No explanations.`;
+【重要】只输出最终可用的中文提示词，不要有任何解释。`;
                 }
 
                 const generatedText = await callAIChat(systemPrompt);
-                document.getElementById('generatedPrompt').value = generatedText;
+
+                // 追加布局、风格和额外参数
+                let finalPrompt = generatedText;
+                const extraParams = document.getElementById('extraParams').value.trim();
+
+                // 构建追加的参数
+                const appendParams = [];
+
+                // 布局参数映射
+                const layoutMap = {
+                    'single': 'single image, solo shot',
+                    '3-panel': 'three-panel layout, triptych, three connected scenes',
+                    '4-panel': 'four-panel comic layout, four frame manga style, four sequential scenes',
+                    'long': 'long vertical scroll, vertical composition, panoramic vertical',
+                    'horizontal': 'horizontal panorama, side-by-side composition',
+                    'vertical': 'vertical stack, stacked panels, vertical sequence'
+                };
+                if (layoutMap[selectedLayout]) {
+                    appendParams.push(layoutMap[selectedLayout]);
+                }
+
+                // 风格参数映射
+                const styleMap = {
+                    'photorealistic': 'photorealistic, realistic photography, 8k, high detail, DSLR camera',
+                    'anime': 'anime style, manga aesthetic, Japanese illustration, anime artwork',
+                    'watercolor': 'watercolor painting, watercolor style, soft watercolor art',
+                    'oil-painting': 'oil painting style, classical oil painting, impasto technique',
+                    'cyberpunk': 'cyberpunk, neon lights, futuristic city, sci-fi aesthetic',
+                    'fantasy': 'fantasy art, magical atmosphere, mystical, ethereal',
+                    'chinese-ink': 'Chinese ink painting, sumi-e, ink wash painting, Eastern art',
+                    'cinematic': 'cinematic lighting, movie scene, film grain, director\'s cut',
+                    'unsafe': 'NSFW（Not Safe For Work）,cinematic lighting, movie scene, film grain, director\'s cut'
+                };
+                if (styleMap[selectedStyle]) {
+                    appendParams.push(styleMap[selectedStyle]);
+                }
+
+                // 额外参数
+                if (extraParams) {
+                    appendParams.push(extraParams);
+                }
+
+                // 将参数追加到提示词
+                if (appendParams.length > 0) {
+                    finalPrompt = generatedText + ', ' + appendParams.join(', ');
+                }
+
+                document.getElementById('generatedPrompt').value = finalPrompt;
 
                 if (generatedText) {
                     document.getElementById('usePromptGroup').style.display = 'flex';

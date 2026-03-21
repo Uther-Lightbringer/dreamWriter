@@ -2085,6 +2085,24 @@
                         </div>
                     ` : ''}
 
+                    ${card.relationships && card.relationships.length > 0 ? `
+                        <div class="character-detail-section">
+                            <div class="character-detail-title">🔗 角色关系</div>
+                            <div class="character-detail-content">
+                                ${card.relationships.map(rel => `
+                                    <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                                        <div style="font-weight: 600; color: var(--accent-purple); margin-bottom: 4px;">
+                                            ${escapeHtml(card.name)} → ${escapeHtml(rel.targetName || '未知')}
+                                        </div>
+                                        <div style="color: var(--text-dark);">
+                                            <strong>关系：</strong>${escapeHtml(rel.relationship || '无')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
                     ${card.notes ? `
                         <div class="character-detail-section">
                             <div class="character-detail-title">📝 备注</div>

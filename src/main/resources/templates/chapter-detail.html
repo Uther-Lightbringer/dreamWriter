@@ -4297,13 +4297,13 @@
             // 使用新的结构化格式 - 电影级场景视觉师角色
             let promptBuilder = `# 角色：电影级场景视觉师\n\n`;
                     
-            promptBuilder += `## 1. Core Task\n`;
-            promptBuilder += `I will deconstruct the user's simple statement into its core "Narrative DNA" and "Emotional DNA". Then, I will act as a professional art director, cinematographer, and scene designer to reconstruct these elements into a rich, atmospheric, and highly detailed image generation prompt. The final output must be a ready-to-use AI painting prompt in English.\n\n`;
+            promptBuilder += `## 1. 核心任务\n`;
+            promptBuilder += `我将把用户的简单描述解构为其核心的“叙事DNA”和“情感DNA”。然后，我会以专业美术指导、电影摄影师和场景设计师的身份，将这些元素重构为一个丰富、富有氛围感且高度详细的图像生成提示。最终输出必须是可直接使用的英文AI绘画提示。\n\n`;
                                 
-            promptBuilder += `## 2. Deconstruction Phase (Internal Monologue)\n`;
-            promptBuilder += `- **Narrative DNA **(User Input): ${inputText}\n`;
-            promptBuilder += `- **Core Emotion**: What unspoken feeling lies beneath this text? (freedom/joy, lonely ceremony, mysterious atmosphere, epic sense, etc.)\n`;
-            promptBuilder += `- **Key Entities & Actions**:\n`;
+            promptBuilder += `## 2. 解构阶段 (内心独白)\n`;
+            promptBuilder += `- **叙事DNA **(用户输入): ${inputText}\n`;
+            promptBuilder += `- **核心情感**: 这段文字背后隐藏着什么未言明的情感？（自由/喜悦、孤独的仪式感、神秘的氛围、史诗感等）\n`;
+            promptBuilder += `- **关键实体与动作**:\n`;
                                 
             if (characterAppearances.length > 0) {
                 promptBuilder += `  - **Main Characters**:\n`;
@@ -4316,22 +4316,22 @@
             promptBuilder += `  - **Action/State**: [Action or state happening]\n`;
             promptBuilder += `  - **Objects/Environment**: [Surroundings, props, background]\n\n`;
                                 
-            promptBuilder += `## 3. Reconstruction Phase (Art Direction)\n`;
-            promptBuilder += `Based on the deconstructed DNA, I will build a complete scene through specific artistic choices.\n\n`;
+            promptBuilder += `## 3. 重构阶段 (艺术指导)\n`;
+            promptBuilder += `基于已解构的DNA，我将通过具体的艺术选择来构建一个完整的场景。\n\n`;
                                 
-            promptBuilder += `- **Scene & Atmosphere**:\n`;
-            promptBuilder += `  - **Specific Environment**: Where exactly are we? (indoor/outdoor, urban/natural, specific location features)\n`;
-            promptBuilder += `  - **Time & Weather**: (dawn/dusk/night, sunny/rainy/foggy, seasonal characteristics)\n`;
-            promptBuilder += `  - **Overall Mood**: What feeling to create? (peaceful, epic, melancholic, dreamy, tense, etc.)\n\n`;
+            promptBuilder += `- **场景与氛围**:\n`;
+            promptBuilder += `  - **具体环境**: 我们究竟在哪里？（室内/室外、城市/自然、具体的地点特征）\n`;
+            promptBuilder += `  - **时间与天气**: （黎明/黄昏/夜晚、晴朗/下雨/有雾、季节性特征）\n`;
+            promptBuilder += `  - **整体情绪**: 要营造什么感觉？（宁静、史诗、忧郁、梦幻、紧张等）\n\n`;
                                 
-            promptBuilder += `- **Camera & Composition**:\n`;
-            promptBuilder += `  - **Cinematography**: (wide-angle, low-angle shot, medium shot, close-up, tracking shot)\n`;
-            promptBuilder += `  - **Lighting Design**: (backlight, diffused light, Rembrandt lighting, natural light, dramatic lighting)\n`;
-            promptBuilder += `  - **Color Palette**: (high saturation, vintage monochrome, cool blue-gray tones, warm golden tones)\n\n`;
+            promptBuilder += `- **镜头与构图**:\n`;
+            promptBuilder += `  - **电影摄影**: （广角、低角度、中景、特写、跟踪镜头）\n`;
+            promptBuilder += `  - **灯光设计**: （背光、漫射光、伦勃朗光、自然光、戏剧性灯光）\n`;
+            promptBuilder += `  - **色彩调色板**: （高饱和度、复古单色、冷蓝灰色调、温暖金色调）\n\n`;
                                 
-            promptBuilder += `- **Style & Medium**:\n`;
-            promptBuilder += `  - **Art Style**: (Miyazaki animation style, surrealist digital painting, 35mm film photography, impressionist oil painting, National Geographic photography)\n`;
-            promptBuilder += `  - **Textures & Details**: (clothing folds, skin texture, object quality, environmental details, lighting effects)\n\n`;
+            promptBuilder += `- **风格与媒介**:\n`;
+            promptBuilder += `  - **艺术风格**: （宫崎骏动画风格、超现实主义数字绘画、35mm胶片摄影、印象派油画、国家地理摄影）\n`;
+            promptBuilder += `  - **纹理与细节**: （衣物褶皱、皮肤质感、物体品质、环境细节、光影效果）\n\n`;
                     
             promptBuilder += `## 4. 最终 Prompt 合成\n`;
             promptBuilder += `将以上所有元素，整合成一个连贯的、以逗号分隔的关键词和短语字符串。输出的最终结果，只需要只输出可用的 PROMPT 即可。\n\n`;
