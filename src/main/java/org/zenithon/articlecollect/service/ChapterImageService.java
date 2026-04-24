@@ -291,64 +291,57 @@ public class ChapterImageService {
     }
     
     /**
-     * 为配图位置生成 AI 绘画提示词（包含角色信息）- 高级提示词版本（英文输出）
+     * 为配图位置生成 AI 绘画提示词（包含角色信息）- 精简版，只描述画面内容
      */
     public String generateImagePromptWithCharacters(String description, List<CharacterCardEntity> characterCards) {
         try {
             StringBuilder promptBuilder = new StringBuilder();
 
-            promptBuilder.append("You are a professional AI image prompt engineer. Please generate a high-quality, detailed prompt for AI image generation based on the following scene description.\n\n");
+            promptBuilder.append("你是AI绘画提示词生成器。根据场景描述，生成简洁的画面描述。\n\n");
 
             // 如果有角色卡，添加角色信息
             if (characterCards != null && !characterCards.isEmpty()) {
-                promptBuilder.append("🎭【Important Character Appearance Information】(If the scene includes these characters, you MUST strictly follow their appearance descriptions):\n");
+                promptBuilder.append("【角色外貌信息】（如果场景中出现这些角色，必须严格遵循其外貌描述）：\n");
                 for (int i = 0; i < characterCards.size(); i++) {
                     CharacterCardEntity card = characterCards.get(i);
-                    promptBuilder.append("\nCharacter ").append(i + 1).append(": ").append(card.getName()).append("\n");
+                    promptBuilder.append("\n角色").append(i + 1).append("：").append(card.getName()).append("\n");
 
                     if (card.getAge() != null) {
-                        promptBuilder.append("  - Age: ").append(card.getAge()).append("\n");
+                        promptBuilder.append("  - 年龄：").append(card.getAge()).append("\n");
                     }
                     if (card.getGender() != null && !card.getGender().isEmpty()) {
-                        promptBuilder.append("  - Gender: ").append(card.getGender()).append("\n");
+                        promptBuilder.append("  - 性别：").append(card.getGender()).append("\n");
                     }
                     if (card.getAppearanceDescription() != null && !card.getAppearanceDescription().isEmpty()) {
-                        promptBuilder.append("  - Appearance: ").append(card.getAppearanceDescription()).append("\n");
+                        promptBuilder.append("  - 外貌：").append(card.getAppearanceDescription()).append("\n");
                     }
                 }
                 promptBuilder.append("\n");
             }
 
-            promptBuilder.append("【Advanced Prompt Structure Requirements】\n");
-            promptBuilder.append("Please generate the prompt following this structure:\n");
-            promptBuilder.append("1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n");
-            promptBuilder.append("2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n");
-            promptBuilder.append("3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, materials, etc.\n");
-            promptBuilder.append("4. **Camera Angles**: e.g., \"wide-angle lens shot\", \"bird's eye view\", \"medium shot\", \"close-up shot\", \"rule of thirds composition\", \"fisheye lens\", etc.\n");
-            promptBuilder.append("5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., \"mysterious\", \"warm and cozy\", \"epic\", \"melancholic\", \"cheerful\", \"tense\", etc.\n");
-            promptBuilder.append("6. **Artist References**: e.g., \"in the style of National Geographic photography\", \"in the style of professional portrait photography\", etc.\n");
-            promptBuilder.append("7. **Lighting Description**: e.g., \"natural daylight\", \"soft studio lighting\", \"golden hour sunlight\", etc.\n");
-            promptBuilder.append("8. **Texture/Material**: e.g., \"natural skin texture\", \"real fabric texture\", \"authentic material details\", etc.\n");
-            promptBuilder.append("9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n");
+            promptBuilder.append("【核心原则】\n");
+            promptBuilder.append("- 只描述画面中能看到的东西\n");
+            promptBuilder.append("- 不要解释性文字、不要情感描述、不要背景故事\n");
+            promptBuilder.append("- 不要形容词堆砌，只保留必要的视觉描述\n");
+            promptBuilder.append("- 不要写【画面呈现】【氛围】等抽象词汇\n\n");
 
-            promptBuilder.append("【Output Format Requirements】\n");
-            promptBuilder.append("- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n");
-            promptBuilder.append("- **USE ENGLISH ONLY**\n");
-            promptBuilder.append("- Only output the prompt text, no other explanations\n");
-            promptBuilder.append("- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n");
-            promptBuilder.append("- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n");
-            promptBuilder.append("- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n");
-            promptBuilder.append("- Focus on the most important visual elements, avoid unnecessary decorative details\n");
-            promptBuilder.append("- If the scene includes the above characters, you MUST strictly follow their appearance features (age, gender, hairstyle, eye color, clothing, etc.)\n");
-            promptBuilder.append("- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n");
-            promptBuilder.append("- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n");
-            promptBuilder.append("- Avoid inappropriate content, use synonyms when necessary\n\n");
+            promptBuilder.append("【必须包含的画面元素】\n");
+            promptBuilder.append("1. 人物：性别、年龄感、体型、发型发色、瞳色、肤色\n");
+            promptBuilder.append("2. 服装：颜色、款式、材质\n");
+            promptBuilder.append("3. 姿势：站立/坐着/躺着等具体姿态\n");
+            promptBuilder.append("4. 表情：具体的面部表情\n");
+            promptBuilder.append("5. 场景：背景中实际出现的环境和物体\n");
+            promptBuilder.append("6. 光线：光源方向和强度\n\n");
 
-            promptBuilder.append("【Prompt Optimization Example】\n");
-            promptBuilder.append("Original idea: \"an eagle\"\n");
-            promptBuilder.append("Optimized prompt: \"A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style.\"\n\n");
+            promptBuilder.append("【输出格式】\n");
+            promptBuilder.append("- 用逗号分隔的关键词形式\n");
+            promptBuilder.append("- 一行输出，无换行\n");
+            promptBuilder.append("- 100-300字以内\n");
+            promptBuilder.append("- 只用中文\n");
+            promptBuilder.append("- 不输出任何开场白或解释\n");
+            promptBuilder.append("- 如果场景包含上述角色，必须严格遵循其外貌特征\n\n");
 
-            promptBuilder.append("Scene Description:\n");
+            promptBuilder.append("场景描述：\n");
             promptBuilder.append(description);
 
             String prompt = promptBuilder.toString();
@@ -363,41 +356,34 @@ public class ChapterImageService {
     }
 
     /**
-     * 为配图位置生成 AI 绘画提示词（不含角色信息）- 高级提示词版本（英文输出）
+     * 为配图位置生成 AI 绘画提示词（不含角色信息）- 精简版，只描述画面内容
      */
     public String generateImagePrompt(String description) {
         try {
-            String prompt = "You are a professional AI image prompt engineer. Please generate a high-quality, detailed prompt for AI image generation based on the following scene description.\n\n" +
+            String prompt = "你是AI绘画提示词生成器。根据场景描述，生成简洁的画面描述。\n\n" +
 
-                           "【Advanced Prompt Structure Requirements】\n" +
-                           "Please generate the prompt following this structure:\n" +
-                           "1. **Basic Structure**: [Subject] + [Action/State] + [Background/Environment]\n" +
-                           "2. **Style Modifiers**: photorealistic, real person photography, authentic photo style, realistic portrait\n" +
-                           "3. **Specific Details**: Include information about composition, perspective, colors, lighting, textures, materials, etc.\n" +
-                           "4. **Camera Angles**: e.g., \"wide-angle lens shot\", \"bird's eye view\", \"medium shot\", \"close-up shot\", \"rule of thirds composition\", \"fisheye lens\", etc.\n" +
-                           "5. **Emotional Tone**: Describe the mood or atmosphere of the scene, e.g., \"mysterious\", \"warm and cozy\", \"epic\", \"melancholic\", \"cheerful\", \"tense\", etc.\n" +
-                           "6. **Artist References**: e.g., \"in the style of National Geographic photography\", \"in the style of professional portrait photography\", etc.\n" +
-                           "7. **Lighting Description**: e.g., \"natural daylight\", \"soft studio lighting\", \"golden hour sunlight\", etc.\n" +
-                           "8. **Texture/Material**: e.g., \"natural skin texture\", \"real fabric texture\", \"authentic material details\", etc.\n" +
-                           "9. **Image Quality**: ultra HD, 8k resolution, high detail, sharp focus, professional photography, DSLR quality, photorealistic, real photo\n\n" +
+                           "【核心原则】\n" +
+                           "- 只描述画面中能看到的东西\n" +
+                           "- 不要解释性文字、不要情感描述、不要背景故事\n" +
+                           "- 不要形容词堆砌，只保留必要的视觉描述\n" +
+                           "- 不要写【画面呈现】【氛围】等抽象词汇\n\n" +
 
-                           "【Output Format Requirements】\n" +
-                           "- **MANDATORY STYLE**: Always include photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n" +
-                           "- **USE ENGLISH ONLY**\n" +
-                           "- Only output the prompt text, no other explanations\n" +
-                           "- Length between 200-500 words, **NEVER EXCEED 1800 CHARACTERS**\n" +
-                           "- **MAX 1800 CHARACTERS - THIS IS CRITICAL!**\n" +
-                           "- **KEEP IT SIMPLE AND CONCISE** - Keep descriptions clear and direct, avoid overly complex sentences\n" +
-                           "- Focus on the most important visual elements, avoid unnecessary decorative details\n" +
-                           "- **OUTPUT AS A SINGLE LINE, NO PARAGRAPHS** - All text must be on one continuous line without line breaks\n" +
-                           "- **USE KEYWORDS, NOT FULL SENTENCES** - When listing items like styles, camera angles, lighting, etc., use comma-separated keywords instead of complete sentences\n" +
-                           "- Avoid inappropriate content, use synonyms when necessary\n\n" +
+                           "【必须包含的画面元素】\n" +
+                           "1. 人物：性别、年龄感、体型、发型发色、瞳色、肤色\n" +
+                           "2. 服装：颜色、款式、材质\n" +
+                           "3. 姿势：站立/坐着/躺着等具体姿态\n" +
+                           "4. 表情：具体的面部表情\n" +
+                           "5. 场景：背景中实际出现的环境和物体\n" +
+                           "6. 光线：光源方向和强度\n\n" +
 
-                           "【Prompt Optimization Example】\n" +
-                           "Original idea: \"an eagle\"\n" +
-                           "Optimized prompt: \"A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style.\"\n\n" +
+                           "【输出格式】\n" +
+                           "- 用逗号分隔的关键词形式\n" +
+                           "- 一行输出，无换行\n" +
+                           "- 200-500字以内\n" +
+                           "- 只用中文\n" +
+                           "- 不输出任何开场白或解释\n\n" +
 
-                           "Scene Description:\n" +
+                           "场景描述：\n" +
                            description;
 
             String result = aiPromptService.callDeepSeekAPI(prompt);
