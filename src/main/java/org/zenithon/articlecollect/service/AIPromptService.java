@@ -126,49 +126,35 @@ public class AIPromptService {
     }
     
     /**
-     * 构建 AI 提示词生成的 Prompt - 使用高级提示词结构（中文）
+     * 构建 AI 提示词生成的 Prompt - 精简版，只描述画面内容
      */
     private String buildPrompt(String characterDescription) {
-        return "你是一位专业的AI绘画提示词工程师。请根据以下角色信息生成高质量、详细的AI图像生成中文提示词。\n\n" +
+        return "你是AI绘画提示词生成器。根据角色信息，生成简洁的画面描述。\n\n" +
 
-               "【高级提示词结构要求】\n" +
-               "请按以下结构生成提示词：\n" +
-               "1. **基本结构**：[主体] + [动作/状态] + [背景/环境]\n" +
-               "2. **风格修饰词**：例如 \"cyberpunk style\"（赛博朋克风格）、\"anime style\"（动漫风格）、\"watercolor style\"（水彩风格）等\n" +
-               "3. **具体细节**：包含构图、视角、色彩、光线、纹理等信息\n" +
-               "4. **镜头角度**：例如 \"wide-angle lens shot\"（广角镜头）、\"medium shot\"（中景）、\"close-up shot\"（特写）等\n" +
-               "5. **情感基调**：描述场景的情绪或氛围，例如 \"mysterious\"（神秘）、\"warm and cozy\"（温暖舒适）、\"epic\"（史诗感）等\n" +
-               "6. **艺术家参考**：例如 \"in the style of Hayao Miyazaki\"（宫崎骏风格）、\"in the style of Van Gogh\"（梵高风格）等\n" +
-               "7. **光线描述**：例如 \"soft morning light\"（柔和晨光）、\"cinematic lighting\"（电影光线）、\"dramatic lighting\"（戏剧性光线）等\n" +
-               "8. **纹理/材质**：例如 \"smooth marble texture\"（光滑大理石纹理）、\"fabric texture\"（织物纹理）等\n" +
-               "9. **构图**：例如 \"rule of thirds composition\"（三分法构图）、\"symmetrical composition\"（对称构图）等\n\n" +
+               "【核心原则】\n" +
+               "- 只描述画面中能看到的东西\n" +
+               "- 不要解释性文字、不要情感描述、不要背景故事\n" +
+               "- 不要形容词堆砌，只保留必要的视觉描述\n" +
+               "- 不要写【画面呈现】【氛围】等抽象词汇\n\n" +
 
-               "【角色肖像提示词具体要求】\n" +
-               "- **艺术风格**：photorealistic（写实）、real person photography（真人摄影）、ultra HD（超高清）、professional photo quality（专业照片质量）\n" +
-               "- **构图**：根据角色选择（全身照/半身照/特写/中景等）\n" +
-               "- **姿势**：设计自然且富有表现力的姿势（站立/坐姿/动态姿势/战斗姿态等）\n" +
-               "- **视角**：选择最佳视角（平视/低角度/高角度/侧面/正面等）\n" +
-               "- **关键描述**：外观特征（发型、发色、眼神、表情、面部特征）、身材体型、服装细节、动作姿势\n" +
-               "- **场景/背景**：添加与角色气质相符的场景和氛围\n" +
-               "- **光线**：光效的详细描述，自然光、柔和影棚光\n" +
-               "- **色彩**：描述主色调和色彩方案，自然肤色、写实色彩\n" +
-               "- **图像质量**：ultra HD, 8k分辨率, high detail（高细节）, sharp focus（锐利对焦）, professional photography（专业摄影）\n\n" +
+               "【必须包含的画面元素】\n" +
+               "1. 人物：性别、年龄感、体型、发型发色、瞳色、肤色\n" +
+               "2. 服装：颜色、款式、材质\n" +
+               "3. 姿势：站立/坐着/躺着等具体姿态\n" +
+               "4. 表情：具体的面部表情\n" +
+               "5. 场景：背景中实际出现的环境和物体\n" +
+               "6. 光线：光源方向和强度\n\n" +
 
-               "【输出格式要求】\n" +
-               "- **必须风格**：始终包含 photorealistic, real person photography, ultra HD, 8k, professional DSLR photo quality\n" +
-               "- 只输出提示词文本，不要其他解释\n" +
-               "- 长度在200-500词之间，**绝对不要超过1800字符**\n" +
-               "- **最多1800字符 - 这很关键！**\n" +
-               "- **只用英文输出**\n" +
-               "- **保持简洁明了** - 保持描述清晰直接，避免过于复杂的句子\n" +
-               "- 专注于最重要的视觉元素，避免不必要的装饰细节\n" +
-               "- **输出一行，不要分段** - 所有文本必须在一行连续，没有换行\n" +
-               "- **使用关键词，不要用完整句子** - 列出风格、镜头角度、光线等项目时，使用逗号分隔的关键词而不是完整句子\n" +
-               "- 避免不当内容，必要时使用同义词\n\n" +
+               "【输出格式】\n" +
+               "- 用逗号分隔的关键词形式\n" +
+               "- 一行输出，无换行\n" +
+               "- 100-300字以内\n" +
+               "- 只用中文\n" +
+               "- 不输出任何开场白或解释\n\n" +
 
-               "【提示词优化示例】\n" +
-               "原始想法：\"一只老鹰\"\n" +
-               "优化后的提示词：\"A fierce eagle, in vibrant Japanese anime style, blending Studio Ghibli's detailed backgrounds with dynamic shonen manga action scenes. The eagle has exaggerated, expressive eyes with a determined gaze, feathers rendered with sharp, dynamic lines suggesting motion. Its wings are spread wide, massive wingspan filling the frame. The eagle wears a small samurai-inspired piece of armor on its chest, adding a touch of fantasy. Background blends traditional Japanese elements like cherry blossoms and Mount Fuji with a futuristic Tokyo skyline contrast. Scene features bright, saturated colors, dramatic lighting effects and speed lines emphasizing the eagle's power and agility. Overall composition creates energy and movement, typical of action manga scene style.\"\n\n" +
+               "【示例】\n" +
+               "输入：张三，25岁男性，黑发短发光头，棕色眼睛，身穿白色衬衫黑色西裤，站着微笑，办公室背景\n" +
+               "输出：25岁男性，短发黑发，棕色眼睛，白色衬衫，黑色西裤，站立姿势，微笑表情，办公室背景，日光灯照明，写实摄影风格\n\n" +
 
                "角色信息：\n" +
                characterDescription;

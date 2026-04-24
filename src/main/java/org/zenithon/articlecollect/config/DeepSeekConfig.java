@@ -15,7 +15,7 @@ public class DeepSeekConfig {
     @Value("${deepseek.api.url:https://api.deepseek.com/v1/chat/completions}")
     private String apiUrl;
     
-    @Value("${deepseek.api.model:deepseek-chat}")
+    @Value("${deepseek.api.model:deepseek-v4-flash}")
     private String model;
     
     public String getApiKey() {
