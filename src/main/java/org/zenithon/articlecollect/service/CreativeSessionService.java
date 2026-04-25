@@ -904,6 +904,45 @@ public class CreativeSessionService {
         return "{\"message\": \"摘要功能将由 AI 在下次请求时生成\"}";
     }
 
+    // ==================== 新增创作工具实现 ====================
+
+    /**
+     * 创建小说工具实现
+     */
+    private String createNovel(String argumentsJson, CreativeSession session, List<Map<String, Object>> messages) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+            String title = (String) args.get("title");
+
+            if (title == null || title.trim().isEmpty()) {
+                return "{\"error\": \"小说标题不能为空\"}";
+            }
+
+            // 调用 NovelService 创建小说
+            Novel novel = novelService.createNovel(title.trim());
+
+            // 更新会话上下文
+            SessionContext context = getContext(session);
+            context.setCurrentNovelId(novel.getId());
+            updateContext(session, context);
+
+            // 更新会话标题为小说标题
+            session.setTitle(title.trim());
+            sessionRepository.save(session);
+
+            logger.info("创建小说成功: id={}, title={}", novel.getId(), title);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "novelId", novel.getId(),
+                "title", title
+            ));
+        } catch (Exception e) {
+            logger.error("创建小说失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
     /**
      * 生成并插入摘要（当对话过长时）
      */
