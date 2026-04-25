@@ -39,6 +39,9 @@ public class CreativeSession {
     @Column(name = "extracted_params", columnDefinition = "TEXT")
     private String extractedParams;    // 当前提取的参数（JSON 格式）
 
+    @Column(name = "context_data", columnDefinition = "TEXT")
+    private String contextData;        // 会话上下文（currentNovelId, currentChapterId, createdCharacterIds）
+
     @Column(name = "create_time", nullable = false)
     private LocalDateTime createTime;
 
@@ -108,6 +111,15 @@ public class CreativeSession {
 
     public void setExtractedParams(String extractedParams) {
         this.extractedParams = extractedParams;
+        this.updateTime = LocalDateTime.now();
+    }
+
+    public String getContextData() {
+        return contextData;
+    }
+
+    public void setContextData(String contextData) {
+        this.contextData = contextData;
         this.updateTime = LocalDateTime.now();
     }
 
