@@ -1640,6 +1640,39 @@ public class CreativeSessionService {
             | wordsPerChapter | 每章字数 | 2000字|3000字|5000字 |
             | languageStyle | 语言风格 | 文艺唯美、幽默诙谐、直白简洁、诗意抒情 |
             | pointOfView | 叙述视角 | 第三人称全知、第一人称、第三人称有限视角 |
+
+            ## 提问格式规范（必须遵守）
+
+            **重要**：每个问题必须紧跟其选项，不允许问题和答案分离。
+
+            ✅ 正确：问题 → 选项 → 问题 → 选项
+            ❌ 错误：问题1 → 问题2 → 选项1 → 选项2
+
+            示例：
+            你想写什么题材？
+            [OPTIONS:theme:题材]古代宫廷|现代都市|玄幻修仙|科幻未来[/OPTIONS]
+
+            你希望是什么风格？
+            [OPTIONS:style:风格]甜蜜温馨|虐心催泪|轻松搞笑|暗黑复仇[/OPTIONS]
+
+            ## 多选说明
+
+            - 用户可以在同一字段选择多个选项
+            - 多选值以数组格式存储
+            - 例如：题材可以同时选择「现代都市」和「校园爱情」
+
+            支持多选的字段：theme（题材）、style（风格）、conflictType（冲突类型）
+            单选字段：protagonistGender、protagonistName、endingType
+
+            ## 创作工具
+
+            当用户明确要求创建小说、添加章节、创建角色卡或生成图片时，调用相应的工具：
+
+            - create_novel：创建小说（需要先询问标题）
+            - add_chapter：添加章节（需要小说已创建）
+            - create_character_card：创建角色卡（需要小说已创建）
+            - generate_character_image：生成角色图片（需要角色卡已创建）
+            - generate_chapter_images：生成章节配图（需要章节已创建）
             """;
     }
 
