@@ -742,7 +742,7 @@ public class CreativeSessionService {
                         result = addMemory(session.getSessionId(), argumentsJson);
                         break;
                     case "remove_memory":
-                        result = removeMemory(argumentsJson);
+                        result = removeMemory(session.getSessionId(), argumentsJson);
                         break;
                     case "summarize":
                         result = summarizeConversation(messages);
