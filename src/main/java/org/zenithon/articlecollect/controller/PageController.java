@@ -87,8 +87,8 @@ public class PageController {
      */
     @PostMapping("/novel/{novelId}/chapter")
     public String createChapter(@PathVariable Long novelId,
-                                @RequestParam String title,
-                                @RequestParam String content,
+                                @RequestParam("title") String title,
+                                @RequestParam("content") String content,
                                 Model model) {
         try {
             // 创建章节
@@ -144,5 +144,30 @@ public class PageController {
     @GetMapping("/ai-image-history")
     public String aiImageHistory() {
         return "ai-image-history";
+    }
+
+    /**
+     * DeepSeek 模型配置页面
+     */
+    @GetMapping("/settings/deepseek")
+    public String deepseekSettings() {
+        return "settings-deepseek";
+    }
+
+    /**
+     * 创作引导独立页面
+     */
+    @GetMapping("/creative-guide")
+    public String creativeGuide() {
+        return "creative-guide";
+    }
+
+    /**
+     * 创作引导独立页面（继续指定会话）
+     */
+    @GetMapping("/creative-guide/{sessionId}")
+    public String creativeGuideWithSession(@PathVariable String sessionId, Model model) {
+        model.addAttribute("sessionId", sessionId);
+        return "creative-guide";
     }
 }
