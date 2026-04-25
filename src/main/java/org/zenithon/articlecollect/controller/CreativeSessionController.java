@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.zenithon.articlecollect.dto.DeepSeekConfigDTO;
 import org.zenithon.articlecollect.dto.NovelGeneratorRequest;
 import org.zenithon.articlecollect.entity.CreativeSession;
 import org.zenithon.articlecollect.service.CreativeSessionService;
@@ -156,11 +157,38 @@ public class CreativeSessionController {
 
     /**
      * 发送消息（SSE 流式响应）
+     * 支持可选的 config 参数覆盖默认配置
      */
     @PostMapping(value = "/{sessionId}/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter chat(@PathVariable String sessionId, @RequestBody Map<String, String> request) {
-        String content = request.get("content");
-        logger.info("收到对话请求, sessionId={}, content={}", sessionId, content);
+    public SseEmitter chat(@PathVariable String sessionId, @RequestBody Map<String, Object> request) {
+        String content = (String) request.get("content");
+
+        // 提取可选的运行时配置
+        final DeepSeekConfigDTO runtimeConfig;
+        if (request.containsKey("config")) {
+            Object configObj = request.get("config");
+            if (configObj instanceof Map) {
+                DeepSeekConfigDTO dto = new DeepSeekConfigDTO();
+                @SuppressWarnings("unchecked")
+                Map<String, Object> configMap = (Map<String, Object>) configObj;
+                if (configMap.containsKey("model")) {
+                    dto.setModel((String) configMap.get("model"));
+                }
+                if (configMap.containsKey("thinkingEnabled")) {
+                    dto.setThinkingEnabled((Boolean) configMap.get("thinkingEnabled"));
+                }
+                if (configMap.containsKey("reasoningEffort")) {
+                    dto.setReasoningEffort((String) configMap.get("reasoningEffort"));
+                }
+                runtimeConfig = dto;
+            } else {
+                runtimeConfig = null;
+            }
+        } else {
+            runtimeConfig = null;
+        }
+
+        logger.info("收到对话请求, sessionId={}, content={}, hasConfig={}", sessionId, content, runtimeConfig != null);
 
         // 创建 SSE 发射器，设置超时时间为 5 分钟
         SseEmitter emitter = new SseEmitter(5 * 60 * 1000L);
@@ -168,7 +196,7 @@ public class CreativeSessionController {
         // 异步处理
         CompletableFuture.runAsync(() -> {
             try {
-                sessionService.chat(sessionId, content, emitter);
+                sessionService.chat(sessionId, content, emitter, runtimeConfig);
             } catch (Exception e) {
                 logger.error("对话处理失败: {}", e.getMessage(), e);
                 try {
@@ -283,5 +311,36 @@ public class CreativeSessionController {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
+    }
+
+    // ==================== 公共记忆管理 ====================
+
+    /**
+     * 获取全局记忆列表
+     */
+    @GetMapping("/memories/global")
+    public ResponseEntity<List<?>> getGlobalMemories() {
+        return ResponseEntity.ok(sessionService.getGlobalMemories());
+    }
+
+    /**
+     * 删除全局记忆
+     */
+    @DeleteMapping("/memories/global/{key}")
+    public ResponseEntity<Map<String, Object>> deleteGlobalMemory(@PathVariable String key) {
+        logger.info("删除全局记忆: {}", key);
+        try {
+            sessionService.deleteGlobalMemory(key);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "已删除全局记忆");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("删除全局记忆失败: {}", e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
     }
 }

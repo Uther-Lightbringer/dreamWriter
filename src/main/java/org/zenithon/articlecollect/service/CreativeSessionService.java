@@ -1381,6 +1381,22 @@ public class CreativeSessionService {
     }
 
     /**
+     * 获取全局记忆列表
+     */
+    public List<CreativeMemory> getGlobalMemories() {
+        return memoryRepository.findBySessionIdIsNullOrderByUpdateTimeDesc();
+    }
+
+    /**
+     * 删除全局记忆
+     */
+    @Transactional
+    public void deleteGlobalMemory(String key) {
+        memoryRepository.deleteByKey(key);
+        logger.info("删除全局记忆: {}", key);
+    }
+
+    /**
      * 构建包含用户记忆的系统提示词
      * @param sessionId 会话ID，用于加载会话特定记忆
      */

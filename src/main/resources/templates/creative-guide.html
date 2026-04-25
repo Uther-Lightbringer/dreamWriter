@@ -806,6 +806,116 @@
             gap: 10px;
             position: relative;
         }
+
+        /* 公共记忆管理样式 */
+        .memory-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .refresh-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .refresh-btn:hover {
+            opacity: 1;
+        }
+
+        .memories-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .memory-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .memory-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .memory-content {
+            flex: 1;
+            margin-right: 8px;
+        }
+
+        .memory-key {
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 2px;
+        }
+
+        .memory-value {
+            color: var(--text-dark);
+            word-break: break-all;
+        }
+
+        .memory-delete {
+            background: transparent;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .memory-delete:hover {
+            opacity: 1;
+        }
+
+        .no-memories {
+            text-align: center;
+            padding: 16px;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .section-divider span {
+            padding: 0 12px;
+        }
     </style>
 </head>
 <body>
@@ -884,8 +994,27 @@
             <h4>👥 角色卡</h4>
             <button class="drawer-close" onclick="closeCharacterDrawer()">×</button>
         </div>
-        <div class="drawer-content" id="characterDrawerContent">
-            <!-- 角色卡列表将动态加载 -->
+        <div class="drawer-content">
+            <!-- 公共记忆管理区域 -->
+            <div class="memory-section">
+                <div class="section-header">
+                    <span>🧠 公共记忆</span>
+                    <button class="refresh-btn" onclick="loadGlobalMemories()" title="刷新">🔄</button>
+                </div>
+                <div id="globalMemoriesList" class="memories-list">
+                    <!-- 公共记忆列表 -->
+                </div>
+            </div>
+
+            <!-- 分隔线 -->
+            <div class="section-divider">
+                <span>角色卡</span>
+            </div>
+
+            <!-- 角色卡列表 -->
+            <div id="characterDrawerContent">
+                <!-- 角色卡列表将动态加载 -->
+            </div>
         </div>
     </div>
 
@@ -1140,7 +1269,8 @@
             pendingSelections = {};
 
             // 1. 提取 [OPTIONS:字段名:显示名称] 标记格式的选项
-            const optionsRegex = /\[OPTIONS:(\w+)(?::([^\]]+))?\]([\s\S]*?)\[\/OPTIONS\]/g;
+            // 字段名支持字母、数字、下划线和连字符
+            const optionsRegex = /\[OPTIONS:([\w-]+)(?::([^\]]+))?\]([\s\S]*?)\[\/OPTIONS\]/g;
             const taggedOptions = [];
             let optionsMatch;
 
@@ -1498,12 +1628,56 @@
         function openCharacterDrawer() {
             document.getElementById('characterDrawer').classList.add('open');
             characterDrawerOpen = true;
+            loadGlobalMemories();
             loadCharacterCards();
         }
 
         function closeCharacterDrawer() {
             document.getElementById('characterDrawer').classList.remove('open');
             characterDrawerOpen = false;
+        }
+
+        // 加载公共记忆
+        async function loadGlobalMemories() {
+            const list = document.getElementById('globalMemoriesList');
+            list.innerHTML = '<div class="no-memories">加载中...</div>';
+
+            try {
+                const response = await fetch('/api/creative-sessions/memories/global');
+                const memories = await response.json();
+
+                if (!memories || memories.length === 0) {
+                    list.innerHTML = '<div class="no-memories">暂无公共记忆</div>';
+                    return;
+                }
+
+                list.innerHTML = memories.map(memory => `
+                    <div class="memory-item">
+                        <div class="memory-content">
+                            <div class="memory-key">${escapeHtml(memory.key)}</div>
+                            <div class="memory-value">${escapeHtml(memory.value)}</div>
+                        </div>
+                        <button class="memory-delete" onclick="deleteGlobalMemory('${escapeHtml(memory.key)}')" title="删除">×</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('加载公共记忆失败', e);
+                list.innerHTML = '<div class="no-memories">加载失败</div>';
+            }
+        }
+
+        // 删除公共记忆
+        async function deleteGlobalMemory(key) {
+            if (!confirm('确定要删除这条公共记忆吗？')) return;
+
+            try {
+                await fetch('/api/creative-sessions/memories/global/' + encodeURIComponent(key), {
+                    method: 'DELETE'
+                });
+                loadGlobalMemories();
+            } catch (e) {
+                console.error('删除公共记忆失败', e);
+            }
         }
 
         async function loadCharacterCards() {
