@@ -453,6 +453,16 @@
                         <label for="protagonist">主角名称</label>
                         <input type="text" id="protagonist" name="protagonist" placeholder="可选">
                     </div>
+
+                    <div class="form-group">
+                        <label for="languageStyle">语言风格</label>
+                        <input type="text" id="languageStyle" name="languageStyle" placeholder="例如：直白、露骨的性虐。性爱描写" value="直白、露骨的性虐。性爱描写">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wordsPerChapter">每章字数</label>
+                        <input type="number" id="wordsPerChapter" name="wordsPerChapter" min="500" max="10000" value="3000">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -463,7 +473,11 @@
 
                 <div class="form-group">
                     <label for="requires">扩写需求</label>
-                    <textarea id="requires" name="requires" placeholder="描述你对扩写的要求，例如：使用具体的例子和生动的故事来阐述观点..." style="min-height: 80px;"></textarea>
+                    <textarea id="requires" name="requires" style="min-height: 120px;">你是一名专业的小说作家，能够将大纲扩展成长篇文章，现在你的任务是把一个单段扩展成一个故事.
+
+# 使用具体的例子和生动的故事来阐述观点，可以提高文章的吸引力。
+# 要适当地描绘人物的形象和穿着，和环境描写互相映衬。要带有一定的诗意的环境和韵律感。
+# 描写的文章要严格按照markdown格式进行描写。</textarea>
                 </div>
 
                 <div class="form-row">
@@ -476,6 +490,13 @@
                             <option value="第二人称视角">第二人称视角</option>
                             <option value="不可靠叙述者">不可靠叙述者</option>
                             <option value="变换视角">变换视角</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="aiModel">AI 模型</label>
+                        <select id="aiModel" name="aiModel">
+                            <option value="deepseek-v4-pro" selected>DeepSeek V4 Pro（推荐）</option>
+                            <option value="deepseek-v4-flash">DeepSeek V4 Flash（快速）</option>
                         </select>
                     </div>
                 </div>
@@ -529,6 +550,10 @@
                 <span id="progressStep">准备开始...</span>
             </div>
 
+            <div class="progress-actions" style="margin: 15px 0; text-align: center;">
+                <button type="button" class="btn-primary" id="queryProgressBtn" onclick="queryProgress()">查询进度</button>
+            </div>
+
             <div class="log-area" id="logArea"></div>
 
             <div id="errorSection" class="error-section"></div>
@@ -545,7 +570,6 @@
 
     <script>
         let currentTaskId = null;
-        let eventSource = null;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -555,6 +579,65 @@
             keywordTextarea.addEventListener('input', function() {
                 keywordCount.textContent = this.value.length;
             });
+
+            // 根据当前时间判断默认模型
+            // Pro 模型优惠截止时间：2026/05/05 23:59 北京时间
+            const promoEndTime = new Date('2026-05-05T23:59:00+08:00');
+            const now = new Date();
+            const aiModelSelect = document.getElementById('aiModel');
+
+            if (now < promoEndTime) {
+                // 优惠期内，默认选择 Pro
+                aiModelSelect.value = 'deepseek-v4-pro';
+                // 添加优惠提示
+                const modelGroup = aiModelSelect.closest('.form-group');
+                const promoTip = document.createElement('small');
+                promoTip.style.cssText = 'display: block; margin-top: 5px; color: #4caf50; font-size: 0.8rem;';
+                promoTip.textContent = '🎉 Pro 模型限时 2.5 折优惠中！';
+                modelGroup.appendChild(promoTip);
+            } else {
+                // 优惠期后，默认选择 Flash
+                aiModelSelect.value = 'deepseek-v4-flash';
+            }
+
+            // 检查是否有从历史记录传递过来的参数
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('useParams') === 'true') {
+                const savedParams = localStorage.getItem('novelGeneratorParams');
+                if (savedParams) {
+                    try {
+                        const params = JSON.parse(savedParams);
+
+                        // 填充表单
+                        if (params.chapterCount) document.getElementById('chapterCount').value = params.chapterCount;
+                        if (params.keyword) {
+                            document.getElementById('keyword').value = params.keyword;
+                            keywordCount.textContent = params.keyword.length;
+                        }
+                        if (params.genre) document.getElementById('genre').value = params.genre;
+                        if (params.requires) document.getElementById('requires').value = params.requires;
+                        if (params.newWorld !== undefined) document.getElementById('newWorld').checked = params.newWorld;
+                        if (params.roleCount) document.getElementById('roleCount').value = params.roleCount;
+                        if (params.gameplay) document.getElementById('gameplay').value = params.gameplay;
+                        if (params.tools) document.getElementById('tools').value = params.tools;
+                        if (params.pointOfView) document.getElementById('pointOfView').value = params.pointOfView;
+                        if (params.protagonist) document.getElementById('protagonist').value = params.protagonist;
+                        if (params.languageStyle) document.getElementById('languageStyle').value = params.languageStyle;
+                        if (params.wordsPerChapter) document.getElementById('wordsPerChapter').value = params.wordsPerChapter;
+
+                        // 清除 URL 参数标记
+                        window.history.replaceState({}, document.title, window.location.pathname);
+
+                        // 清除 localStorage
+                        localStorage.removeItem('novelGeneratorParams');
+
+                        // 显示提示
+                        alert('已加载历史参数，您可以修改后提交生成。');
+                    } catch (e) {
+                        console.error('解析参数失败:', e);
+                    }
+                }
+            }
         });
 
         // 切换高级选项
@@ -583,7 +666,10 @@
                 gameplay: document.getElementById('gameplay').value.trim() || 'BDSM',
                 tools: document.getElementById('tools').value.trim() || 'BDSM',
                 pointOfView: document.getElementById('pointOfView').value,
-                protagonist: document.getElementById('protagonist').value.trim()
+                protagonist: document.getElementById('protagonist').value.trim(),
+                languageStyle: document.getElementById('languageStyle').value.trim() || '直白、露骨的性虐。性爱描写',
+                wordsPerChapter: parseInt(document.getElementById('wordsPerChapter').value) || 3000,
+                aiModel: document.getElementById('aiModel').value
             };
 
             try {
@@ -597,7 +683,7 @@
 
                 if (result.success) {
                     currentTaskId = result.taskId;
-                    startProgressStreaming(result.taskId);
+                    showProgressSection(result.taskId);
                 } else {
                     showError(result.error || '启动失败');
                     resetForm();
@@ -608,55 +694,55 @@
             }
         });
 
-        // 启动进度流
-        function startProgressStreaming(taskId) {
+        // 显示进度区域
+        function showProgressSection(taskId) {
             document.getElementById('formSection').style.display = 'none';
             document.getElementById('progressSection').classList.add('active');
+            document.getElementById('errorSection').classList.remove('active');
 
-            addLog('任务已创建，正在启动...');
-
-            eventSource = new EventSource('/api/novel-generator/stream/' + taskId);
-
-            eventSource.addEventListener('progress', function(event) {
-                const data = JSON.parse(event.data);
-                updateProgress(data.progress, data.step);
-                addLog(data.step + ' (' + data.progress + '%)');
-            });
-
-            eventSource.addEventListener('complete', function(event) {
-                const data = JSON.parse(event.data);
-                showResult(data.novelId, data.novelTitle);
-                addLog('创作完成！');
-                eventSource.close();
-            });
-
-            eventSource.addEventListener('error', function(event) {
-                if (event.data) {
-                    const data = JSON.parse(event.data);
-                    showError(data.error || '生成失败');
-                }
-                eventSource.close();
-            });
-
-            eventSource.onerror = function() {
-                // 检查任务状态
-                checkTaskStatus(taskId);
-            };
+            addLog('任务已创建，任务ID: ' + taskId);
+            addLog('点击"查询进度"按钮查看最新状态');
         }
 
-        // 检查任务状态（SSE断开时）
-        async function checkTaskStatus(taskId) {
+        // 查询进度（手动调用）
+        async function queryProgress() {
+            if (!currentTaskId) {
+                showError('任务ID不存在');
+                return;
+            }
+
+            const btn = document.getElementById('queryProgressBtn');
+            btn.disabled = true;
+            btn.textContent = '查询中...';
+
             try {
-                const response = await fetch('/api/novel-generator/progress/' + taskId);
+                const response = await fetch('/api/novel-generator/progress/' + currentTaskId);
                 const progress = await response.json();
+
+                updateProgress(progress.progress, progress.currentStep || '处理中...');
+
+                // 添加日志
+                const time = new Date().toLocaleTimeString();
+                if (progress.currentStep) {
+                    addLog(progress.currentStep + ' (' + progress.progress + '%)');
+                }
 
                 if (progress.status === 'COMPLETED') {
                     showResult(progress.resultNovelId, progress.resultNovelTitle);
+                    addLog('创作完成！');
                 } else if (progress.status === 'FAILED') {
-                    showError(progress.errorMessage);
+                    showError(progress.errorMessage || '生成失败');
+                } else if (progress.status === 'RUNNING') {
+                    addLog('任务正在执行中...');
+                } else if (progress.status === 'PENDING') {
+                    addLog('任务等待中...');
                 }
             } catch (e) {
-                console.error('检查任务状态失败:', e);
+                console.error('查询进度失败:', e);
+                addLog('查询失败: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '查询进度';
             }
         }
 

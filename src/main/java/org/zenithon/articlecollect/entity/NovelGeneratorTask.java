@@ -71,6 +71,15 @@ public class NovelGeneratorTask {
     @Column(length = 255)
     private String protagonist;
 
+    @Column(name = "language_style", length = 100)
+    private String languageStyle;
+
+    @Column(name = "words_per_chapter")
+    private Integer wordsPerChapter;
+
+    @Column(name = "ai_model", length = 50)
+    private String aiModel;
+
     // ========== 中间结果 ==========
 
     @Column(name = "generated_tools", columnDefinition = "TEXT")
@@ -311,6 +320,30 @@ public class NovelGeneratorTask {
 
     public void setProtagonist(String protagonist) {
         this.protagonist = protagonist;
+    }
+
+    public String getLanguageStyle() {
+        return languageStyle;
+    }
+
+    public void setLanguageStyle(String languageStyle) {
+        this.languageStyle = languageStyle;
+    }
+
+    public Integer getWordsPerChapter() {
+        return wordsPerChapter;
+    }
+
+    public void setWordsPerChapter(Integer wordsPerChapter) {
+        this.wordsPerChapter = wordsPerChapter;
+    }
+
+    public String getAiModel() {
+        return aiModel;
+    }
+
+    public void setAiModel(String aiModel) {
+        this.aiModel = aiModel;
     }
 
     public String getGeneratedTools() {

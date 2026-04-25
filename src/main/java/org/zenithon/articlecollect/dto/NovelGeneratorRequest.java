@@ -55,6 +55,22 @@ public class NovelGeneratorRequest {
      */
     private String protagonist;
 
+    /**
+     * 语言风格
+     */
+    private String languageStyle = "直白、露骨的性虐。性爱描写";
+
+    /**
+     * 每章字数要求
+     */
+    private Integer wordsPerChapter = 3000;
+
+    /**
+     * AI模型选择
+     * deepseek-v4-pro 或 deepseek-v4-flash
+     */
+    private String aiModel = "deepseek-v4-pro";
+
     // ========== Getters and Setters ==========
 
     public Integer getChapterCount() {
@@ -137,6 +153,30 @@ public class NovelGeneratorRequest {
         this.protagonist = protagonist;
     }
 
+    public String getLanguageStyle() {
+        return languageStyle;
+    }
+
+    public void setLanguageStyle(String languageStyle) {
+        this.languageStyle = languageStyle;
+    }
+
+    public Integer getWordsPerChapter() {
+        return wordsPerChapter;
+    }
+
+    public void setWordsPerChapter(Integer wordsPerChapter) {
+        this.wordsPerChapter = wordsPerChapter;
+    }
+
+    public String getAiModel() {
+        return aiModel;
+    }
+
+    public void setAiModel(String aiModel) {
+        this.aiModel = aiModel;
+    }
+
     /**
      * 验证请求参数
      */
@@ -158,6 +198,7 @@ public class NovelGeneratorRequest {
                 ", tools='" + tools + '\'' +
                 ", pointOfView='" + pointOfView + '\'' +
                 ", protagonist='" + protagonist + '\'' +
+                ", languageStyle='" + languageStyle + '\'' +
                 '}';
     }
 }

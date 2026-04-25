@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.zenithon.articlecollect.dto.CharacterCard;
 import org.zenithon.articlecollect.dto.GeneratedOutline;
 import org.zenithon.articlecollect.dto.NovelGeneratorRequest;
@@ -38,6 +37,7 @@ public class NovelGeneratorAsyncService {
     private final NovelRepository novelRepository;
     private final ChapterRepository chapterRepository;
     private final CharacterCardService characterCardService;
+    private final CharacterCardAsyncService characterCardAsyncService;
     private final ObjectMapper objectMapper;
     private final Executor novelGeneratorTaskExecutor;
 
@@ -48,6 +48,7 @@ public class NovelGeneratorAsyncService {
             NovelRepository novelRepository,
             ChapterRepository chapterRepository,
             CharacterCardService characterCardService,
+            CharacterCardAsyncService characterCardAsyncService,
             ObjectMapper objectMapper,
             Executor novelGeneratorTaskExecutor) {
         this.taskRepository = taskRepository;
@@ -55,6 +56,7 @@ public class NovelGeneratorAsyncService {
         this.novelRepository = novelRepository;
         this.chapterRepository = chapterRepository;
         this.characterCardService = characterCardService;
+        this.characterCardAsyncService = characterCardAsyncService;
         this.objectMapper = objectMapper;
         this.novelGeneratorTaskExecutor = novelGeneratorTaskExecutor;
     }
@@ -63,15 +65,23 @@ public class NovelGeneratorAsyncService {
      * 异步执行生成任务
      */
     @Async("novelGeneratorTaskExecutor")
-    @Transactional
     public void executeGenerationTask(String taskId, NovelGeneratorRequest request) {
         NovelGeneratorTask task = null;
         try {
+            // 设置当前任务使用的 AI 模型
+            String aiModel = request.getAiModel();
+            if (aiModel != null && !aiModel.isEmpty()) {
+                stepService.setCurrentModel(aiModel);
+                logger.info("任务 {} 使用模型: {}", taskId, aiModel);
+            }
+
             task = taskRepository.findByTaskId(taskId)
                     .orElseThrow(() -> new RuntimeException("任务不存在: " + taskId));
 
             // 标记为运行中
             task.markAsRunning();
+            // 保存选择的模型到任务实体
+            task.setAiModel(aiModel);
             taskRepository.save(task);
 
             // ========== Step 1: 工具生成 (5%) ==========
@@ -136,7 +146,8 @@ public class NovelGeneratorAsyncService {
             updateProgress(task, "正在保存小说数据...", 30);
             Novel novel = new Novel(novelTitle);
             novel.setWorldView(worldview);
-            novel.setDescription(request.getKeyword());
+            // 用生成的大纲作为小说概述
+            novel.setDescription(outline.getOutline());
             novel = novelRepository.save(novel);
 
             task.setResultNovelId(novel.getId());
@@ -157,6 +168,20 @@ public class NovelGeneratorAsyncService {
             int baseProgress = 35;
             int progressRange = 55; // 35% to 90%
 
+            // 创建final副本供Lambda使用
+            final Long novelId = novel.getId();
+            final String taskIdValue = task.getTaskId();
+            final String outlineText = outline.getOutline();
+            final String finalCharactersJson = charactersJson;
+            final String finalWorldview = worldview;
+            final String finalTools = tools;
+            final String finalGameplay = gameplay;
+            final String genre = request.getGenre();
+            final String requires = request.getRequires();
+            final String pointOfView = request.getPointOfView();
+            final String languageStyle = request.getLanguageStyle();
+            final int wordsPerChapter = request.getWordsPerChapter() != null ? request.getWordsPerChapter() : 3000;
+
             // 并行处理章节生成
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             List<Chapter> generatedChapters = new ArrayList<>();
@@ -169,13 +194,13 @@ public class NovelGeneratorAsyncService {
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     try {
                         String chapterContent = generateChapterContent(
-                                chapterInfo, outline.getOutline(),
-                                charactersJson, worldview, tools, gameplay,
-                                request.getGenre(), request.getRequires(), request.getPointOfView()
+                                chapterInfo, outlineText,
+                                finalCharactersJson, finalWorldview, finalTools, finalGameplay,
+                                genre, requires, pointOfView, languageStyle, wordsPerChapter
                         );
 
                         Chapter chapter = new Chapter();
-                        chapter.setNovelId(novel.getId());
+                        chapter.setNovelId(novelId);
                         chapter.setTitle(chapterInfo.getSection());
                         chapter.setContent(chapterContent);
                         chapter.setChapterNumber(index + 1);
@@ -187,8 +212,12 @@ public class NovelGeneratorAsyncService {
 
                             // 更新进度
                             int currentProgress = baseProgress + (int) ((completedCount[0] / (double) totalChapters) * progressRange);
-                            updateProgress(task, "正在生成第 " + completedCount[0] + "/" + totalChapters + " 章: " + chapterInfo.getSection(), currentProgress);
-                            taskRepository.save(task);
+                            // 重新查询task以避免并发问题
+                            NovelGeneratorTask currentTask = taskRepository.findByTaskId(taskIdValue).orElse(null);
+                            if (currentTask != null) {
+                                updateProgress(currentTask, "正在生成第 " + completedCount[0] + "/" + totalChapters + " 章: " + chapterInfo.getSection(), currentProgress);
+                                taskRepository.save(currentTask);
+                            }
                         }
                     } catch (Exception e) {
                         logger.error("生成章节失败 [{}]: {}", chapterInfo.getSection(), e.getMessage(), e);
@@ -221,6 +250,9 @@ public class NovelGeneratorAsyncService {
                 task.markAsFailed(e.getMessage());
                 taskRepository.save(task);
             }
+        } finally {
+            // 清除当前任务的模型设置
+            stepService.clearCurrentModel();
         }
     }
 
@@ -236,7 +268,9 @@ public class NovelGeneratorAsyncService {
             String gameplay,
             String genre,
             String requires,
-            String pointOfView) throws Exception {
+            String pointOfView,
+            String languageStyle,
+            int wordsPerChapter) throws Exception {
 
         // 提取相关上下文
         String relevantContext = stepService.extractRelevantContext(
@@ -246,27 +280,86 @@ public class NovelGeneratorAsyncService {
         // 扩写章节
         String expandedContent = stepService.expandChapter(
                 chapterInfo, outline, relevantContext,
-                tools, gameplay, genre, requires, pointOfView
+                tools, gameplay, genre, requires, pointOfView, languageStyle, wordsPerChapter
         );
 
         // 去除AI味润色
-        String polishedContent = stepService.polishContent(expandedContent);
+        String polishedContent = stepService.polishContent(expandedContent, wordsPerChapter);
 
-        // 格式化（句号后换行）
-        return stepService.formatChapterContent(polishedContent);
+        // 字数检查和重试
+        int currentWordCount = countChineseWords(polishedContent);
+        int maxRetries = 3;
+        int retryCount = 0;
+
+        while (currentWordCount < wordsPerChapter && retryCount < maxRetries) {
+            retryCount++;
+            logger.warn("章节 '{}' 字数不足: {} < {}，第{}次重试扩写",
+                chapterInfo.getSection(), currentWordCount, wordsPerChapter, retryCount);
+
+            // 让AI继续扩写
+            polishedContent = stepService.expandContent(
+                polishedContent, wordsPerChapter - currentWordCount, languageStyle
+            );
+
+            // 再次润色
+            polishedContent = stepService.polishContent(polishedContent, wordsPerChapter);
+
+            currentWordCount = countChineseWords(polishedContent);
+        }
+
+        if (currentWordCount < wordsPerChapter) {
+            logger.warn("章节 '{}' 经过{}次重试后字数仍不足: {} < {}",
+                chapterInfo.getSection(), maxRetries, currentWordCount, wordsPerChapter);
+        } else {
+            logger.info("章节 '{}' 字数检查通过: {} >= {}", chapterInfo.getSection(), currentWordCount, wordsPerChapter);
+        }
+
+        return polishedContent;
+    }
+
+    /**
+     * 统计中文字数（包括中文标点）
+     */
+    private int countChineseWords(String content) {
+        if (content == null || content.isEmpty()) {
+            return 0;
+        }
+        // 统计中文字符和中文字标点
+        int count = 0;
+        for (char c : content.toCharArray()) {
+            // 中文字符范围
+            if (c >= 0x4E00 && c <= 0x9FFF) {
+                count++;
+            }
+            // 中文标点
+            else if (c >= 0x3000 && c <= 0x303F) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
      * 保存角色卡
      */
     private void saveCharacterCards(Long novelId, List<CharacterCard> characterCards) {
+        List<CharacterCard> savedCards = new ArrayList<>();
         for (int i = 0; i < characterCards.size(); i++) {
             CharacterCard card = characterCards.get(i);
             try {
-                characterCardService.addCharacterCard(novelId, card, i);
+                CharacterCard savedCard = characterCardService.addCharacterCard(novelId, card, i);
+                savedCards.add(savedCard);
+                logger.info("保存角色卡成功: {} (ID: {})", card.getName(), savedCard.getId());
             } catch (Exception e) {
                 logger.error("保存角色卡失败: {}", card.getName(), e);
             }
+        }
+
+        // 异步生成角色卡的 AI 提示词和图片
+        // 注意：不传递 savedCards 对象，让异步方法自己查询，避免事务可见性问题
+        if (!savedCards.isEmpty()) {
+            logger.info("开始异步生成 {} 个角色卡的 AI 提示词和图片", savedCards.size());
+            characterCardAsyncService.processCharacterCardsAsyncByNovelId(novelId);
         }
     }
 

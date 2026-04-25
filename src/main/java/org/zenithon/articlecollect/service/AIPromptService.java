@@ -920,6 +920,120 @@ public class AIPromptService {
     }
 
     /**
+     * 调用 DeepSeek API (支持指定模型)
+     * @param systemPrompt 系统提示词
+     * @param userPrompt 用户提示词
+     * @param enableThinking 是否开启思考模式
+     * @param reasoningEffort 思考强度 (high/max)
+     * @param maxTokens 最大token数
+     * @param jsonMode 是否启用JSON模式
+     * @param model 指定的模型名称（如果为null则使用默认模型）
+     * @return AI返回的内容
+     * @throws Exception 调用异常
+     */
+    public String callDeepSeekAPIWithModel(String systemPrompt, String userPrompt,
+                                            boolean enableThinking, String reasoningEffort,
+                                            int maxTokens, boolean jsonMode, String model) throws Exception {
+        // 检查 API Key 是否配置
+        if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().trim().isEmpty()) {
+            logger.warn("DeepSeek API Key 未配置");
+            throw new RuntimeException("DeepSeek API Key 未配置，请设置环境变量 DEEPSEEK_API_KEY");
+        }
+
+        // 使用指定的模型，如果为空则使用默认模型
+        String useModel = (model != null && !model.isEmpty()) ? model : deepSeekConfig.getModel();
+        logger.info("使用模型: {}", useModel);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", useModel);
+        requestBody.put("max_tokens", maxTokens);
+
+        // 思考模式配置
+        if (enableThinking) {
+            Map<String, Object> thinking = new HashMap<>();
+            thinking.put("type", "enabled");
+            requestBody.put("thinking", thinking);
+            if (reasoningEffort != null) {
+                requestBody.put("reasoning_effort", reasoningEffort);
+            }
+        }
+
+        // JSON模式配置
+        if (jsonMode) {
+            Map<String, String> responseFormat = new HashMap<>();
+            responseFormat.put("type", "json_object");
+            requestBody.put("response_format", responseFormat);
+        }
+
+        // 构建消息
+        List<Map<String, String>> messages = new ArrayList<>();
+        if (systemPrompt != null && !systemPrompt.isEmpty()) {
+            Map<String, String> systemMessage = new HashMap<>();
+            systemMessage.put("role", "system");
+            systemMessage.put("content", systemPrompt);
+            messages.add(systemMessage);
+        }
+        if (userPrompt != null && !userPrompt.isEmpty()) {
+            Map<String, String> userMessage = new HashMap<>();
+            userMessage.put("role", "user");
+            userMessage.put("content", userPrompt);
+            messages.add(userMessage);
+        }
+        requestBody.put("messages", messages);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+        logger.debug("调用DeepSeek API, model={}, thinking={}, maxTokens={}, jsonMode={}", useModel, enableThinking, maxTokens, jsonMode);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            deepSeekConfig.getApiUrl(),
+            request,
+            String.class
+        );
+
+        logger.debug("DeepSeek API响应状态: {}", response.getStatusCode());
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            String responseBody = response.getBody();
+            logger.debug("DeepSeek API响应体: {}", responseBody.length() > 500 ? responseBody.substring(0, 500) + "..." : responseBody);
+
+            JsonNode rootNode = objectMapper.readTree(responseBody);
+            JsonNode choices = rootNode.path("choices");
+
+            if (choices.isArray() && choices.size() > 0) {
+                JsonNode messageNode = choices.get(0).path("message");
+                String content = messageNode.path("content").asText();
+
+                // 如果content为空，尝试使用reasoning_content
+                if ((content == null || content.isEmpty()) && messageNode.has("reasoning_content")) {
+                    content = messageNode.path("reasoning_content").asText();
+                    logger.debug("使用reasoning_content作为响应内容");
+                }
+
+                // 清理可能的思考标签
+                if (content != null && !content.isEmpty()) {
+                    content = THINK_TAG_PATTERN.matcher(content).replaceAll("").trim();
+                    return content;
+                }
+            }
+
+            // 检查是否有错误信息
+            JsonNode errorNode = rootNode.path("error");
+            if (!errorNode.isMissingNode()) {
+                String errorMsg = errorNode.path("message").asText();
+                throw new RuntimeException("DeepSeek API错误: " + errorMsg);
+            }
+
+            logger.warn("DeepSeek API响应中没有有效内容, choices: {}", choices);
+        }
+
+        throw new RuntimeException("API调用失败: " + response.getStatusCode());
+    }
+
+    /**
      * 流式 AI 对话
      * @param prompt 用户输入的提示词
      * @param emitter SSE 发射器
