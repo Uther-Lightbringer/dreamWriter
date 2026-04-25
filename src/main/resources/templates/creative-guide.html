@@ -570,13 +570,150 @@
         .close-fullscreen:hover {
             opacity: 1;
         }
+
+        /* 配置切换组件 */
+        .config-toggle-btn {
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .config-toggle-btn:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .config-toggle-btn.customized {
+            background: rgba(156, 39, 176, 0.2);
+            border-color: var(--accent-purple);
+        }
+
+        .config-panel {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            z-index: 100;
+            min-width: 240px;
+            display: none;
+        }
+
+        .config-panel.show {
+            display: block;
+        }
+
+        .config-panel h4 {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .config-row label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .config-row select {
+            padding: 6px 10px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: white;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .config-row select:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        .config-reset {
+            width: 100%;
+            margin-top: 12px;
+            padding: 8px;
+            background: transparent;
+            border: 1px solid var(--text-light);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .config-reset:hover {
+            background: var(--text-light);
+            color: white;
+        }
+
+        .header-actions-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
     </style>
 </head>
 <body>
     <div class="guide-container">
         <div class="guide-header">
             <h1>✨ 创作引导</h1>
-            <div class="header-actions">
+            <div class="header-actions-wrapper">
+                <button class="config-toggle-btn" id="configToggleBtn" onclick="toggleConfigPanel()">
+                    <span>⚙️</span>
+                    <span id="configStatus">默认配置</span>
+                </button>
+                <!-- 配置面板 -->
+                <div class="config-panel" id="configPanel">
+                    <h4>运行时配置</h4>
+                    <div class="config-row">
+                        <label>模型</label>
+                        <select id="configModel" onchange="updateConfigStatus()">
+                            <option value="deepseek-v4-flash">Flash (快速)</option>
+                            <option value="deepseek-v4-pro">Pro (高性能)</option>
+                        </select>
+                    </div>
+                    <div class="config-row">
+                        <label>思考模式</label>
+                        <select id="configThinking" onchange="updateConfigStatus()">
+                            <option value="false">关闭</option>
+                            <option value="true">开启</option>
+                        </select>
+                    </div>
+                    <div class="config-row" id="effortRow" style="display: none;">
+                        <label>推理强度</label>
+                        <select id="configEffort" onchange="updateConfigStatus()">
+                            <option value="high">high</option>
+                            <option value="max">max</option>
+                        </select>
+                    </div>
+                    <button class="config-reset" onclick="resetRuntimeConfig()">恢复默认</button>
+                </div>
                 <button class="header-btn" onclick="toggleHistory()">📜 历史</button>
                 <a href="/" class="header-btn">🏠 首页</a>
             </div>
@@ -617,6 +754,13 @@
         let currentParams = {};
         let isStreaming = false;
 
+        // 默认配置（从服务器加载）
+        let defaultConfig = {
+            model: 'deepseek-v4-pro',
+            thinkingEnabled: true,
+            reasoningEffort: 'high'
+        };
+
         // 字段名映射
         const fieldNames = {
             theme: '题材',
@@ -635,6 +779,9 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 加载默认配置
+            loadDefaultConfig();
+
             const pathParts = window.location.pathname.split('/');
             if (pathParts.length > 2 && pathParts[2]) {
                 currentSessionId = pathParts[2];
@@ -689,10 +836,13 @@
 
             // 调用聊天 API (SSE)
             try {
+                // 获取运行时配置
+                const runtimeConfig = getRuntimeConfig();
+
                 const response = await fetch('/api/creative-sessions/' + currentSessionId + '/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content })
+                    body: JSON.stringify({ content, config: runtimeConfig })
                 });
 
                 const reader = response.body.getReader();
@@ -934,35 +1084,84 @@
         function handleOptionClick(btn, field, value, label, isBatchMode) {
             const fieldContainer = btn.closest('.option-field');
 
-            // 清除自定义输入框
+            // 检查是否支持多选的字段
+            const multiSelectFields = ['theme', 'style', 'conflictType'];
+            const baseField = field.replace(/\d+$/, '');
+            const isMultiSelect = multiSelectFields.includes(baseField);
+
+            // 清除自定义输入框（多选模式不清除）
             const customInput = fieldContainer.querySelector('.custom-option-input');
-            if (customInput) {
+            if (customInput && !isMultiSelect) {
                 customInput.value = '';
                 customInput.classList.remove('confirmed');
             }
 
             if (isBatchMode) {
-                const displayName = fieldContainer.dataset.displayName || null;
-                pendingSelections[field] = { value, label, displayName };
+                if (isMultiSelect) {
+                    // 多选模式：切换选中状态
+                    btn.classList.toggle('selected');
 
-                // 更新按钮状态
-                fieldContainer.querySelectorAll('.option-btn').forEach(b => {
-                    b.classList.remove('selected');
-                });
-                btn.classList.add('selected');
+                    // 收集所有选中的值
+                    const selectedValues = [];
+                    const selectedLabels = [];
+                    fieldContainer.querySelectorAll('.option-btn.selected').forEach(b => {
+                        selectedValues.push(b.dataset.value);
+                        selectedLabels.push(b.dataset.label);
+                    });
 
-                // 显示已选状态
-                let statusEl = fieldContainer.querySelector('.selection-status');
-                if (!statusEl) {
-                    statusEl = document.createElement('div');
-                    statusEl.className = 'selection-status';
-                    fieldContainer.appendChild(statusEl);
+                    // 更新 pendingSelections
+                    if (selectedValues.length > 0) {
+                        const displayName = fieldContainer.dataset.displayName || null;
+                        pendingSelections[field] = {
+                            value: selectedValues,
+                            label: selectedLabels.join('、'),
+                            displayName,
+                            isMulti: true
+                        };
+
+                        // 更新状态显示
+                        let statusEl = fieldContainer.querySelector('.selection-status');
+                        if (!statusEl) {
+                            statusEl = document.createElement('div');
+                            statusEl.className = 'selection-status';
+                            fieldContainer.appendChild(statusEl);
+                        }
+                        statusEl.textContent = '✓ 已选 ' + selectedValues.length + ' 个';
+                    } else {
+                        delete pendingSelections[field];
+                        const statusEl = fieldContainer.querySelector('.selection-status');
+                        if (statusEl) statusEl.remove();
+                    }
+                } else {
+                    // 单选模式
+                    const displayName = fieldContainer.dataset.displayName || null;
+                    pendingSelections[field] = { value, label, displayName };
+
+                    // 更新按钮状态
+                    fieldContainer.querySelectorAll('.option-btn').forEach(b => {
+                        b.classList.remove('selected');
+                    });
+                    btn.classList.add('selected');
+
+                    // 显示已选状态
+                    let statusEl = fieldContainer.querySelector('.selection-status');
+                    if (!statusEl) {
+                        statusEl = document.createElement('div');
+                        statusEl.className = 'selection-status';
+                        fieldContainer.appendChild(statusEl);
+                    }
+                    statusEl.textContent = '✓ 已选：' + label;
                 }
-                statusEl.textContent = '✓ 已选：' + label;
             } else {
-                currentParams[field] = value;
-                document.getElementById('chatInput').value = label;
-                sendMessage();
+                // 非批量模式
+                if (!isMultiSelect) {
+                    currentParams[field] = value;
+                    document.getElementById('chatInput').value = label;
+                    sendMessage();
+                } else {
+                    // 多选字段在非批量模式下也切换状态
+                    btn.classList.toggle('selected');
+                }
             }
         }
 
@@ -1171,6 +1370,100 @@
 
             closeHistory();
         }
+
+        // ==================== 配置切换功能 ====================
+
+        // 加载默认配置
+        async function loadDefaultConfig() {
+            try {
+                const response = await fetch('/api/deepseek-config/CREATIVE_GUIDANCE');
+                if (response.ok) {
+                    const config = await response.json();
+                    defaultConfig = {
+                        model: config.model,
+                        thinkingEnabled: config.thinkingEnabled,
+                        reasoningEffort: config.reasoningEffort
+                    };
+                    resetRuntimeConfig();
+                }
+            } catch (e) {
+                console.error('加载默认配置失败:', e);
+            }
+        }
+
+        // 切换配置面板
+        function toggleConfigPanel() {
+            const panel = document.getElementById('configPanel');
+            panel.classList.toggle('show');
+        }
+
+        // 更新配置状态
+        function updateConfigStatus() {
+            const model = document.getElementById('configModel').value;
+            const thinking = document.getElementById('configThinking').value === 'true';
+            const effortRow = document.getElementById('effortRow');
+
+            // 显示/隐藏推理强度选项
+            effortRow.style.display = thinking ? 'flex' : 'none';
+
+            // 检查是否与默认配置不同
+            const isCustomized = model !== defaultConfig.model ||
+                                  thinking !== defaultConfig.thinkingEnabled ||
+                                  (thinking && document.getElementById('configEffort').value !== defaultConfig.reasoningEffort);
+
+            const statusEl = document.getElementById('configStatus');
+            const btn = document.getElementById('configToggleBtn');
+
+            if (isCustomized) {
+                statusEl.textContent = '已自定义';
+                btn.classList.add('customized');
+            } else {
+                statusEl.textContent = '默认配置';
+                btn.classList.remove('customized');
+            }
+        }
+
+        // 获取当前运行时配置
+        function getRuntimeConfig() {
+            const model = document.getElementById('configModel').value;
+            const thinking = document.getElementById('configThinking').value === 'true';
+            const effort = document.getElementById('configEffort').value;
+
+            // 如果是默认配置，返回 null（让后端使用默认值）
+            if (model === defaultConfig.model &&
+                thinking === defaultConfig.thinkingEnabled &&
+                (!thinking || effort === defaultConfig.reasoningEffort)) {
+                return null;
+            }
+
+            return {
+                model: model,
+                thinkingEnabled: thinking,
+                reasoningEffort: thinking ? effort : 'high'
+            };
+        }
+
+        // 重置为默认配置
+        function resetRuntimeConfig() {
+            document.getElementById('configModel').value = defaultConfig.model;
+            document.getElementById('configThinking').value = defaultConfig.thinkingEnabled.toString();
+            document.getElementById('configEffort').value = defaultConfig.reasoningEffort;
+
+            const effortRow = document.getElementById('effortRow');
+            effortRow.style.display = defaultConfig.thinkingEnabled ? 'flex' : 'none';
+
+            updateConfigStatus();
+        }
+
+        // 点击其他地方关闭配置面板
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('configPanel');
+            const btn = document.getElementById('configToggleBtn');
+
+            if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.classList.remove('show');
+            }
+        });
     </script>
 </body>
 </html>
