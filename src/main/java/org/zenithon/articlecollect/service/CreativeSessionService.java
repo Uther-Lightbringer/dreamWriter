@@ -244,6 +244,15 @@ public class CreativeSessionService {
             // 添加用户消息
             messages.add(Map.of("role", "user", "content", content));
 
+            // 如果是第一条用户消息，使用前7个字作为临时标题
+            if (countUserTurns(messages) == 1 && content != null && !content.isEmpty()) {
+                String tempTitle = content.length() > 7
+                    ? content.substring(0, 7) + "..."
+                    : content;
+                session.setTitle(tempTitle);
+                logger.info("设置临时会话标题: {}", tempTitle);
+            }
+
             // 检查是否需要生成摘要
             if (countUserTurns(messages) > SUMMARY_THRESHOLD) {
                 generateAndInsertSummary(messages);
