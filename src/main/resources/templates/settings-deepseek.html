@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek 模型配置 · 梦境文阁</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --accent-teal: #009688;
+            --accent-green: #4caf50;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            font-family: 'Noto Serif SC', serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 25%, var(--dream-mint) 50%, var(--dream-peach) 75%, var(--dream-pink) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .floating-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #ffb3d9, transparent);
+            top: -100px;
+            left: -100px;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #b3d9ff, transparent);
+            top: 30%;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #b3ffe0, transparent);
+            bottom: -50px;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -30px); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .nav-links {
+            margin-bottom: 30px;
+        }
+
+        .nav-links a {
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .config-table th {
+            text-align: left;
+            padding: 15px 12px;
+            color: var(--text-dark);
+            font-weight: 600;
+            border-bottom: 2px solid rgba(156, 39, 176, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .config-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            vertical-align: middle;
+        }
+
+        .config-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .config-table tr:hover {
+            background: rgba(156, 39, 176, 0.05);
+        }
+
+        .feature-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .feature-desc {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        select, .toggle-switch {
+            padding: 8px 12px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            border-radius: 8px;
+            background: white;
+            color: var(--text-dark);
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover, select:focus {
+            border-color: var(--accent-purple);
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            appearance: none;
+            background: #ddd;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch:checked {
+            background: var(--accent-purple);
+        }
+
+        .toggle-switch:checked::before {
+            transform: translateX(24px);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .reset-btn {
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--text-light);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: var(--text-light);
+            color: white;
+        }
+
+        .info-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(156, 39, 176, 0.1);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-purple);
+        }
+
+        .info-box h3 {
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: var(--accent-green);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        @media (max-width: 768px) {
+            .config-table th:nth-child(4),
+            .config-table td:nth-child(4) {
+                display: none;
+            }
+
+            .container {
+                padding: 20px 10px;
+            }
+
+            .glass-card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <div class="nav-links">
+            <a href="/">← 返回首页</a>
+        </div>
+
+        <div class="header">
+            <h1>DeepSeek 模型配置</h1>
+            <p>按功能模块独立配置 AI 模型参数</p>
+        </div>
+
+        <div class="glass-card">
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th style="width: 180px;">功能模块</th>
+                        <th style="width: 140px;">模型</th>
+                        <th style="width: 120px;">思考模式</th>
+                        <th style="width: 100px;">推理强度</th>
+                        <th style="width: 100px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="configTableBody">
+                    <!-- 由 JavaScript 动态填充 -->
+                </tbody>
+            </table>
+
+            <div class="info-box">
+                <h3>配置说明</h3>
+                <ul>
+                    <li><strong>Flash 模型</strong>: 快速响应，适合简单任务，成本较低</li>
+                    <li><strong>Pro 模型</strong>: 高性能，适合复杂任务，能力更强</li>
+                    <li><strong>思考模式</strong>: 开启后 AI 会进行深度推理，适合需要分析的任务</li>
+                    <li><strong>推理强度</strong>: <code>high</code> 适合普通请求，<code>max</code> 适合复杂 Agent 任务</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 配置数据
+        let configs = [];
+
+        // 加载配置
+        async function loadConfigs() {
+            try {
+                const response = await fetch('/api/deepseek-config');
+                if (response.ok) {
+                    configs = await response.json();
+                    renderTable();
+                } else {
+                    showToast('加载配置失败', 'error');
+                }
+            } catch (e) {
+                console.error('加载配置失败:', e);
+                showToast('加载配置失败: ' + e.message, 'error');
+            }
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('configTableBody');
+            tbody.innerHTML = '';
+
+            configs.forEach((config, index) => {
+                const tr = document.createElement('tr');
+
+                // 功能名称
+                const tdName = document.createElement('td');
+                tdName.innerHTML = `
+                    <div class="feature-name">${config.featureName}</div>
+                    <div class="feature-desc">${config.description || ''}</div>
+                `;
+
+                // 模型选择
+                const tdModel = document.createElement('td');
+                tdModel.innerHTML = `
+                    <select id="model-${index}" onchange="markChanged(${index})">
+                        <option value="deepseek-v4-flash" ${config.model === 'deepseek-v4-flash' ? 'selected' : ''}>
+                            Flash (快速)
+                        </option>
+                        <option value="deepseek-v4-pro" ${config.model === 'deepseek-v4-pro' ? 'selected' : ''}>
+                            Pro (高性能)
+                        </option>
+                    </select>
+                `;
+
+                // 思考模式开关
+                const tdThinking = document.createElement('td');
+                tdThinking.innerHTML = `
+                    <div class="toggle-container">
+                        <input type="checkbox" class="toggle-switch" id="thinking-${index}"
+                            ${config.thinkingEnabled ? 'checked' : ''} onchange="markChanged(${index})">
+                    </div>
+                `;
+
+                // 推理强度
+                const tdEffort = document.createElement('td');
+                tdEffort.innerHTML = `
+                    <select id="effort-${index}" onchange="markChanged(${index})">
+                        <option value="high" ${config.reasoningEffort === 'high' ? 'selected' : ''}>high</option>
+                        <option value="max" ${config.reasoningEffort === 'max' ? 'selected' : ''}>max</option>
+                    </select>
+                `;
+
+                // 操作按钮
+                const tdAction = document.createElement('td');
+                tdAction.innerHTML = `
+                    <button class="save-btn" id="save-${index}" onclick="saveConfig(${index})">保存</button>
+                    <button class="reset-btn" onclick="resetConfig(${index})" style="margin-top: 5px;">重置</button>
+                `;
+
+                tr.appendChild(tdName);
+                tr.appendChild(tdModel);
+                tr.appendChild(tdThinking);
+                tr.appendChild(tdEffort);
+                tr.appendChild(tdAction);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 标记已修改
+        function markChanged(index) {
+            const saveBtn = document.getElementById(`save-${index}`);
+            saveBtn.textContent = '保存 *';
+            saveBtn.style.background = 'linear-gradient(135deg, #ff9800, #f44336)';
+        }
+
+        // 保存配置
+        async function saveConfig(index) {
+            const config = configs[index];
+            const saveBtn = document.getElementById(`save-${index}`);
+            saveBtn.disabled = true;
+            saveBtn.textContent = '保存中...';
+
+            const dto = {
+                model: document.getElementById(`model-${index}`).value,
+                thinkingEnabled: document.getElementById(`thinking-${index}`).checked,
+                reasoningEffort: document.getElementById(`effort-${index}`).value
+            };
+
+            try {
+                const response = await fetch(`/api/deepseek-config/${config.featureCode}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+
+                if (response.ok) {
+                    const updated = await response.json();
+                    configs[index] = updated;
+                    renderTable();
+                    showToast('配置已保存');
+                } else {
+                    showToast('保存失败', 'error');
+                    saveBtn.textContent = '保存 *';
+                    saveBtn.disabled = false;
+                }
+            } catch (e) {
+                console.error('保存配置失败:', e);
+                showToast('保存失败: ' + e.message, 'error');
+                saveBtn.textContent = '保存 *';
+                saveBtn.disabled = false;
+            }
+        }
+
+        // 重置配置
+        async function resetConfig(index) {
+            const config = configs[index];
+
+            if (!confirm(`确定要重置 "${config.featureName}" 的配置吗？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/deepseek-config/${config.featureCode}/reset`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const updated = await response.json();
+                    configs[index] = updated;
+                    renderTable();
+                    showToast('配置已重置');
+                } else {
+                    showToast('重置失败', 'error');
+                }
+            } catch (e) {
+                console.error('重置配置失败:', e);
+                showToast('重置失败: ' + e.message, 'error');
+            }
+        }
+
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 页面加载时
+        document.addEventListener('DOMContentLoaded', loadConfigs);
+    </script>
+</body>
+</html>
