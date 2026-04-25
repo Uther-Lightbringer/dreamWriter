@@ -80,7 +80,7 @@ public class AIChatController {
      * 流式 AI 对话接口 - GET 方式 (用于 EventSource)
      */
     @GetMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter chatStreamGet(@RequestParam String prompt) {
+    public SseEmitter chatStreamGet(@RequestParam("prompt") String prompt) {
         return handleChatStream(prompt);
     }
     

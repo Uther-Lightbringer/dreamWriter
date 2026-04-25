@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梦境创作 · 小说生成器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --accent-teal: #009688;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            font-family: 'Noto Serif SC', serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 25%, var(--dream-mint) 50%, var(--dream-peach) 75%, var(--dream-pink) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .floating-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, #ffb3d9, transparent); top: -100px; left: -100px; }
+        .orb-2 { width: 350px; height: 350px; background: radial-gradient(circle, #b3d9ff, transparent); top: 30%; right: -50px; animation-delay: -5s; }
+        .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, #b3ffe0, transparent); bottom: -50px; left: 30%; animation-delay: -10s; }
+        .orb-4 { width: 250px; height: 250px; background: radial-gradient(circle, #ffe0b3, transparent); bottom: 20%; right: 20%; animation-delay: -7s; }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header h1 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: 6px;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 10px 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(156, 39, 176, 0.15);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            padding: 35px;
+            margin-bottom: 25px;
+            transition: all 0.4s ease;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid rgba(93, 64, 55, 0.15);
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-family: 'Noto Serif SC', serif;
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent-purple);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-family: 'ZCOOL XiaoWei', serif;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            letter-spacing: 3px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(156, 39, 176, 0.35);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 进度区域 */
+        .progress-section {
+            display: none;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-bar-container {
+            background: rgba(93, 64, 55, 0.1);
+            border-radius: 50px;
+            height: 24px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-teal));
+            border-radius: 50px;
+            transition: width 0.5s ease;
+            background-size: 200% 100%;
+            animation: progressShimmer 2s linear infinite;
+        }
+
+        @keyframes progressShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .progress-percent {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.5rem;
+            color: var(--accent-purple);
+        }
+
+        .log-area {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 14px;
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(93, 64, 55, 0.05);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        /* 结果区域 */
+        .result-section {
+            display: none;
+            text-align: center;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .result-novel-title {
+            font-size: 1.4rem;
+            color: var(--accent-purple);
+            margin-bottom: 25px;
+        }
+
+        .btn-view {
+            display: inline-block;
+            padding: 14px 40px;
+            font-size: 1rem;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue));
+            border: none;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 150, 136, 0.35);
+        }
+
+        .error-section {
+            display: none;
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 14px;
+            padding: 20px;
+            color: #c62828;
+            margin-top: 20px;
+        }
+
+        .error-section.active {
+            display: block;
+        }
+
+        /* 高级选项折叠 */
+        .advanced-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            padding: 10px 0;
+            border-top: 1px solid rgba(93, 64, 55, 0.1);
+            margin-top: 20px;
+        }
+
+        .advanced-toggle:hover {
+            color: var(--accent-purple);
+        }
+
+        .advanced-options {
+            display: none;
+            padding-top: 20px;
+        }
+
+        .advanced-options.active {
+            display: block;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>梦境创作</h1>
+            <p class="subtitle">AI 小说生成器 · 让故事自然流淌</p>
+            <div class="nav-links">
+                <a href="/" class="nav-link">返回首页</a>
+                <a href="/novel-generator-history" class="nav-link">历史记录</a>
+            </div>
+        </div>
+
+        <!-- 表单区域 -->
+        <div id="formSection" class="glass-card">
+            <h2 class="card-title">创作设定</h2>
+
+            <form id="generatorForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="chapterCount">章节数量</label>
+                        <input type="number" id="chapterCount" name="chapterCount" value="8" min="1" max="50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="genre">文学体裁</label>
+                        <input type="text" id="genre" name="genre" value="记叙文">
+                    </div>
+                    <div class="form-group">
+                        <label for="protagonist">主角名称</label>
+                        <input type="text" id="protagonist" name="protagonist" placeholder="可选">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="keyword">故事大纲 / 关键词</label>
+                    <textarea id="keyword" name="keyword" placeholder="请输入故事的大纲或关键词，描述主要情节和人物关系..." required></textarea>
+                    <div class="char-count"><span id="keywordCount">0</span>/5000</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="requires">扩写需求</label>
+                    <textarea id="requires" name="requires" placeholder="描述你对扩写的要求，例如：使用具体的例子和生动的故事来阐述观点..." style="min-height: 80px;"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pointOfView">叙述视角</label>
+                        <select id="pointOfView" name="pointOfView">
+                            <option value="第三人称全知视角" selected>第三人称全知视角</option>
+                            <option value="第一人称视角">第一人称视角</option>
+                            <option value="第三人称有限视角">第三人称有限视角</option>
+                            <option value="第二人称视角">第二人称视角</option>
+                            <option value="不可靠叙述者">不可靠叙述者</option>
+                            <option value="变换视角">变换视角</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 高级选项 -->
+                <div class="advanced-toggle" onclick="toggleAdvanced()">
+                    <span>高级选项</span>
+                    <span id="advancedArrow">▼</span>
+                </div>
+
+                <div id="advancedOptions" class="advanced-options">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="newWorld" name="newWorld">
+                                <label for="newWorld">生成新世界观</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="roleCount">角色数量</label>
+                            <input type="number" id="roleCount" name="roleCount" value="3" min="1" max="20">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gameplay">玩法类型</label>
+                            <input type="text" id="gameplay" name="gameplay" value="BDSM">
+                        </div>
+                        <div class="form-group">
+                            <label for="tools">工具类型</label>
+                            <input type="text" id="tools" name="tools" value="BDSM">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">开始创作</button>
+            </form>
+        </div>
+
+        <!-- 进度区域 -->
+        <div id="progressSection" class="glass-card progress-section">
+            <h2 class="card-title">创作进度</h2>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="progress-text">
+                <span id="progressPercent" class="progress-percent">0%</span>
+                <span id="progressStep">准备开始...</span>
+            </div>
+
+            <div class="log-area" id="logArea"></div>
+
+            <div id="errorSection" class="error-section"></div>
+        </div>
+
+        <!-- 结果区域 -->
+        <div id="resultSection" class="glass-card result-section">
+            <div class="result-icon">🎉</div>
+            <h3 class="result-title">创作完成！</h3>
+            <p class="result-novel-title" id="resultNovelTitle"></p>
+            <a href="#" class="btn-view" id="viewNovelBtn">查看小说</a>
+        </div>
+    </div>
+
+    <script>
+        let currentTaskId = null;
+        let eventSource = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const keywordTextarea = document.getElementById('keyword');
+            const keywordCount = document.getElementById('keywordCount');
+
+            keywordTextarea.addEventListener('input', function() {
+                keywordCount.textContent = this.value.length;
+            });
+        });
+
+        // 切换高级选项
+        function toggleAdvanced() {
+            const options = document.getElementById('advancedOptions');
+            const arrow = document.getElementById('advancedArrow');
+            options.classList.toggle('active');
+            arrow.textContent = options.classList.contains('active') ? '▲' : '▼';
+        }
+
+        // 表单提交
+        document.getElementById('generatorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '正在启动...';
+
+            const formData = {
+                chapterCount: parseInt(document.getElementById('chapterCount').value),
+                keyword: document.getElementById('keyword').value.trim(),
+                genre: document.getElementById('genre').value.trim() || '记叙文',
+                requires: document.getElementById('requires').value.trim(),
+                newWorld: document.getElementById('newWorld').checked,
+                roleCount: parseInt(document.getElementById('roleCount').value) || 3,
+                gameplay: document.getElementById('gameplay').value.trim() || 'BDSM',
+                tools: document.getElementById('tools').value.trim() || 'BDSM',
+                pointOfView: document.getElementById('pointOfView').value,
+                protagonist: document.getElementById('protagonist').value.trim()
+            };
+
+            try {
+                const response = await fetch('/api/novel-generator/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentTaskId = result.taskId;
+                    startProgressStreaming(result.taskId);
+                } else {
+                    showError(result.error || '启动失败');
+                    resetForm();
+                }
+            } catch (error) {
+                showError('网络错误: ' + error.message);
+                resetForm();
+            }
+        });
+
+        // 启动进度流
+        function startProgressStreaming(taskId) {
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('progressSection').classList.add('active');
+
+            addLog('任务已创建，正在启动...');
+
+            eventSource = new EventSource('/api/novel-generator/stream/' + taskId);
+
+            eventSource.addEventListener('progress', function(event) {
+                const data = JSON.parse(event.data);
+                updateProgress(data.progress, data.step);
+                addLog(data.step + ' (' + data.progress + '%)');
+            });
+
+            eventSource.addEventListener('complete', function(event) {
+                const data = JSON.parse(event.data);
+                showResult(data.novelId, data.novelTitle);
+                addLog('创作完成！');
+                eventSource.close();
+            });
+
+            eventSource.addEventListener('error', function(event) {
+                if (event.data) {
+                    const data = JSON.parse(event.data);
+                    showError(data.error || '生成失败');
+                }
+                eventSource.close();
+            });
+
+            eventSource.onerror = function() {
+                // 检查任务状态
+                checkTaskStatus(taskId);
+            };
+        }
+
+        // 检查任务状态（SSE断开时）
+        async function checkTaskStatus(taskId) {
+            try {
+                const response = await fetch('/api/novel-generator/progress/' + taskId);
+                const progress = await response.json();
+
+                if (progress.status === 'COMPLETED') {
+                    showResult(progress.resultNovelId, progress.resultNovelTitle);
+                } else if (progress.status === 'FAILED') {
+                    showError(progress.errorMessage);
+                }
+            } catch (e) {
+                console.error('检查任务状态失败:', e);
+            }
+        }
+
+        // 更新进度
+        function updateProgress(percent, step) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent + '%';
+            document.getElementById('progressStep').textContent = step;
+        }
+
+        // 添加日志
+        function addLog(message) {
+            const logArea = document.getElementById('logArea');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = '[' + time + '] ' + message;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 显示结果
+        function showResult(novelId, novelTitle) {
+            document.getElementById('progressSection').classList.remove('active');
+            document.getElementById('resultSection').classList.add('active');
+            document.getElementById('resultNovelTitle').textContent = novelTitle;
+            document.getElementById('viewNovelBtn').href = '/novel/' + novelId;
+        }
+
+        // 显示错误
+        function showError(message) {
+            const errorSection = document.getElementById('errorSection');
+            errorSection.textContent = '错误: ' + message;
+            errorSection.classList.add('active');
+        }
+
+        // 重置表单
+        function resetForm() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '开始创作';
+        }
+    </script>
+</body>
+</html>

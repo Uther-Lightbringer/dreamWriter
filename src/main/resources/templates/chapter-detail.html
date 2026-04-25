@@ -1624,6 +1624,42 @@
             box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
         }
 
+        /* 画风选择器 */
+        .style-selector-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-teal);
+        }
+
+        .style-selector {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 2px solid rgba(156, 39, 176, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .style-selector:hover {
+            border-color: var(--accent-purple);
+        }
+
+        .style-selector:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
+        }
+
+        .style-selector option {
+            padding: 10px;
+        }
+
         /* 自动配画面板 */
         .auto-image-panel {
             margin-top: 30px;
@@ -1820,6 +1856,15 @@
 
         .markdown-content li {
             margin: 8px 0;
+        }
+
+        .markdown-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: block;
         }
 
         /* 响应式设计 */
@@ -2034,6 +2079,15 @@
                         <button class="auto-image-close" onclick="closeAutoImagePanel()">×</button>
                     </div>
                     <div class="auto-image-body">
+                        <!-- 画风选择区域 -->
+                        <div class="style-selector-section">
+                            <div class="step-title">🎨 选择画风</div>
+                            <p class="step-description">选择图片的艺术风格，不同风格呈现不同的视觉效果</p>
+                            <select id="imageStyleSelector" class="style-selector">
+                                <option value="">加载中...</option>
+                            </select>
+                        </div>
+
                         <div class="auto-image-step">
                             <div class="step-title">✨ 第一步：分析章节内容</div>
                             <p class="step-description">AI 将自动分析章节内容，找出适合配图的位置（每章节最多 4 张）</p>
@@ -2338,7 +2392,7 @@
         let isDarkMode = false;   // 默认亮色主题
         
         // 卡片阅读模式相关变量
-        let isCardMode = true;            // 默认为卡片模式
+        let isCardMode = false;           // 默认为传统模式
         let cardContents = [];            // 分割后的卡片内容数组
         let currentCardIndex = 0;         // 当前显示的卡片索引
         let boundaryAction = null;        // 边界操作（上一张/下一章）
@@ -2366,6 +2420,7 @@
             loadCardModeSettings(); // 加载卡片模式设置
             setupResizeObserver(); // 设置窗口大小监听
             setupTextSelectionListener(); // 设置文字选择监听
+            loadAvailableStyles(); // 加载画风选项
             // 初始化字数显示
             updateCharacterCount('imagePrompt2', 'imagePrompt2Count');
             updateCharacterCount('modalImagePrompt', 'modalImagePromptCount');
@@ -2660,7 +2715,10 @@
             document.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
-            
+
+            // 为图片绑定全屏点击事件
+            bindImageFullscreen();
+
             // 设置导航按钮状态
             const prevButton = document.getElementById('prevButton');
             const nextButton = document.getElementById('nextButton');
@@ -2916,9 +2974,9 @@
         // 加载卡片模式设置
         function loadCardModeSettings() {
             const savedCardMode = localStorage.getItem('cardMode');
-            // 默认为卡片模式，除非用户手动切换到传统模式
-            if (savedCardMode === 'false') {
-                isCardMode = false;
+            // 默认为传统模式，只有用户手动开启卡片模式时才切换
+            if (savedCardMode === 'true') {
+                isCardMode = true;
                 updateModeToggleButton();
             }
             // 注意：不立即切换，等章节内容加载后再处理
@@ -3337,56 +3395,83 @@
             document.getElementById('promptLoading2').style.display = 'block';
             document.getElementById('promptResult2').style.display = 'none';
 
-            // 使用新的结构化格式 - 先分析上下文，再生成提示词
-            let promptBuilder = `# 角色：小说场景视觉分析专家\n\n`;
+            // 使用新的结构化格式 - 生成详细提示词
+            let promptBuilder = `# 角色：专业AI绘画提示词工程师\n\n`;
 
-            promptBuilder += `## 任务说明\n`;
-            promptBuilder += `你需要分两步完成任务：\n`;
-            promptBuilder += `第一步：根据提供的小说上下文，详细分析选中场景中的人物信息、物品道具、环境背景等；\n`;
-            promptBuilder += `第二步：基于分析结果，生成一个专业的AI文生图提示词（英文）。\n\n`;
+            promptBuilder += `## 核心任务\n`;
+            promptBuilder += `你需要根据提供的小说场景描述，生成一个约1000字的详细AI绘画提示词。提示词必须包含：人物外貌、动作表情、环境场景、光影氛围、构图风格等五大维度的详细描写。\n\n`;
 
-            promptBuilder += `## 小说全文上下文\n`;
+            promptBuilder += `## 小说场景上下文\n`;
             if (contextBefore) {
                 promptBuilder += `【前文】...${contextBefore}...\n\n`;
             }
-            promptBuilder += `【选中的核心场景】${input}\n\n`;
+            promptBuilder += `【核心场景】${input}\n\n`;
             if (contextAfter) {
                 promptBuilder += `【后文】...${contextAfter}...\n\n`;
             }
 
-            promptBuilder += `## 第一步：场景深度分析\n`;
-            promptBuilder += `请基于以上小说内容，详细分析：\n\n`;
-            promptBuilder += `1. **出场人物分析**：\n`;
-            promptBuilder += `   - 人物姓名\n`;
-            promptBuilder += `   - 外貌特征（脸型、五官、发色、瞳色、身高体型等）\n`;
-            promptBuilder += `   - 穿着服饰（服装款式、颜色、材质、配饰等）\n`;
-            promptBuilder += `   - 动作姿态（正在做什么动作、表情如何）\n\n`;
-
             if (characterAppearances.length > 0) {
-                promptBuilder += `   【已知角色卡信息参考】：\n`;
+                promptBuilder += `## 已知角色信息（必须参考）\n`;
                 characterAppearances.forEach((char, index) => {
-                    promptBuilder += `   - ${char.name}: ${char.description}\n`;
+                    promptBuilder += `${index + 1}. ${char.name}: ${char.description}\n`;
                 });
                 promptBuilder += `\n`;
             }
 
-            promptBuilder += `2. **物品与道具分析**：\n`;
-            promptBuilder += `   - 场景中出现的物品、武器、道具等\n`;
-            promptBuilder += `   - 物品的详细描述（形状、颜色、材质、状态等）\n\n`;
+            promptBuilder += `## 输出要求\n`;
+            promptBuilder += `请生成一段约1000字的详细绘画提示词，必须包含以下所有维度：\n\n`;
 
-            promptBuilder += `3. **环境与背景分析**：\n`;
-            promptBuilder += `   - 具体场景地点（室内/室外、建筑类型、自然环境等）\n`;
-            promptBuilder += `   - 时间与天气（时辰、季节、天气状况等）\n`;
-            promptBuilder += `   - 整体氛围与情感基调\n\n`;
+            promptBuilder += `### 一、人物外貌描写（约200字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 面部特征：脸型（瓜子脸、鹅蛋脸、方脸等）、五官细节（眼睛形状和颜色、眉毛、鼻子、嘴唇）\n`;
+            promptBuilder += `- 发型发色：头发长度、发型样式、发色（黑色、棕色、金色等）、是否有刘海\n`;
+            promptBuilder += `- 身材体型：身高（高挑、娇小）、体态（苗条、丰满、健美）、肤色（白皙、小麦色等）\n`;
+            promptBuilder += `- 年龄气质：年龄感、整体气质（清纯、成熟、优雅、英气等）\n`;
+            promptBuilder += `- 穿着服饰：服装款式、颜色、材质、配饰细节（耳环、项链、手表等）\n\n`;
 
-            promptBuilder += `## 第二步：生成AI绘画提示词\n`;
-            promptBuilder += `基于以上分析，生成一个详细的英文AI绘画提示词，要求：\n\n`;
-            promptBuilder += `- 风格要求：photorealistic, real person photography, ultra HD, 8k resolution, professional DSLR photo quality\n`;
-            promptBuilder += `- 包含：人物详细描述 + 动作姿态 + 物品道具 + 环境背景 + 光影效果 + 镜头构图 + 艺术风格\n`;
-            promptBuilder += `- 使用英文输出，用逗号分隔关键词\n`;
-            promptBuilder += `- 只输出最终的提示词，不要包含分析过程\n\n`;
+            promptBuilder += `### 二、动作表情描写（约200字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 身体姿态：站姿/坐姿/躺姿、身体朝向、重心分布、肢体位置\n`;
+            promptBuilder += `- 手部动作：手势细节、手指姿态、是否拿握物品\n`;
+            promptBuilder += `- 腿脚姿态：双腿位置、脚尖朝向、是否有交叉或弯曲\n`;
+            promptBuilder += `- 面部表情：眼神方向、眉毛状态、嘴角弧度、整体情绪表现\n`;
+            promptBuilder += `- 动态感：动作的力度、速度感、是否有飘动的头发或衣角\n\n`;
 
-            promptBuilder += `【重要】直接输出最终的英文图像生成提示词，不要包含任何分析过程或额外说明。`;
+            promptBuilder += `### 三、环境场景描写（约250字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 具体地点：室内（卧室、客厅、教室、办公室等）或室外（街道、公园、海边、山野等）\n`;
+            promptBuilder += `- 空间布局：前景物体、中景主体、远景背景的空间层次\n`;
+            promptBuilder += `- 建筑与物体：家具、装饰品、植物、建筑结构的细节\n`;
+            promptBuilder += `- 地面与天空：地面材质（木地板、瓷砖、草地、沙滩）、天空状态\n`;
+            promptBuilder += `- 时间季节：一天中的时段（清晨、正午、黄昏、夜晚）、季节特征\n`;
+            promptBuilder += `- 天气氛围：晴天、阴天、雨天、雾天、雪天等\n\n`;
+
+            promptBuilder += `### 四、光影氛围描写（约200字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 主光源：光源位置（侧光、顶光、逆光、正面光）、光源类型（自然光、灯光、烛光）\n`;
+            promptBuilder += `- 光线质感：柔和漫射光、硬质直射光、斑驳光影\n`;
+            promptBuilder += `- 阴影细节：阴影位置、阴影深浅、投影方向\n`;
+            promptBuilder += `- 色彩调性：暖色调（金色、橙色）、冷色调（蓝色、青色）、中性色调\n`;
+            promptBuilder += `- 氛围感受：温馨、神秘、紧张、浪漫、宁静等情绪氛围\n\n`;
+
+            promptBuilder += `### 五、构图与风格描写（约150字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 镜头角度：平视、俯视、仰视、斜角\n`;
+            promptBuilder += `- 景别：特写、近景、中景、全景、远景\n`;
+            promptBuilder += `- 画幅比例：横构图、竖构图、正方形构图\n`;
+            promptBuilder += `- 景深效果：背景虚化程度、焦点位置\n`;
+            promptBuilder += `- 艺术风格：写实摄影、电影质感、油画风格、动漫风格等\n`;
+            promptBuilder += `- 画质要求：超高清、8K分辨率、专业单反、胶片质感\n\n`;
+
+            promptBuilder += `## 输出格式\n`;
+            promptBuilder += `直接输出约1000字的绘画提示词，用逗号分隔各个描述短语，不要分段，不要包含任何分析过程或额外说明。\n\n`;
+
+            promptBuilder += `【重要提醒】\n`;
+            promptBuilder += `1. 提示词总字数控制在800-1200字之间\n`;
+            promptBuilder += `2. 必须包含上述五个维度的详细描写\n`;
+            promptBuilder += `3. 使用具体、形象、生动的描述词汇\n`;
+            promptBuilder += `4. 全部使用中文输出\n`;
+            promptBuilder += `5. 直接输出提示词，不要有任何前言或总结`;
 
             console.log('\n📝 增强版提示词构建完成 (面板版本)');
             console.log('📖 输入文字长度:', input.length);
@@ -3778,56 +3863,83 @@
                 contextAfter = currentChapterContent.substring(selectedIndex + selectedText.length, afterEnd);
             }
 
-            // 使用新的结构化格式 - 先分析上下文，再生成提示词
-            let promptBuilder = `# 角色：小说场景视觉分析专家\n\n`;
+            // 使用新的结构化格式 - 生成详细提示词
+            let promptBuilder = `# 角色：专业AI绘画提示词工程师\n\n`;
 
-            promptBuilder += `## 任务说明\n`;
-            promptBuilder += `你需要分两步完成任务：\n`;
-            promptBuilder += `第一步：根据提供的小说上下文，详细分析选中场景中的人物信息、物品道具、环境背景等；\n`;
-            promptBuilder += `第二步：基于分析结果，生成一个专业的AI文生图提示词（英文）。\n\n`;
+            promptBuilder += `## 核心任务\n`;
+            promptBuilder += `你需要根据提供的小说场景描述，生成一个约1000字的详细AI绘画提示词。提示词必须包含：人物外貌、动作表情、环境场景、光影氛围、构图风格等五大维度的详细描写。\n\n`;
 
-            promptBuilder += `## 小说全文上下文\n`;
+            promptBuilder += `## 小说场景上下文\n`;
             if (contextBefore) {
                 promptBuilder += `【前文】...${contextBefore}...\n\n`;
             }
-            promptBuilder += `【选中的核心场景】${selectedText}\n\n`;
+            promptBuilder += `【核心场景】${selectedText}\n\n`;
             if (contextAfter) {
                 promptBuilder += `【后文】...${contextAfter}...\n\n`;
             }
 
-            promptBuilder += `## 第一步：场景深度分析\n`;
-            promptBuilder += `请基于以上小说内容，详细分析：\n\n`;
-            promptBuilder += `1. **出场人物分析**：\n`;
-            promptBuilder += `   - 人物姓名\n`;
-            promptBuilder += `   - 外貌特征（脸型、五官、发色、瞳色、身高体型等）\n`;
-            promptBuilder += `   - 穿着服饰（服装款式、颜色、材质、配饰等）\n`;
-            promptBuilder += `   - 动作姿态（正在做什么动作、表情如何）\n\n`;
-
             if (characterAppearances.length > 0) {
-                promptBuilder += `   【已知角色卡信息参考】：\n`;
+                promptBuilder += `## 已知角色信息（必须参考）\n`;
                 characterAppearances.forEach((char, index) => {
-                    promptBuilder += `   - ${char.name}: ${char.description}\n`;
+                    promptBuilder += `${index + 1}. ${char.name}: ${char.description}\n`;
                 });
                 promptBuilder += `\n`;
             }
 
-            promptBuilder += `2. **物品与道具分析**：\n`;
-            promptBuilder += `   - 场景中出现的物品、武器、道具等\n`;
-            promptBuilder += `   - 物品的详细描述（形状、颜色、材质、状态等）\n\n`;
+            promptBuilder += `## 输出要求\n`;
+            promptBuilder += `请生成一段约1000字的详细绘画提示词，必须包含以下所有维度：\n\n`;
 
-            promptBuilder += `3. **环境与背景分析**：\n`;
-            promptBuilder += `   - 具体场景地点（室内/室外、建筑类型、自然环境等）\n`;
-            promptBuilder += `   - 时间与天气（时辰、季节、天气状况等）\n`;
-            promptBuilder += `   - 整体氛围与情感基调\n\n`;
+            promptBuilder += `### 一、人物外貌描写（约200字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 面部特征：脸型（瓜子脸、鹅蛋脸、方脸等）、五官细节（眼睛形状和颜色、眉毛、鼻子、嘴唇）\n`;
+            promptBuilder += `- 发型发色：头发长度、发型样式、发色（黑色、棕色、金色等）、是否有刘海\n`;
+            promptBuilder += `- 身材体型：身高（高挑、娇小）、体态（苗条、丰满、健美）、肤色（白皙、小麦色等）\n`;
+            promptBuilder += `- 年龄气质：年龄感、整体气质（清纯、成熟、优雅、英气等）\n`;
+            promptBuilder += `- 穿着服饰：服装款式、颜色、材质、配饰细节（耳环、项链、手表等）\n\n`;
 
-            promptBuilder += `## 第二步：生成AI绘画提示词\n`;
-            promptBuilder += `基于以上分析，生成一个详细的英文AI绘画提示词，要求：\n\n`;
-            promptBuilder += `- 风格要求：photorealistic, real person photography, ultra HD, 8k resolution, professional DSLR photo quality\n`;
-            promptBuilder += `- 包含：人物详细描述 + 动作姿态 + 物品道具 + 环境背景 + 光影效果 + 镜头构图 + 艺术风格\n`;
-            promptBuilder += `- 使用英文输出，用逗号分隔关键词\n`;
-            promptBuilder += `- 只输出最终的提示词，不要包含分析过程\n\n`;
+            promptBuilder += `### 二、动作表情描写（约200字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 身体姿态：站姿/坐姿/躺姿、身体朝向、重心分布、肢体位置\n`;
+            promptBuilder += `- 手部动作：手势细节、手指姿态、是否拿握物品\n`;
+            promptBuilder += `- 腿脚姿态：双腿位置、脚尖朝向、是否有交叉或弯曲\n`;
+            promptBuilder += `- 面部表情：眼神方向、眉毛状态、嘴角弧度、整体情绪表现\n`;
+            promptBuilder += `- 动态感：动作的力度、速度感、是否有飘动的头发或衣角\n\n`;
 
-            promptBuilder += `【重要】直接输出最终的英文图像生成提示词，不要包含任何分析过程或额外说明。`;
+            promptBuilder += `### 三、环境场景描写（约250字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 具体地点：室内（卧室、客厅、教室、办公室等）或室外（街道、公园、海边、山野等）\n`;
+            promptBuilder += `- 空间布局：前景物体、中景主体、远景背景的空间层次\n`;
+            promptBuilder += `- 建筑与物体：家具、装饰品、植物、建筑结构的细节\n`;
+            promptBuilder += `- 地面与天空：地面材质（木地板、瓷砖、草地、沙滩）、天空状态\n`;
+            promptBuilder += `- 时间季节：一天中的时段（清晨、正午、黄昏、夜晚）、季节特征\n`;
+            promptBuilder += `- 天气氛围：晴天、阴天、雨天、雾天、雪天等\n\n`;
+
+            promptBuilder += `### 四、光影氛围描写（约200字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 主光源：光源位置（侧光、顶光、逆光、正面光）、光源类型（自然光、灯光、烛光）\n`;
+            promptBuilder += `- 光线质感：柔和漫射光、硬质直射光、斑驳光影\n`;
+            promptBuilder += `- 阴影细节：阴影位置、阴影深浅、投影方向\n`;
+            promptBuilder += `- 色彩调性：暖色调（金色、橙色）、冷色调（蓝色、青色）、中性色调\n`;
+            promptBuilder += `- 氛围感受：温馨、神秘、紧张、浪漫、宁静等情绪氛围\n\n`;
+
+            promptBuilder += `### 五、构图与风格描写（约150字）\n`;
+            promptBuilder += `必须详细描述：\n`;
+            promptBuilder += `- 镜头角度：平视、俯视、仰视、斜角\n`;
+            promptBuilder += `- 景别：特写、近景、中景、全景、远景\n`;
+            promptBuilder += `- 画幅比例：横构图、竖构图、正方形构图\n`;
+            promptBuilder += `- 景深效果：背景虚化程度、焦点位置\n`;
+            promptBuilder += `- 艺术风格：写实摄影、电影质感、油画风格、动漫风格等\n`;
+            promptBuilder += `- 画质要求：超高清、8K分辨率、专业单反、胶片质感\n\n`;
+
+            promptBuilder += `## 输出格式\n`;
+            promptBuilder += `直接输出约1000字的绘画提示词，用逗号分隔各个描述短语，不要分段，不要包含任何分析过程或额外说明。\n\n`;
+
+            promptBuilder += `【重要提醒】\n`;
+            promptBuilder += `1. 提示词总字数控制在800-1200字之间\n`;
+            promptBuilder += `2. 必须包含上述五个维度的详细描写\n`;
+            promptBuilder += `3. 使用具体、形象、生动的描述词汇\n`;
+            promptBuilder += `4. 全部使用中文输出\n`;
+            promptBuilder += `5. 直接输出提示词，不要有任何前言或总结`;
 
             console.log('\n📝 增强版提示词构建完成 (选中文字版本)');
             console.log('📖 选中文字长度:', selectedText.length);
@@ -4293,69 +4405,193 @@
         function buildAIPrompt(inputText) {
             // 从输入文本中识别角色卡中的名字并提取外貌信息
             const characterAppearances = extractCharacterAppearances(inputText);
-                    
-            // 使用新的结构化格式 - 电影级场景视觉师角色
-            let promptBuilder = `# 角色：电影级场景视觉师\n\n`;
-                    
-            promptBuilder += `## 1. 核心任务\n`;
-            promptBuilder += `我将把用户的简单描述解构为其核心的“叙事DNA”和“情感DNA”。然后，我会以专业美术指导、电影摄影师和场景设计师的身份，将这些元素重构为一个丰富、富有氛围感且高度详细的图像生成提示。最终输出必须是可直接使用的英文AI绘画提示。\n\n`;
-                                
-            promptBuilder += `## 2. 解构阶段 (内心独白)\n`;
-            promptBuilder += `- **叙事DNA **(用户输入): ${inputText}\n`;
-            promptBuilder += `- **核心情感**: 这段文字背后隐藏着什么未言明的情感？（自由/喜悦、孤独的仪式感、神秘的氛围、史诗感等）\n`;
-            promptBuilder += `- **关键实体与动作**:\n`;
-                                
+
+            let promptBuilder = `你是专业的AI绘画提示词工程师，擅长将文字描述转化为精准的图像生成提示词。\n\n`;
+
+            // 黄金结构模板
+            promptBuilder += `【黄金提示词结构】\n`;
+            promptBuilder += `按照以下顺序构建提示词，每个部分用逗号分隔：\n`;
+            promptBuilder += `1. 图片类型：定义这是什么类型的图\n`;
+            promptBuilder += `2. 主体描述：主角或核心物体\n`;
+            promptBuilder += `3. 构图方式：视角、位置关系\n`;
+            promptBuilder += `4. 风格氛围：情绪、材质、配色\n`;
+            promptBuilder += `5. 质量约束：清晰度、细节要求\n`;
+            promptBuilder += `6. 排除词：不需要的元素\n\n`;
+
+            // 核心原则
+            promptBuilder += `【核心原则 - 极其重要！】\n`;
+            promptBuilder += `1. 禁止出现任何人名、角色名！只描述人物的外貌特征\n`;
+            promptBuilder += `2. 使用流畅的自然语言描述画面，像在描述一张照片\n`;
+            promptBuilder += `3. 描述要具体：不要说"美丽的场景"，要说"金色沙漠在夕阳下泛着微光"\n`;
+            promptBuilder += `4. 光线决定氛围：描述光源、方向、强度\n`;
+            promptBuilder += `5. 严格控制字数在200-500字\n`;
+            promptBuilder += `6. 【简化原则】场景描述要精简，最多2-3个背景元素，避免画面拥挤\n\n`;
+
+            // 智能构图指导
+            promptBuilder += `【智能构图指导】\n`;
+            promptBuilder += `根据场景内容自动选择最佳构图方案：\n\n`;
+
+            promptBuilder += `【单人构图方案】\n`;
+            promptBuilder += `1. 特写肖像：人物面部占据画面大部分，人物居中或黄金分割位\n`;
+            promptBuilder += `2. 半身像：人物胸部以上，居中，头顶留空间，背景适度虚化\n`;
+            promptBuilder += `3. 全身像：展示完整人物，居中或三分法构图\n\n`;
+
+            promptBuilder += `【双人构图方案】\n`;
+            promptBuilder += `1. 对话构图：画面左右两侧各一人，面向中间，视线相交，中景\n`;
+            promptBuilder += `2. 并排构图：画面中央并排站立，保持间距不重叠，全身或大半身\n`;
+            promptBuilder += `3. 主次构图：主角居中偏前较大，配角一侧偏后较小，中景到全景\n`;
+            promptBuilder += `4. 上下级构图：上位者坐着（画面一侧），下位者站立（另一侧），中景\n\n`;
+
+            promptBuilder += `【重要提醒】\n`;
+            promptBuilder += `1. 画面最多2人！超过2人必须简化或选择代表性人物\n`;
+            promptBuilder += `2. 两人之间要留出空间，避免肢体重叠或遮挡\n`;
+            promptBuilder += `3. 复杂场景要简化背景，聚焦人物互动\n\n`;
+
+            // 输出格式
+            promptBuilder += `【输出格式】使用流畅的自然语言描述画面\n`;
+            promptBuilder += `像在描述一张真实照片，用连贯的句子而不是关键词堆砌\n`;
+            promptBuilder += `示例结构：这是一张[图片类型]。画面中[人物描述]，[动作姿态]，[表情]。`;
+            promptBuilder += `[服装配饰]。背景是[场景环境]。[光线描述]。整体氛围[情感基调]。\n\n`;
+
+            // 角色外貌参考
             if (characterAppearances.length > 0) {
-                promptBuilder += `  - **Main Characters**:\n`;
+                promptBuilder += `【人物外貌参考】\n`;
+                promptBuilder += `以下是需要描绘的人物外貌特征，请用这些外貌特征来描述人物：\n`;
+                promptBuilder += `（注意：输出时不要出现人物名字，只用外貌描述）\n\n`;
                 characterAppearances.forEach((char, index) => {
-                    promptBuilder += `    ${index + 1}. ${char.name}: ${char.description}\n`;
+                    promptBuilder += `人物${index + 1}外貌：${char.description}\n`;
                 });
+                promptBuilder += `\n`;
             }
-                                
-            promptBuilder += `  - **Subject**: [Main object extracted from text]\n`;
-            promptBuilder += `  - **Action/State**: [Action or state happening]\n`;
-            promptBuilder += `  - **Objects/Environment**: [Surroundings, props, background]\n\n`;
-                                
-            promptBuilder += `## 3. 重构阶段 (艺术指导)\n`;
-            promptBuilder += `基于已解构的DNA，我将通过具体的艺术选择来构建一个完整的场景。\n\n`;
-                                
-            promptBuilder += `- **场景与氛围**:\n`;
-            promptBuilder += `  - **具体环境**: 我们究竟在哪里？（室内/室外、城市/自然、具体的地点特征）\n`;
-            promptBuilder += `  - **时间与天气**: （黎明/黄昏/夜晚、晴朗/下雨/有雾、季节性特征）\n`;
-            promptBuilder += `  - **整体情绪**: 要营造什么感觉？（宁静、史诗、忧郁、梦幻、紧张等）\n\n`;
-                                
-            promptBuilder += `- **镜头与构图**:\n`;
-            promptBuilder += `  - **电影摄影**: （广角、低角度、中景、特写、跟踪镜头）\n`;
-            promptBuilder += `  - **灯光设计**: （背光、漫射光、伦勃朗光、自然光、戏剧性灯光）\n`;
-            promptBuilder += `  - **色彩调色板**: （高饱和度、复古单色、冷蓝灰色调、温暖金色调）\n\n`;
-                                
-            promptBuilder += `- **风格与媒介**:\n`;
-            promptBuilder += `  - **艺术风格**: （宫崎骏动画风格、超现实主义数字绘画、35mm胶片摄影、印象派油画、国家地理摄影）\n`;
-            promptBuilder += `  - **纹理与细节**: （衣物褶皱、皮肤质感、物体品质、环境细节、光影效果）\n\n`;
-                    
-            promptBuilder += `## 4. 最终 Prompt 合成\n`;
-            promptBuilder += `将以上所有元素，整合成一个连贯的、以逗号分隔的关键词和短语字符串。输出的最终结果，只需要只输出可用的 PROMPT 即可。\n\n`;
-            promptBuilder += `【重要】请直接输出最终的图像生成指令，不要包含任何分析过程、阶段说明或额外解释。`;
-                    
+
+            // 必须包含的画面元素
+            promptBuilder += `【必须包含的画面元素】\n\n`;
+
+            promptBuilder += `0. 图片类型（选择最合适的）：\n`;
+            promptBuilder += `   - editorial illustration：文章配图\n`;
+            promptBuilder += `   - lifestyle photography：生活方式摄影\n`;
+            promptBuilder += `   - character portrait：人物肖像\n`;
+            promptBuilder += `   - scene visualization：场景可视化\n\n`;
+
+            promptBuilder += `1. 人物外貌描述（最多2人，禁止出现名字）：\n`;
+            promptBuilder += `   描述格式：【性别】【年龄感】【体型】【发型发色】【瞳色】【肤色】\n`;
+            promptBuilder += `   示例：年轻女性，苗条身材，黑色长直发，棕色眼睛，白皙肤色\n\n`;
+
+            promptBuilder += `2. 服装描述：\n`;
+            promptBuilder += `   格式：【颜色】【款式】【材质】\n`;
+            promptBuilder += `   示例：白色丝绸连衣裙 / 深蓝色羊毛西装\n\n`;
+
+            promptBuilder += `3. 人物动作姿态：\n`;
+            promptBuilder += `   - 站立/坐着/跪坐/躺卧/依靠/蹲下\n`;
+            promptBuilder += `   - 行走/转身/伸手/弯腰\n\n`;
+
+            promptBuilder += `4. 人物表情：\n`;
+            promptBuilder += `   微笑/严肃/专注/平静/惊讶/害羞\n\n`;
+
+            promptBuilder += `5. 场景环境（重要：必须简化）：\n`;
+            promptBuilder += `   【简化原则】只保留2-3个关键背景元素\n`;
+            promptBuilder += `   【正确】简洁办公室背景，书架和窗户\n`;
+            promptBuilder += `   【错误】办公室里有书架、窗户、盆栽、电脑、文件柜...（太多）\n\n`;
+
+            promptBuilder += `6. 光线效果：\n`;
+            promptBuilder += `   描述光源位置、方向、强度、色温\n\n`;
+
+            promptBuilder += `7. 情感基调：\n`;
+            promptBuilder += `   温馨/紧张/神秘/浪漫/忧郁/欢快/宁静/压抑\n\n`;
+
+            promptBuilder += `8. 构图角度：\n`;
+            promptBuilder += `   景别：特写/半身/全身/远景\n`;
+            promptBuilder += `   角度：平视/俯视/仰视\n\n`;
+
+            promptBuilder += `9. 景深效果：\n`;
+            promptBuilder += `   - 浅景深：背景虚化，焦点在人物（推荐人像）\n`;
+            promptBuilder += `   - 深景深：前景背景都清晰（推荐场景）\n\n`;
+
+            promptBuilder += `10. 风格氛围：\n`;
+            promptBuilder += `   写实摄影风格，追求真实感和细节质感\n\n`;
+
+            // 用户输入场景
+            promptBuilder += `【用户输入场景】\n`;
+            promptBuilder += `${inputText}\n\n`;
+
+            // 输出示例
+            promptBuilder += `【输出示例 - 使用自然语言描述】\n\n`;
+
+            promptBuilder += `示例1（单人半身像）：\n`;
+            promptBuilder += `这是一张人物肖像照片。画面中央是一位年轻女性，她身材苗条，有着黑色长直发和棕色眼睛，`;
+            promptBuilder += `皮肤白皙。她身穿白色丝绸连衣裙，耳垂上挂着珍珠耳环，站立时微微侧身，脸上带着温柔的微笑。`;
+            promptBuilder += `背景是简洁的办公室，可以看到书架和窗户，背景被柔和地虚化处理。`;
+            promptBuilder += `午后阳光从左侧窗户照进来，形成柔和的侧光效果，整体氛围温馨宁静。`;
+            promptBuilder += `半身构图，平视角度，焦点清晰地锁定在她的面部。`;
+            promptBuilder += `写实摄影风格，杰作，最佳质量，无多余手指，无变形，无水印。\n\n`;
+
+            promptBuilder += `示例2（双人对话构图）：\n`;
+            promptBuilder += `这是一张文章配图风格的图片。画面左侧坐着一位中年男性，他身材健壮，黑色短发，`;
+            promptBuilder += `戴着金边眼镜，身穿深蓝色西装，正面向右侧，表情专注。`;
+            promptBuilder += `画面右侧站着一位年轻女性，她身材苗条，棕色卷发，身穿白色衬衫，面向左侧微笑着。`;
+            promptBuilder += `两人的视线在画面中央交汇。背景是简洁的会议室，落地窗外可以看到城市天际线。`;
+            promptBuilder += `明亮的自然光从窗户照进来，营造出专业严肃的氛围。中景构图，平视角度。`;
+            promptBuilder += `写实摄影风格，杰作，最佳质量，无多余手指，无水印。\n\n`;
+
+            // 质量增强和排除词要求
+            promptBuilder += `【必须在末尾添加质量标签】\n`;
+            promptBuilder += `杰作，最佳质量，极致细节，震撼画面\n\n`;
+
+            promptBuilder += `【必须在末尾添加排除要求】\n`;
+            promptBuilder += `无多余手指，无变形，无模糊，无水印，无签名，无任何文字\n\n`;
+
+            // 重要限制
+            promptBuilder += `【重要限制】\n`;
+            promptBuilder += `1. 画面中最多只能出现2个人物\n`;
+            promptBuilder += `2. 禁止出现任何人名、角色名！只用外貌特征描述人物\n`;
+            promptBuilder += `3. 只描述画面中能直接看到的东西\n`;
+            promptBuilder += `4. 直接输出提示词，不要有任何前言或总结`;
+
             return promptBuilder;
         }
         
         // ========== 图片全屏显示功能 ==========
-        
+
         // 为文章内容中的所有图片绑定全屏点击事件
         function bindImageFullscreen() {
-            const contentElement = document.querySelector('.content-body, .chapter-content, article, .markdown-body');
+            const contentElement = document.querySelector('.markdown-content, .content-body, .chapter-content');
             if (!contentElement) return;
-            
+
             const images = contentElement.querySelectorAll('img');
             images.forEach(img => {
-                // 只为 Markdown 生成的图片添加（排除表情等小图标）
-                if (img.alt && img.alt.includes('AI Generated Image')) {
-                    img.style.cursor = 'pointer';
-                    img.onclick = function(e) {
-                        e.stopPropagation();
-                        showImageFullscreen(this.src);
-                    };
+                // 检查图片是否已经绑定过点击事件
+                if (img.dataset.fullscreenBound) return;
+
+                // 对于 AI 生成的图片直接绑定
+                const isAIGenerated = img.alt && img.alt.includes('AI Generated Image');
+
+                // 检查图片是否足够大（排除表情符号等小图）
+                const checkAndBind = () => {
+                    const isLargeImage = img.naturalWidth > 100 || img.offsetWidth > 100;
+                    if (isAIGenerated || isLargeImage) {
+                        img.style.cursor = 'zoom-in';
+                        img.dataset.fullscreenBound = 'true';
+                        img.onclick = function(e) {
+                            e.stopPropagation();
+                            showImageFullscreen(this.src);
+                        };
+                    }
+                };
+
+                // 如果图片已加载，直接检查；否则等待加载完成
+                if (img.complete) {
+                    checkAndBind();
+                } else {
+                    img.onload = checkAndBind;
+                    // 如果是 AI 生成的图片，立即绑定（不等待加载）
+                    if (isAIGenerated) {
+                        img.style.cursor = 'zoom-in';
+                        img.dataset.fullscreenBound = 'true';
+                        img.onclick = function(e) {
+                            e.stopPropagation();
+                            showImageFullscreen(this.src);
+                        };
+                    }
                 }
             });
         }
@@ -4412,7 +4648,49 @@
         let generatedImagesData = [];
         let currentAutoImageTaskId = null;
         let autoImagePollInterval = null;
-        
+        let availableStyles = []; // 存储画风选项
+        let selectedStyle = null; // 当前选择的画风
+
+        // 加载可用的画风选项
+        async function loadAvailableStyles() {
+            try {
+                const response = await fetch('/api/chapter-image/styles');
+                const result = await response.json();
+
+                if (result.success && result.styles) {
+                    availableStyles = result.styles;
+                    selectedStyle = result.defaultStyle;
+
+                    // 填充选择器
+                    const selector = document.getElementById('imageStyleSelector');
+                    if (selector) {
+                        selector.innerHTML = '';
+                        availableStyles.forEach(style => {
+                            const option = document.createElement('option');
+                            option.value = style.value;
+                            option.textContent = `${style.name} - ${style.description}`;
+                            if (style.value === result.defaultStyle) {
+                                option.selected = true;
+                            }
+                            selector.appendChild(option);
+                        });
+
+                        // 监听选择变化
+                        selector.addEventListener('change', function() {
+                            selectedStyle = this.value;
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('加载画风选项失败:', error);
+                // 设置默认选项
+                const selector = document.getElementById('imageStyleSelector');
+                if (selector) {
+                    selector.innerHTML = '<option value="">写实摄影风格（默认）</option>';
+                }
+            }
+        }
+
         // 显示自动配画面板
         function showAutoImagePanel() {
             document.getElementById('autoImagePanel').style.display = 'block';
@@ -4560,6 +4838,10 @@
                     return;
                 }
 
+                // 获取选择的画风
+                const styleSelector = document.getElementById('imageStyleSelector');
+                const currentStyle = styleSelector ? styleSelector.value : selectedStyle;
+
                 // 隐藏位置列表，显示生成中
                 document.getElementById('imagePositions').style.display = 'none';
                 document.getElementById('generatingLoading').style.display = 'block';
@@ -4568,12 +4850,13 @@
                 // 初始化进度面板
                 initProgressPanels(selectedPositions);
 
-                // 使用新的API启动任务
+                // 使用新的API启动任务（包含画风参数）
                 const response = await fetch(`/api/chapter-image/auto-generate/start/${chapterId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        selectedPositions: selectedPositions
+                        selectedPositions: selectedPositions,
+                        style: currentStyle
                     })
                 });
 
@@ -4581,7 +4864,7 @@
 
                 if (result.success && result.taskId) {
                     currentAutoImageTaskId = result.taskId;
-                    logger.info('自动配图任务已启动: ' + result.taskId);
+                    console.log('自动配图任务已启动: ' + result.taskId + ', 画风: ' + currentStyle);
 
                     // 开始轮询任务状态
                     startTaskPolling(result.taskId);

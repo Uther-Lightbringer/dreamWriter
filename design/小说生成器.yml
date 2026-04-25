@@ -1,0 +1,1778 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 小说生成器
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.10@7bd3ea26522e06d90b2098ac2f9eb97214d609a8fa4ed0de313abcef07c31477
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: iteration
+      id: 1770591699993-source-1770591866976-target
+      selected: false
+      source: '1770591699993'
+      sourceHandle: source
+      target: '1770591866976'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: iteration
+        targetType: end
+      id: 1770591866976-source-1770595035576-target
+      selected: false
+      source: '1770591866976'
+      sourceHandle: source
+      target: '1770595035576'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: llm
+        targetType: variable-aggregator
+      id: 1770595828144-source-1770595956939-target
+      selected: false
+      source: '1770595828144'
+      sourceHandle: source
+      target: '1770595956939'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1770647256157-source-1770591699993-target
+      selected: false
+      source: '1770647256157'
+      sourceHandle: source
+      target: '1770591699993'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: http-request
+      id: 1770647256157-source-1770647676735-target
+      selected: false
+      source: '1770647256157'
+      sourceHandle: source
+      target: '1770647676735'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: code
+        targetType: http-request
+      id: 1770651394317-source-1770648668060-target
+      selected: false
+      source: '1770651394317'
+      sourceHandle: source
+      target: '1770648668060'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: 1770583603771-source-1772622062124-target
+      selected: false
+      source: '1770583603771'
+      sourceHandle: source
+      target: '1772622062124'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: 1772622062124-source-1772628047789-target
+      selected: false
+      source: '1772622062124'
+      sourceHandle: source
+      target: '1772628047789'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: iteration-start
+        targetType: llm
+      id: 1770591866976start-source-1773548926094-target
+      selected: false
+      source: 1770591866976start
+      sourceHandle: source
+      target: '1773548926094'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: code
+      id: 1770647676735-source-1770649646363-target
+      source: '1770647676735'
+      sourceHandle: source
+      target: '1770649646363'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1770649646363-source-1773551425638-target
+      selected: false
+      source: '1770649646363'
+      sourceHandle: source
+      target: '1773551425638'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1773549060045-source-1773555925554-target
+      source: '1773549060045'
+      sourceHandle: source
+      target: '1773555925554'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1773548794641-source-1773556069588-target
+      source: '1773548794641'
+      sourceHandle: source
+      target: '1773556069588'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: iteration
+      id: 1770649646363-source-1770591866976-target
+      selected: false
+      source: '1770649646363'
+      sourceHandle: source
+      target: '1770591866976'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1770649646363-source-1773554417976-target
+      source: '1770649646363'
+      sourceHandle: source
+      target: '1773554417976'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: llm
+        targetType: code
+      id: 1773548926094-source-1773560559057-target
+      source: '1773548926094'
+      sourceHandle: source
+      target: '1773560559057'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: code
+        targetType: llm
+      id: 1773560559057-source-1770595828144-target
+      source: '1773560559057'
+      sourceHandle: source
+      target: '1770595828144'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: 1770589568284-source-1770647256157-target
+      source: '1770589568284'
+      sourceHandle: source
+      target: '1770647256157'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1773555925554-source-1773548794641-target
+      source: '1773555925554'
+      sourceHandle: source
+      target: '1773548794641'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1773556069588-source-1770589568284-target
+      source: '1773556069588'
+      sourceHandle: source
+      target: '1770589568284'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: if-else
+      id: 1772628047789-source-1773576262808-target
+      source: '1772628047789'
+      sourceHandle: source
+      target: '1773576262808'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1773576262808-true-1773549060045-target
+      source: '1773576262808'
+      sourceHandle: 'true'
+      target: '1773549060045'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: code
+      id: 1773576262808-false-1773555925554-target
+      source: '1773576262808'
+      sourceHandle: 'false'
+      target: '1773555925554'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: llm
+        targetType: llm
+      id: 1770595828144-source-1773589237901-target
+      source: '1770595828144'
+      sourceHandle: source
+      target: '1773589237901'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: llm
+        targetType: code
+      id: 1773589237901-source-1773589272836-target
+      source: '1773589237901'
+      sourceHandle: source
+      target: '1773589272836'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1773554417976-fail-branch-17736041832690-target
+      source: '1773554417976'
+      sourceHandle: fail-branch
+      target: '17736041832690'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: http-request
+      id: 17736041832690-source-17736042643390-target
+      source: '17736041832690'
+      sourceHandle: source
+      target: '17736042643390'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: code
+        targetType: code
+      id: 1773589272836-source-1773684293248-target
+      source: '1773589272836'
+      sourceHandle: source
+      target: '1773684293248'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        sourceType: code
+        targetType: code
+      id: 1773684293248-source-1770651394317-target
+      source: '1773684293248'
+      sourceHandle: source
+      target: '1770651394317'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - default: '8'
+          hint: ''
+          label: 章节数量
+          options: []
+          placeholder: ''
+          required: true
+          type: number
+          variable: chapter
+        - default: '在一个普通的高中。我是高二学生乔平，班主任是我的妈妈丽娟。我有一个很可爱的女朋友叫李静。
+
+
+            王明是我的死对头，学习成绩不好，各方面都比不上。
+
+
+            一开始我们都不对付。他却在我不知情的情况下，把我的妈妈和女朋友都调教成了他的性奴。
+
+
+            在一开始我都不知道。知道故事结尾，我才知道。最后被我撞见王明在调教丽娟和李静之后，我以为我的妈妈丽娟和女友李静都是被胁迫的，但是她们却和王明一起制服了我。最后说是自愿的。'
+          hint: ''
+          label: 关键词
+          max_length: 19999999
+          options: []
+          placeholder: ''
+          required: false
+          type: paragraph
+          variable: keyword
+        - default: 记叙文
+          hint: ''
+          label: 体裁
+          max_length: 128
+          options: []
+          placeholder: ''
+          required: false
+          type: text-input
+          variable: genre
+        - default: '你是一名专业的小说作家，能够将大纲扩展成长篇文章，现在你的任务是把一个单段扩展成一个故事.  # 使用具体的例子和生动的故事来阐述观点，可以提高文章的吸引力。
+            # 要适当地描绘人物的形象和穿着，和环境描写互相映衬。要带有一定的诗意的环境和韵律感。 # 描写的文章要严格按照markdown格式进行描写。'
+          hint: ''
+          label: 扩写需求
+          max_length: 256
+          options: []
+          placeholder: ''
+          required: true
+          type: paragraph
+          variable: requires
+        - default: false
+          hint: ''
+          label: 是否生成新世界观
+          options: []
+          placeholder: ''
+          required: true
+          type: checkbox
+          variable: newWorld
+        - default: '3'
+          hint: ''
+          label: 角色数量
+          options: []
+          placeholder: ''
+          required: true
+          type: number
+          variable: role_count
+        - default: BDSM
+          hint: ''
+          label: 玩法
+          max_length: 30
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: gameplay
+        - default: BDSM
+          hint: ''
+          label: 工具
+          max_length: 30
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: tools
+        - default: 第三人称全知视角
+          hint: ''
+          label: 小说视角
+          options:
+          - 第一人称视角
+          - 第三人称全知视角
+          - 第三人称有限视角
+          - 第二人称视角
+          - 不可靠叙述者
+          - 变换视角
+          - 多重叙事视角
+          - 框架叙事视角
+          placeholder: ''
+          required: true
+          type: select
+          variable: point_of_view
+        - default: ''
+          hint: ''
+          label: 主角
+          options: []
+          placeholder: ''
+          required: false
+          type: text-input
+          variable: Protagonist
+      height: 343
+      id: '1770583603771'
+      position:
+        x: -1268.1012994169414
+        y: 648.0433520319242
+      positionAbsolute:
+        x: -1268.1012994169414
+        y: 648.0433520319242
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1770583603771'
+          - keyword
+        model:
+          completion_params:
+            max_tokens: 8001
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 9da860c8-e1dc-44c9-9a1f-5f4c044bf838
+          role: system
+          text: '根据{{#context#}}得出来的内容，我需要进行续扩写。对故事的扩写保持输入的内容的基本基调，不要偏离基调。
+
+            文章中要加入更多具体的例子、生动的描述和感官细节等。使用具体的例子和生动的故事。
+
+            调教工具：{{#1772622062124.text#}}
+
+            玩法：{{#1772628047789.text#}}
+
+            世界观:{{#1773555925554.result#}}
+
+            可用的人物角色卡:{{#1773556069588.result#}}
+
+            叙述视角：{{#1770583603771.point_of_view#}}
+
+            主角:{{#1770583603771.Protagonist#}}'
+        - id: f7f666e2-87f4-412e-8083-ad3298619f64
+          role: user
+          text: "先生成整个故事的大纲，然后帮我生成{{#1770583603771.chapter#}}个章节，章节标题和章节概括。\n\n根据{{#1770583603771.keyword#}}来创作一个故事。\n\
+            \n# 生成范式：\n 章节标题要准确，概括章节的主要内容。标题要口语化。\n1. 章节概括要求不得少于100字。章节概括不要带有任何总结的话语，仅需描写动作和事实即可。\n\
+            2. 设计各个章节之间的时候要有联系。后面的章节可以适度地回应前文。\n3 . 在个别章节，可以适当地带出和显示角色的工作等。\n以下是要生成的格式的\n\
+            \n[\n  {\n    \"section\": \"\",\n    \"description\": \"\"\n  }\n].\n\
+            \"outline\": \"xxx\""
+        - id: 38201a41-5e0f-4956-b2e8-2a69b961f6b7
+          role: assistant
+          text: ''
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              chapter:
+                description: 章节
+                items:
+                  additionalProperties: false
+                  properties:
+                    description:
+                      description: 章节概述
+                      type: string
+                    section:
+                      description: 章节标题
+                      type: string
+                  required:
+                  - section
+                  type: object
+                type: array
+              outline:
+                description: 大纲
+                type: string
+            required:
+            - chapter
+            - outline
+            type: object
+        structured_output_enabled: true
+        title: 大纲和章节生成
+        type: llm
+        vision:
+          enabled: false
+      height: 118
+      id: '1770589568284'
+      position:
+        x: 447.2917828338765
+        y: 623.2254437831095
+      positionAbsolute:
+        x: 447.2917828338765
+        y: 623.2254437831095
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\n\ndef main(arg1: str) -> dict:\n    data = json.loads(arg1)\n\
+          \    return {\n        \"chapter_list\": [\n            {\n            \
+          \    \"section\": item[\"section\"],\n                \"description\": item[\"\
+          description\"]\n            }\n            for item in data[\"chapter\"\
+          ]\n        ]\n    }"
+        code_language: python3
+        error_strategy: fail-branch
+        outputs:
+          chapter_list:
+            children: null
+            type: array[object]
+        selected: false
+        title: 分裂出每一个章节
+        type: code
+        variables:
+        - value_selector:
+          - '1770589568284'
+          - text
+          value_type: string
+          variable: arg1
+      height: 88
+      id: '1770591699993'
+      position:
+        x: 1433.7961545968662
+        y: 465.0723595123629
+      positionAbsolute:
+        x: 1433.7961545968662
+        y: 465.0723595123629
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        error_handle_mode: continue-on-error
+        flatten_output: true
+        height: 842
+        is_parallel: true
+        iterator_input_type: array[object]
+        iterator_selector:
+        - '1770591699993'
+        - chapter_list
+        output_selector:
+        - '1770595956939'
+        - Group2
+        output_type: array[object]
+        parallel_nums: 9
+        selected: false
+        start_node_id: 1770591866976start
+        title: 迭代
+        type: iteration
+        width: 2253.9396418400847
+      height: 842
+      id: '1770591866976'
+      position:
+        x: 2050.9465162999995
+        y: 714.7601573439307
+      positionAbsolute:
+        x: 2050.9465162999995
+        y: 714.7601573439307
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 2254
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: 1770591866976start
+      parentId: '1770591866976'
+      position:
+        x: 24
+        y: 68
+      positionAbsolute:
+        x: 2074.9465162999995
+        y: 782.7601573439307
+      selectable: false
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        outputs:
+        - value_selector:
+          - '1770591866976'
+          - output
+          value_type: array[object]
+          variable: result
+        selected: false
+        title: 输出
+        type: end
+      height: 88
+      id: '1770595035576'
+      position:
+        x: 4362.2242442710085
+        y: 404.0808178182675
+      positionAbsolute:
+        x: 4362.2242442710085
+        y: 404.0808178182675
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1770591866976'
+          - item
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        model:
+          completion_params:
+            frequency_penalty: 1.2
+            max_tokens: 8192
+            temperature: 1.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: f613cc7f-7988-4281-839a-b2ccb74cdd93
+          role: system
+          text: '女王可以使用的工具：{{#1772622062124.text#}}
+
+            玩法：{{#1772628047789.text#}}
+
+            {{#1770583603771.requires#}}
+
+            # 以{{#1770583603771.genre#}}的格式进行描写。
+
+            体裁: {{#1770583603771.genre#}}
+
+            故事扩写里面的人物要严格按照角色卡进行：{{#1773560559057.result#}}
+
+            叙述视角：{{#1770583603771.point_of_view#}}
+
+
+            '
+        - id: e5bf5950-3c61-4ec5-b76c-e63f1675a2c6
+          role: user
+          text: "## 整体大纲\n{{#1770589568284.text#}}\n## 需要扩展的段落\n{{#1770591866976.item#}}\n\
+            \n\n生成的内容的第一句要标题开头。然后换行。\n如：\n```\n# 第一章： xxxx\n   xxxxx\n\n```"
+        selected: false
+        structured_output_enabled: false
+        title: 扩写
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1770595828144'
+      parentId: '1770591866976'
+      position:
+        x: 172.8072864286155
+        y: 474.772112918959
+      positionAbsolute:
+        x: 2223.753802728615
+        y: 1189.5322702628896
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        advanced_settings:
+          group_enabled: true
+          groups:
+          - groupId: 8cb98225-7384-4297-a5de-01c55d11df07
+            group_name: Group2
+            output_type: string
+            variables:
+            - - '1770595828144'
+              - text
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        output_type: object
+        selected: false
+        title: 小说合集
+        type: variable-aggregator
+        variables:
+        - - '1770591866976'
+          - item
+        - - '1770595828144'
+          - usage
+      height: 108
+      id: '1770595956939'
+      parentId: '1770591866976'
+      position:
+        x: 1251.5776005506314
+        y: 78.92880901273793
+      positionAbsolute:
+        x: 3302.524116850631
+        y: 793.6889663566686
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1770589568284'
+          - text
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 0f5ac2d4-5c3b-4456-9d71-9023f6a361f2
+          role: system
+          text: '生成这个大纲和标题所代表的小说名字。只需要说出标题即可。标题可以带有隐喻和概括。生成的小说标题不要带有任何标点符号。叙述视角：{{#1770583603771.point_of_view#}}
+
+
+
+            '
+        - id: aa04436d-ea28-41cc-918c-0786e79622e4
+          role: user
+          text: 基于{{#context#}}，来进行生成。
+        selected: false
+        title: 生成标题
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1770647256157'
+      position:
+        x: 760.0364471259163
+        y: 372.56507434117543
+      positionAbsolute:
+        x: 760.0364471259163
+        y: 372.56507434117543
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-266
+            key: ''
+            type: text
+            value: "{\n    \"title\": \"{{#1770647256157.text#}}\"\n}"
+          type: json
+        headers: Content-Type:application/json
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: false
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 创建小说标题
+        type: http-request
+        url: http://host.docker.internal:38081/api/novels
+        variables: []
+      height: 138
+      id: '1770647676735'
+      position:
+        x: 1037.4831679933409
+        y: 603.3686604099281
+      positionAbsolute:
+        x: 1037.4831679933409
+        y: 603.3686604099281
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-507
+            key: ''
+            type: text
+            value: "{\n    \"title\": \"{{#1770651394317.section#}}\",\n    \"content\"\
+              : \"{{#1773589272836.result#}}\",\n    \"index\": \"{{#1770591866976.index#}}\"\
+              ,\n\"storySummary\": \"{{#1770651394317.description#}}\"\n\n}"
+          type: json
+        headers: Content-Type:application/json
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 6
+          retry_enabled: true
+          retry_interval: 5000
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 新增小说章节
+        type: http-request
+        url: http://host.docker.internal:38081/api/novels/{{#1770649646363.article_id#}}/chapters
+        variables: []
+      height: 173
+      id: '1770648668060'
+      parentId: '1770591866976'
+      position:
+        x: 1730.6892427007651
+        y: 179.12603014080037
+      positionAbsolute:
+        x: 3781.6357590007647
+        y: 893.8861874847311
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "\ndef main(arg1: str):\n    parsed = json.loads(arg1)      # 先解析整个\
+          \ JSON 字符串\n    return {\n        \"article_id\": parsed[\"id\"]     # 再取\
+          \ id 字段\n    }\n"
+        code_language: python3
+        outputs:
+          article_id:
+            children: null
+            type: number
+        selected: false
+        title: 取出小说id
+        type: code
+        variables:
+        - value_selector:
+          - '1770647676735'
+          - body
+          value_type: string
+          variable: arg1
+      height: 52
+      id: '1770649646363'
+      position:
+        x: 1472.3302982673504
+        y: 761.4098099380211
+      positionAbsolute:
+        x: 1472.3302982673504
+        y: 761.4098099380211
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "def main(arg1: dict, arg2: str):\n    \n    return {\n        # \"\
+          section\": arg1[\"section\"]\n        # \"section\": arg1[\"arg1\"][\"section\"\
+          ]\n        \"section\" : arg1[\"section\"],\n        \"description\": arg1[\"\
+          description\"]\n    }"
+        code_language: python3
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        outputs:
+          description:
+            children: null
+            type: string
+          section:
+            children: null
+            type: string
+        selected: false
+        title: 取出小说标题和小说内容
+        type: code
+        variables:
+        - value_selector:
+          - '1770591866976'
+          - item
+          value_type: object
+          variable: arg1
+        - value_selector:
+          - '1773684293248'
+          - result
+          value_type: string
+          variable: arg2
+      height: 52
+      id: '1770651394317'
+      parentId: '1770591866976'
+      position:
+        x: 1538.2450640953543
+        y: 522.4187448657758
+      positionAbsolute:
+        x: 3589.191580395354
+        y: 1237.1789022097064
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1770583603771'
+          - keyword
+        model:
+          completion_params:
+            frequency_penalty: 2
+            max_tokens: 8192
+            temperature: 0.9
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: dfaa5803-44c3-48f2-921a-01d2edc8fe7a
+          role: system
+          text: '输出和{{#1770583603771.tools#}}的玩法相关的道具，以及这些道具的玩法。道具的数量要有20种，不可以重复。工具都要使用中文。
+
+
+            以下是要生成的格式的。其中“用法”的字数不得超过20.
+
+
+            ①“工具”：“用法”；
+
+            ②“工具”：“用法”；
+
+            '
+        selected: false
+        structured_output_enabled: false
+        title: 工具
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1772622062124'
+      position:
+        x: -781.336846192912
+        y: 499.21239942863895
+      positionAbsolute:
+        x: -781.336846192912
+        y: 499.21239942863895
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 244a102f-c399-4937-9972-b54153dc5f24
+          role: system
+          text: '输出和{{#1770583603771.gameplay#}}的玩法，要有20种，不可以重复。玩法都要使用中文。
+
+
+            以下是要生成的格式的。其中 解释字数不能超过30。
+
+
+            ①玩法：解释
+
+            ②玩法：解释
+
+            '
+        selected: false
+        title: 玩法
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1772628047789'
+      position:
+        x: -925.7903650853591
+        y: 772.3263991942946
+      positionAbsolute:
+        x: -925.7903650853591
+        y: 772.3263991942946
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-reasoner
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 8088b2ef-7c06-4861-aa20-2992447df832
+          role: system
+          text: "根据世界观{{#1773555925554.result#}}，生成在这个世界观下的故事的人物,后面要根据这些人物来写小说。生成{{#1770583603771.role_count#}}个角色。可以包含以下内容来生成角色卡。不需要严格按照以下的格式。输出的内容里面只需要包括角色卡内容，不要包含其他的任何东西。\n\
+            生成的角色要围绕：{{#1770583603771.keyword#}}\n可以附带的工具：{{#1772622062124.text#}}\n\
+            可以附带的玩法:{{#1772628047789.text#}}\n主角:{{#1770583603771.Protagonist#}}\n\
+            生成的角色卡的顺序，要把主角放在第一。\n生成的角色名称，要以中国人的命名的风格来。人种要以中国人为主。可以加入该人物喜欢的衣服和穿戴特色。生成的内容里面出现的所有标点符号，都要使用英文输入法的。她/他的眼睛、眉毛、鼻子、嘴巴、脸型、身高、衣服、发型和整体风格都要描述出来，尽量不用比喻，而是要准确的白描。这是为了能把文字提供给AI生成图片的时候，生成同一个人物的时候脸保持一致。\n\
+            要求输出的格式严格按照以下的JSON来：\n\n[\n  {\n    \"name\": \"角色姓名\",\n    \"alternativeNames\"\
+            : [\"别名1\", \"别名2\"],\n    \"age\": 0, # 年龄，必须是数字\n    \"gender\": \"\
+            性别\",\n    \"occupation\": \"职业\",\n    \"appearance\": {\n      \"height\"\
+            : \"身高\",\n      \"hair\": \"发色\",\n      \"eyes\": \"瞳色\",\n      \"\
+            build\": \"体型\",\n      \"distinguishingFeatures\": \"特征\" # 此处要描写人脸\n\
+            \    },\n    \"personality\": \"性格描述\",\n    \"background\": \"背景故事\"\
+            ,\n    \"relationships\": [\n      {\n        \"targetName\": \"其他角色姓名\"\
+            ,\n        \"relationship\": \"关系描述\"\n      }\n    ],\n    \"notes\"\
+            : \"备注\"\n  }\n]\n"
+        retry_config:
+          max_retries: 3
+          retry_enabled: false
+          retry_interval: 1000
+        selected: false
+        structured_output_enabled: true
+        title: 角色卡生成
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1773548794641'
+      position:
+        x: -81.04831786362712
+        y: 609.4734627287017
+      positionAbsolute:
+        x: -81.04831786362712
+        y: 609.4734627287017
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-reasoner
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: d9409758-dcf8-482d-a682-c41d9628880d
+          role: system
+          text: "你是一个人物角色总结大师。我下面给出了人物的角色卡、世界观和故事的章节概括。帮我基于章节概括里面出现的人物和世界观，只抽取在本章节内需要体现的特质。我的目的是缩小人物和世界观的所占的上下文，然后结合章节概括，提供给另一个AI来扩展生成符合人物和世界观的小说。\n\
+            \n按照以下模板生成“”\n\n  基于以下角色卡和故事背景，生成[章节内容/对话/情节发展]：\n\n  **故事背景**：[简要描述世界观、当前阶段]\n\
+            \n  **角色卡参考**：\n  1. [角色A姓名]：[关键特质摘要]\n  2. [角色B姓名]：[关键特质摘要]\n\n  **当前情境**：[具体场景、冲突、需要解决的问题]\n\
+            \n  **生成要求**：\n  - 保持角色性格一致性\n  - 符合角色能力和限制\n  - 推动预设的角色发展弧线\n  - 体现支配/服从关系的动态变化"
+        - id: c7d4f06b-a387-4205-aa4a-7e6c47434ef5
+          role: user
+          text: '故事的角色卡：{{#1773548794641.text#}}
+
+
+            世界观：{{#1773555925554.result#}}
+
+
+            当前的故事章节和大纲：{{#1770591866976.item#}}'
+        selected: false
+        title: 生成当前章节需要的角色和世界观卡片【
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1773548926094'
+      parentId: '1770591866976'
+      position:
+        x: 132.20830869381234
+        y: 106.92027400439508
+      positionAbsolute:
+        x: 2183.154824993812
+        y: 821.6804313483258
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1770583603771'
+          - keyword
+        model:
+          completion_params:
+            response_format: text
+          mode: chat
+          name: deepseek-reasoner
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: e55f20a2-9627-4a84-b942-52217c906d92
+          role: system
+          text: '基于{{#context#}}, 使用参照以下内容，生成世界观。要严格按照markdown格式。不需要完全拘泥于以下的模板。输出的内容里面只需要包括世界观内容，不要包含其他的任何东西。
+
+
+            '
+        reasoning_format: separated
+        selected: false
+        structured_output_enabled: false
+        title: 世界观
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1773549060045'
+      position:
+        x: -445.87723459470817
+        y: 646.0998352090023
+      positionAbsolute:
+        x: -445.87723459470817
+        y: 646.0998352090023
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-895
+            key: ''
+            type: text
+            value: '{"worldView":  "{{#1773555925554.result#}}"}'
+          type: raw-text
+        default_value:
+        - key: body
+          type: string
+          value: 小说世界观插入失败，请手动操作。
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        error_strategy: default-value
+        headers: Content-Type:application/json
+        method: put
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 插入小说世界观
+        type: http-request
+        url: http://host.docker.internal:38081/api/novels/{{#1770649646363.article_id#}}/worldview
+        variables: []
+      height: 209
+      id: '1773551425638'
+      position:
+        x: 508.01549217101854
+        y: 854.9687215782089
+      positionAbsolute:
+        x: 508.01549217101854
+        y: 854.9687215782089
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-58
+            key: ''
+            type: text
+            value: '{{#1773556069588.result#}}'
+          type: json
+        error_strategy: fail-branch
+        headers: Content-Type:application/json
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 插入小说角色卡
+        type: http-request
+        url: http://host.docker.internal:38081/api/novels/{{#1770649646363.article_id#}}/character-cards/batch
+        variables: []
+      height: 209
+      id: '1773554417976'
+      position:
+        x: 794.2176994593617
+        y: 1089.8365969006877
+      positionAbsolute:
+        x: 794.2176994593617
+        y: 1089.8365969006877
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import re\nimport json\n\ndef main(arg1: str) -> dict:\n    \"\"\"\n\
+          \    移除输入字符串中所有的 <think> 标签及其内部内容，并清理 JSON 控制字符。\n\n    参数:\n        arg1\
+          \ (str): 包含 <think> 标签的原始文本。\n\n    返回:\n        dict: 包含处理后的文本的字典，键为 \"\
+          result\"。\n    \"\"\"\n    # 使用正则表达式匹配 <think> 标签及其内容，re.DOTALL 使 . 能匹配换行符\n\
+          \    cleaned = re.sub(r'<think>.*?</think>', '', arg1, flags=re.DOTALL)\n\
+          \    \n    # 清理 JSON 控制字符\n    # 1. 移除或转义未转义的换行符、回车符、制表符等\n    # 2. 移除其他\
+          \ ASCII 控制字符 (0x00-0x1F，但保留已经正确转义的序列)\n    \n    def replace_control_char(match):\n\
+          \        \"\"\"替换控制字符为对应的转义序列\"\"\"\n        char = match.group(0)\n   \
+          \     if char == '\\n':\n            return '\\\\n'\n        elif char ==\
+          \ '\\r':\n            return '\\\\r'\n        elif char == '\\t':\n    \
+          \        return '\\\\t'\n        elif char == '\\b':\n            return\
+          \ '\\\\b'\n        elif char == '\\f':\n            return '\\\\f'\n   \
+          \     else:\n            # 其他控制字符直接移除\n            return ''\n    \n   \
+          \ # 处理控制字符（在字符串内部，而不是已经转义的序列）\n    # 这个正则表达式匹配不在反斜杠后面的控制字符\n    cleaned\
+          \ = re.sub(r'(?<!\\\\)[\\n\\r\\t\\b\\f]', replace_control_char, cleaned)\n\
+          \    \n    # 移除其他 ASCII 控制字符 (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)\n    cleaned\
+          \ = re.sub(r'(?<!\\\\)[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]', '', cleaned)\n\
+          \    \n    return {\n        \"result\": cleaned\n    }\n"
+        code_language: python3
+        default_value:
+        - key: result
+          type: string
+          value: 现代社会
+        error_strategy: default-value
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 去除<think>后的世界观
+        type: code
+        variables:
+        - value_selector:
+          - '1773549060045'
+          - text
+          value_type: string
+          variable: arg1
+      height: 88
+      id: '1773555925554'
+      position:
+        x: -206.8167309201311
+        y: 861.9931072137955
+      positionAbsolute:
+        x: -206.8167309201311
+        y: 861.9931072137955
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import re\nimport json\n\ndef main(arg1: str) -> dict:\n    \"\"\"\n\
+          \    清理 JSON 字符串中的 <think> 标签和控制字符，确保可以被后端正确解析。\n    \n    参数:\n       \
+          \ arg1 (str): 包含 <think> 标签和可能的控制字符的原始文本。\n    \n    返回:\n        dict:\
+          \ 包含处理后的文本的字典，键为 \"result\"。\n    \"\"\"\n    # 步骤 1: 移除 <think> 标签及其内容\n\
+          \    cleaned = re.sub(r'<think>.*?</think>', '', arg1, flags=re.DOTALL)\n\
+          \    \n    # 步骤 2: 移除所有 ASCII 控制字符 (除了 \\n, \\r, \\t 等常见的外)\n    # 这些控制字符会导致\
+          \ JSON 解析失败\n    cleaned = re.sub(r'[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\\
+          x7F]', '', cleaned)\n    \n    # 步骤 3: 尝试修复 JSON 格式问题\n    # 如果 cleaned\
+          \ 看起来像 JSON（以 { 开头），则尝试解析并重新序列化\n    if cleaned.strip().startswith('{'):\n\
+          \        try:\n            # 尝试直接解析\n            json.loads(cleaned)\n \
+          \       except json.JSONDecodeError:\n            # 如果解析失败，尝试逐行清理并重新构建\n\
+          \            lines = cleaned.split('\\n')\n            cleaned_lines = []\n\
+          \            for line in lines:\n                # 移除每行中的控制字符\n        \
+          \        line = re.sub(r'[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]', '', line)\n\
+          \                cleaned_lines.append(line)\n            cleaned = '\\n'.join(cleaned_lines)\n\
+          \            \n            # 再次尝试解析，如果还是失败就返回原始清理后的内容\n            try:\n\
+          \                json.loads(cleaned)\n            except json.JSONDecodeError:\n\
+          \                pass  # 如果还是无法解析，就返回清理后的版本\n    \n    return {\n      \
+          \  \"result\": cleaned\n    }"
+        code_language: python3
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 取出think后的角色卡
+        type: code
+        variables:
+        - value_selector:
+          - '1773548794641'
+          - text
+          value_type: string
+          variable: arg1
+      height: 52
+      id: '1773556069588'
+      position:
+        x: 140.7034508138081
+        y: 819.3077350348096
+      positionAbsolute:
+        x: 140.7034508138081
+        y: 819.3077350348096
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import re\nimport json\n\ndef main(arg1: str) -> dict:\n    \"\"\"\n\
+          \    清理 JSON 字符串中的 <think> 标签和控制字符，确保可以被后端正确解析。\n    \n    参数:\n       \
+          \ arg1 (str): 包含 <think> 标签和可能的控制字符的原始文本。\n    \n    返回:\n        dict:\
+          \ 包含处理后的文本的字典，键为 \"result\"。\n    \"\"\"\n    # 步骤 1: 移除 <think> 标签及其内容\n\
+          \    cleaned = re.sub(r'<think>.*?</think>', '', arg1, flags=re.DOTALL)\n\
+          \    \n    # 步骤 2: 移除所有 ASCII 控制字符 (除了 \\n, \\r, \\t 等常见的外)\n    # 这些控制字符会导致\
+          \ JSON 解析失败\n    cleaned = re.sub(r'[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\\
+          x7F]', '', cleaned)\n    \n    # 步骤 3: 尝试修复 JSON 格式问题\n    # 如果 cleaned\
+          \ 看起来像 JSON（以 { 开头），则尝试解析并重新序列化\n    if cleaned.strip().startswith('{'):\n\
+          \        try:\n            # 尝试直接解析\n            json.loads(cleaned)\n \
+          \       except json.JSONDecodeError:\n            # 如果解析失败，尝试逐行清理并重新构建\n\
+          \            lines = cleaned.split('\\n')\n            cleaned_lines = []\n\
+          \            for line in lines:\n                # 移除每行中的控制字符\n        \
+          \        line = re.sub(r'[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]', '', line)\n\
+          \                cleaned_lines.append(line)\n            cleaned = '\\n'.join(cleaned_lines)\n\
+          \            \n            # 再次尝试解析，如果还是失败就返回原始清理后的内容\n            try:\n\
+          \                json.loads(cleaned)\n            except json.JSONDecodeError:\n\
+          \                pass  # 如果还是无法解析，就返回清理后的版本\n    \n    return {\n      \
+          \  \"result\": cleaned\n    }"
+        code_language: python3
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 去掉<think>的世界观和角色
+        type: code
+        variables:
+        - value_selector:
+          - '1773548926094'
+          - text
+          value_type: string
+          variable: arg1
+      height: 52
+      id: '1773560559057'
+      parentId: '1770591866976'
+      position:
+        x: 192.1410401991684
+        y: 307.0408632809854
+      positionAbsolute:
+        x: 2243.087556499168
+        y: 1021.8010206249161
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: d1895980-d119-4bf2-8509-4d087a87703c
+            value: true
+            varType: boolean
+            variable_selector:
+            - '1770583603771'
+            - newWorld
+          id: 'true'
+          logical_operator: and
+        selected: false
+        title: 条件分支
+        type: if-else
+      height: 124
+      id: '1773576262808'
+      position:
+        x: -629.0818141893894
+        y: 896.8151297456404
+      positionAbsolute:
+        x: -629.0818141893894
+        y: 896.8151297456404
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1770595828144'
+          - text
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-reasoner
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 8affd852-d920-42fb-81c7-957758050432
+          role: system
+          text: "# 质量检查清单\n需要对传入的扩写内容进行检查，并修改。检查完之后修改对应的内容，更符合清单。结果只输出修改后的文章,不要附带其他任何东西。。\n\
+            请用以下规范输出：\n1.语言平实直述，避免抽象隐喻；\n2.使用日常场景化案例辅助说明；\n3.优先选择具体名词替代抽象概念；\n4.保持段落简明（不超过5行）；\n\
+            5.技术表述需附通俗解释；\n6.禁用文学化修辞；\n7.重点信息前置；\n8.复杂内容分点说明；\n9.保持口语化但不过度简化专业内容；\n\
+            10.确保信息准确前提下优先选择大众认知词汇\n交付章节前使用此清单确保质量。\n\n**深度润色（去除AI味）** - 重点检查并修改：\n\
+                - **去除过度修饰的形容词**：删减\"璀璨\"、\"瑰丽\"、\"绚烂\"等AI常用词堆砌\n    - **减少抽象陈述**：把\"\
+            心中涌起复杂的情感\"改为具体动作/对话\n    - **打破四字格律**：避免\"心潮澎湃、热血沸腾\"等陈词滥调\n    - **增加口语化表达**：人物对话要有个性，避免\"\
+            书面语套话\"\n    - **优化节奏感**：长句和短句交替，避免句式单调\n    - **细节具象化**：用具体的视觉/听觉/嗅觉细节替代笼统描述\n\
+            \    - **去掉“记住”**： 去掉类似“记住xxx”这样的对话，替换成更贴近人的话语\n    - **人物对话不要有陈述句**\n\
+            \n字数不得少于4000字。\n\n\n"
+        - id: 3bb78d11-cf25-4a4c-ae6a-c3c3f2d0d704
+          role: user
+          text: '{{#1770595828144.text#}}'
+        selected: true
+        title: 去除AI味后的扩写
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1773589237901'
+      parentId: '1770591866976'
+      position:
+        x: 500.81439851338155
+        y: 571.3136385662093
+      positionAbsolute:
+        x: 2551.760914813381
+        y: 1286.07379591014
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "import re\nimport json\n\ndef main(arg1: str) -> dict:\n    \"\"\"\n\
+          \    清理 JSON 字符串中的 <think> 标签和控制字符，确保可以被后端正确解析。\n    \n    参数:\n       \
+          \ arg1 (str): 包含 <think> 标签和可能的控制字符的原始文本。\n    \n    返回:\n        dict:\
+          \ 包含处理后的文本的字典，键为 \"result\"。\n    \"\"\"\n    # 步骤 1: 移除 <think> 标签及其内容\n\
+          \    cleaned = re.sub(r'<think>.*?</think>', '', arg1, flags=re.DOTALL)\n\
+          \    \n    # 步骤 2: 移除所有 ASCII 控制字符 (除了 \\n, \\r, \\t 等常见的外)\n    # 这些控制字符会导致\
+          \ JSON 解析失败\n    cleaned = re.sub(r'[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\\
+          x7F]', '', cleaned)\n    \n    # 步骤 3: 尝试修复 JSON 格式问题\n    # 如果 cleaned\
+          \ 看起来像 JSON（以 { 开头），则尝试解析并重新序列化\n    if cleaned.strip().startswith('{'):\n\
+          \        try:\n            # 尝试直接解析\n            json.loads(cleaned)\n \
+          \       except json.JSONDecodeError:\n            # 如果解析失败，尝试逐行清理并重新构建\n\
+          \            lines = cleaned.split('\\n')\n            cleaned_lines = []\n\
+          \            for line in lines:\n                # 移除每行中的控制字符\n        \
+          \        line = re.sub(r'[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]', '', line)\n\
+          \                cleaned_lines.append(line)\n            cleaned = '\\n'.join(cleaned_lines)\n\
+          \            \n            # 再次尝试解析，如果还是失败就返回原始清理后的内容\n            try:\n\
+          \                json.loads(cleaned)\n            except json.JSONDecodeError:\n\
+          \                pass  # 如果还是无法解析，就返回清理后的版本\n    \n    return {\n      \
+          \  \"result\": cleaned\n    }"
+        code_language: python3
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 扩写- 去掉<Think>的
+        type: code
+        variables:
+        - value_selector:
+          - '1773589237901'
+          - text
+          value_type: string
+          variable: arg1
+      height: 52
+      id: '1773589272836'
+      parentId: '1770591866976'
+      position:
+        x: 802.7800824415203
+        y: 470.09167748686707
+      positionAbsolute:
+        x: 2853.72659874152
+        y: 1184.8518348307978
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            response_format: json_object
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 8088b2ef-7c06-4861-aa20-2992447df832
+          role: system
+          text: "正确的json格式：[\n  {\n    \"name\": \"角色姓名\",\n    \"alternativeNames\"\
+            : [\"别名1\", \"别名2\"],\n    \"age\": 0, # 年龄，必须是数字\n    \"gender\": \"\
+            性别\",\n    \"occupation\": \"职业\",\n    \"appearance\": {\n      \"height\"\
+            : \"身高\",\n      \"hair\": \"发色\",\n      \"eyes\": \"瞳色\",\n      \"\
+            build\": \"体型\",\n      \"distinguishingFeatures\": \"特征\"\n    },\n \
+            \   \"personality\": \"性格描述\",\n    \"background\": \"背景故事\",\n    \"\
+            relationships\": [\n      {\n        \"targetName\": \"其他角色姓名\",\n   \
+            \     \"relationship\": \"关系描述\"\n      }\n    ],\n    \"notes\": \"备注\"\
+            \n  }\n]\n\n修复以下的文本为正确的json格式。输出结果仅需包含修正后的json。\n\n{{#1773556069588.result#}}"
+        retry_config:
+          max_retries: 3
+          retry_enabled: false
+          retry_interval: 1000
+        selected: false
+        structured_output_enabled: true
+        title: 角色卡生成(重新生成)
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '17736041832690'
+      position:
+        x: 1231.2855333978043
+        y: 1115.471253118373
+      positionAbsolute:
+        x: 1231.2855333978043
+        y: 1115.471253118373
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-254
+            key: ''
+            type: text
+            value: '{{#17736041832690.text#}}'
+          type: raw-text
+        error_strategy: fail-branch
+        headers: Content-Type:application/json
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 插入小说角色卡 (1)
+        type: http-request
+        url: http://host.docker.internal:38081/api/novels/{{#1770649646363.article_id#}}/character-cards/batch
+        variables: []
+      height: 209
+      id: '17736042643390'
+      position:
+        x: 1587.739027982875
+        y: 1271.2306319155439
+      positionAbsolute:
+        x: 1587.739027982875
+        y: 1271.2306319155439
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import re\n\ndef main(arg1: str):\n    # 在每个中文句号后面添加一个换行符\n    processed\
+          \ = re.sub(r'。', r'。\\n', arg1)\n    return {\"result\": processed}"
+        code_language: python3
+        isInIteration: true
+        isInLoop: false
+        iteration_id: '1770591866976'
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 句号换行
+        type: code
+        variables:
+        - value_selector:
+          - '1773589272836'
+          - result
+          value_type: string
+          variable: arg1
+      height: 52
+      id: '1773684293248'
+      parentId: '1770591866976'
+      position:
+        x: 1236.7293475288438
+        y: 522.4187448657758
+      positionAbsolute:
+        x: 3287.6758638288434
+        y: 1237.1789022097064
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    viewport:
+      x: -93.17057242766805
+      y: -178.79520767500992
+      zoom: 0.6597539553864465
+  rag_pipeline_variables: []
