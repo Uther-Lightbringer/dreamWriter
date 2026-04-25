@@ -992,6 +992,62 @@ public class CreativeSessionService {
     }
 
     /**
+     * 创建角色卡工具实现
+     */
+    private String createCharacterCard(String argumentsJson, CreativeSession session, List<Map<String, Object>> messages) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            // 获取小说ID
+            SessionContext context = getContext(session);
+            Long novelId = args.get("novelId") != null
+                ? ((Number) args.get("novelId")).longValue()
+                : context.getCurrentNovelId();
+
+            if (novelId == null) {
+                return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
+            }
+
+            String name = (String) args.get("name");
+            if (name == null || name.trim().isEmpty()) {
+                return "{\"error\": \"角色姓名不能为空\"}";
+            }
+
+            // 生成随机 seed（1-2147483647）
+            int seed = new Random().nextInt(2147483646) + 1;
+
+            // 构建角色卡 DTO
+            CharacterCard card = new CharacterCard();
+            card.setName(name.trim());
+            card.setAppearanceDescription((String) args.get("appearance"));
+            card.setPersonality((String) args.get("personality"));
+            card.setBackground((String) args.get("description"));
+            // 存储 seed 在 notes 字段（临时方案）
+            card.setNotes("seed:" + seed);
+
+            // 调用 CharacterCardService 保存
+            List<CharacterCard> savedCards = characterCardService.saveCharacterCards(novelId, Arrays.asList(card));
+            CharacterCard savedCard = savedCards.get(0);
+
+            // 更新上下文
+            context.addCharacterId(savedCard.getId());
+            updateContext(session, context);
+
+            logger.info("创建角色卡成功: novelId={}, characterId={}, name={}, seed={}", novelId, savedCard.getId(), name, seed);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "characterId", savedCard.getId(),
+                "name", name,
+                "seed", seed
+            ));
+        } catch (Exception e) {
+            logger.error("创建角色卡失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages) {
