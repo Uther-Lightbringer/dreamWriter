@@ -1305,7 +1305,8 @@
             list.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light)">加载中...</p>';
 
             try {
-                const sessions = await fetch('/api/creative-sessions').then(r => r.json());
+                const response = await fetch('/api/creative-sessions').then(r => r.json());
+                const sessions = response.sessions || response;
                 if (!sessions || sessions.length === 0) {
                     list.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light)">暂无历史记录</p>';
                     return;

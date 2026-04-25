@@ -152,7 +152,7 @@ public class CreativeSessionService {
 
         // 初始化消息历史（包含系统提示词 + 用户记忆）
         List<Map<String, Object>> messages = new ArrayList<>();
-        String systemPrompt = buildSystemPromptWithMemories();
+        String systemPrompt = buildSystemPromptWithMemories(sessionId);
         messages.add(Map.of("role", "system", "content", systemPrompt));
         session.setMessages(toJson(messages));
 
@@ -242,7 +242,7 @@ public class CreativeSessionService {
             List<Map<String, Object>> messages = parseMessages(session.getMessages());
 
             // 刷新系统消息中的记忆部分（每次请求都更新）
-            refreshMemoriesInSystemMessage(messages);
+            refreshMemoriesInSystemMessage(messages, sessionId);
 
             // 添加用户消息
             messages.add(Map.of("role", "user", "content", content));
@@ -857,7 +857,8 @@ public class CreativeSessionService {
     }
 
     /**
-     * 添加跨会话记忆
+     * 添加记忆
+     * 支持 scope 参数：global（全局记忆，默认）或 session（会话记忆）
      */
     @Transactional
     private String addMemory(String sessionId, String argumentsJson) {
@@ -865,26 +866,44 @@ public class CreativeSessionService {
             Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
             String key = (String) args.get("key");
             String value = (String) args.get("value");
+            String scope = (String) args.getOrDefault("scope", "global"); // global 或 session
 
             if (key == null || value == null) {
                 return "{\"error\": \"key 和 value 参数必填\"}";
             }
 
-            // 检查是否已存在，存在则更新
-            Optional<CreativeMemory> existing = memoryRepository.findByKey(key);
+            boolean isSessionMemory = "session".equalsIgnoreCase(scope);
+            String targetSessionId = isSessionMemory ? sessionId : null;
+
+            // 检查是否已存在同 key 同 scope 的记忆
+            Optional<CreativeMemory> existing;
+            if (isSessionMemory) {
+                existing = memoryRepository.findByKeyAndSessionId(key, sessionId);
+            } else {
+                existing = memoryRepository.findByKey(key)
+                    .filter(m -> m.getSessionId() == null);
+            }
+
             if (existing.isPresent()) {
                 CreativeMemory memory = existing.get();
                 memory.setValue(value);
                 memory.setSourceSessionId(sessionId);
                 memoryRepository.save(memory);
-                logger.info("更新记忆: {} = {}", key, value);
+                logger.info("更新{}记忆: {} = {}", isSessionMemory ? "会话" : "全局", key, value);
             } else {
-                CreativeMemory memory = new CreativeMemory(key, value, sessionId);
+                CreativeMemory memory = new CreativeMemory(key, value, sessionId, isSessionMemory);
                 memoryRepository.save(memory);
-                logger.info("添加记忆: {} = {}", key, value);
+                logger.info("添加{}记忆: {} = {}", isSessionMemory ? "会话" : "全局", key, value);
             }
 
-            return objectMapper.writeValueAsString(Map.of("success", true, "message", "已添加到个人偏好", "key", key, "value", value));
+            String message = isSessionMemory ? "已添加到会话偏好" : "已添加到全局偏好";
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "message", message,
+                "key", key,
+                "value", value,
+                "scope", scope
+            ));
         } catch (Exception e) {
             logger.error("添加记忆失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
@@ -893,21 +912,31 @@ public class CreativeSessionService {
 
     /**
      * 删除记忆
+     * 支持 scope 参数：global（全局记忆，默认）或 session（会话记忆）
      */
     @Transactional
-    private String removeMemory(String argumentsJson) {
+    private String removeMemory(String sessionId, String argumentsJson) {
         try {
             Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
             String key = (String) args.get("key");
+            String scope = (String) args.getOrDefault("scope", "global");
 
             if (key == null) {
                 return "{\"error\": \"key 参数必填\"}";
             }
 
-            memoryRepository.deleteByKey(key);
-            logger.info("删除记忆: {}", key);
+            boolean isSessionMemory = "session".equalsIgnoreCase(scope);
 
-            return objectMapper.writeValueAsString(Map.of("success", true, "message", "已删除记忆", "key", key));
+            if (isSessionMemory) {
+                memoryRepository.deleteByKeyAndSessionId(key, sessionId);
+                logger.info("删除会话记忆: {}, sessionId: {}", key, sessionId);
+            } else {
+                memoryRepository.deleteByKey(key);
+                logger.info("删除全局记忆: {}", key);
+            }
+
+            String message = isSessionMemory ? "已删除会话记忆" : "已删除全局记忆";
+            return objectMapper.writeValueAsString(Map.of("success", true, "message", message, "key", key, "scope", scope));
         } catch (Exception e) {
             logger.error("删除记忆失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
@@ -1344,20 +1373,47 @@ public class CreativeSessionService {
     }
 
     /**
-     * 构建包含用户记忆的系统提示词
+     * 获取特定会话的记忆（包含全局记忆和会话记忆）
+     * 会话记忆优先级高于全局记忆
      */
-    private String buildSystemPromptWithMemories() {
+    public List<CreativeMemory> getMemoriesForSession(String sessionId) {
+        return memoryRepository.findBySessionIdOrSessionIdIsNullOrderByUpdateTimeDesc(sessionId);
+    }
+
+    /**
+     * 构建包含用户记忆的系统提示词
+     * @param sessionId 会话ID，用于加载会话特定记忆
+     */
+    private String buildSystemPromptWithMemories(String sessionId) {
         StringBuilder prompt = new StringBuilder(SYSTEM_PROMPT_BASE);
 
-        // 获取用户记忆
-        List<CreativeMemory> memories = memoryRepository.findAllByOrderByUpdateTimeDesc();
+        // 获取全局记忆和会话记忆
+        List<CreativeMemory> globalMemories = memoryRepository.findBySessionIdIsNullOrderByUpdateTimeDesc();
+        List<CreativeMemory> sessionMemories = sessionId != null
+            ? memoryRepository.findBySessionIdOrderByUpdateTimeDesc(sessionId)
+            : List.of();
 
-        if (!memories.isEmpty()) {
+        // 合并记忆：会话记忆覆盖全局记忆
+        Map<String, CreativeMemory> memoryMap = new LinkedHashMap<>();
+
+        // 先添加全局记忆
+        for (CreativeMemory memory : globalMemories) {
+            memoryMap.put(memory.getKey(), memory);
+        }
+
+        // 再添加会话记忆（会覆盖同 key 的全局记忆）
+        for (CreativeMemory memory : sessionMemories) {
+            memoryMap.put(memory.getKey(), memory);
+        }
+
+        if (!memoryMap.isEmpty()) {
             prompt.append("\n\n## 用户偏好记忆\n");
             prompt.append("以下是用户之前保存的偏好，请在引导时参考：\n\n");
 
-            for (CreativeMemory memory : memories) {
-                prompt.append("- ").append(memory.getKey()).append("：").append(memory.getValue()).append("\n");
+            for (CreativeMemory memory : memoryMap.values()) {
+                String scope = memory.getSessionId() != null ? "[会话]" : "[全局]";
+                prompt.append("- ").append(scope).append(" ").append(memory.getKey())
+                      .append("：").append(memory.getValue()).append("\n");
             }
         }
 
@@ -1369,7 +1425,7 @@ public class CreativeSessionService {
      * 每次对话请求前调用，确保记忆始终是最新的
      */
     @SuppressWarnings("unchecked")
-    private void refreshMemoriesInSystemMessage(List<Map<String, Object>> messages) {
+    private void refreshMemoriesInSystemMessage(List<Map<String, Object>> messages, String sessionId) {
         if (messages == null || messages.isEmpty()) {
             return;
         }
@@ -1385,37 +1441,22 @@ public class CreativeSessionService {
 
         if (systemMessageIndex == -1) {
             // 没有系统消息，创建一个
-            String newSystemPrompt = buildSystemPromptWithMemories();
+            String newSystemPrompt = buildSystemPromptWithMemories(sessionId);
             messages.add(0, Map.of("role", "system", "content", newSystemPrompt));
             logger.debug("创建新的系统消息（含记忆）");
             return;
         }
 
-        // 获取当前记忆
-        List<CreativeMemory> memories = memoryRepository.findAllByOrderByUpdateTimeDesc();
-
         // 构建新的系统提示词
-        String newSystemPrompt;
-        if (!memories.isEmpty()) {
-            StringBuilder prompt = new StringBuilder(SYSTEM_PROMPT_BASE);
-            prompt.append("\n\n## 用户偏好记忆\n");
-            prompt.append("以下是用户之前保存的偏好，请在引导时参考：\n\n");
-            for (CreativeMemory memory : memories) {
-                prompt.append("- ").append(memory.getKey()).append("：").append(memory.getValue()).append("\n");
-            }
-            newSystemPrompt = prompt.toString();
-        } else {
-            newSystemPrompt = SYSTEM_PROMPT_BASE;
-        }
+        String newSystemPrompt = buildSystemPromptWithMemories(sessionId);
 
         // 更新系统消息
-        // 由于 Map.of() 创建的是不可变 Map，需要创建新的 Map
         Map<String, Object> newSystemMessage = new LinkedHashMap<>();
         newSystemMessage.put("role", "system");
         newSystemMessage.put("content", newSystemPrompt);
         messages.set(systemMessageIndex, newSystemMessage);
 
-        logger.debug("已刷新系统消息中的记忆部分，当前记忆数: {}", memories.size());
+        logger.debug("已刷新系统消息中的记忆部分，sessionId: {}", sessionId);
     }
 
     /**
@@ -1519,12 +1560,14 @@ public class CreativeSessionService {
         Map<String, Object> addMemoryProps = new LinkedHashMap<>();
         addMemoryProps.put("key", Map.of("type", "string", "description", "记忆类型，如 preferred_style, preferred_genre"));
         addMemoryProps.put("value", Map.of("type", "string", "description", "记忆内容"));
-        tools.add(createTool("add_memory", "添加跨会话记忆。仅当用户明确要求「记住」「保存偏好」时调用。", addMemoryProps, Arrays.asList("key", "value")));
+        addMemoryProps.put("scope", Map.of("type", "string", "description", "记忆范围：global（全局，跨会话共享）或 session（仅当前会话）", "enum", Arrays.asList("global", "session")));
+        tools.add(createTool("add_memory", "添加记忆。仅当用户明确要求「记住」「保存偏好」时调用。默认保存为全局记忆，用户指定「本次会话」时保存为会话记忆。", addMemoryProps, Arrays.asList("key", "value")));
 
         // remove_memory 工具
         Map<String, Object> removeMemoryProps = new LinkedHashMap<>();
         removeMemoryProps.put("key", Map.of("type", "string", "description", "要删除的记忆类型"));
-        tools.add(createTool("remove_memory", "删除记忆。当用户要求「忘记」「删除偏好」时调用。", removeMemoryProps, Arrays.asList("key")));
+        removeMemoryProps.put("scope", Map.of("type", "string", "description", "记忆范围：global（全局）或 session（会话）", "enum", Arrays.asList("global", "session")));
+        tools.add(createTool("remove_memory", "删除记忆。当用户要求「忘记」「删除偏好」时调用。默认删除全局记忆。", removeMemoryProps, Arrays.asList("key")));
 
         // show_examples 工具
         Map<String, Object> showExamplesProps = new LinkedHashMap<>();
@@ -1646,8 +1689,16 @@ public class CreativeSessionService {
 
             ## 记忆管理
 
-            当用户明确要求"记住""保存偏好"时，调用 add_memory 工具保存。
-            当用户要求"忘记""删除偏好"时，调用 remove_memory 工具删除。
+            支持两种记忆范围：
+            - **全局记忆**（scope=global）：跨会话共享，适合用户长期偏好
+            - **会话记忆**（scope=session）：仅当前会话有效，适合特定故事的设定
+
+            调用时机：
+            - 用户说"记住我喜欢的风格" → add_memory(scope=global)
+            - 用户说"这个设定只用于本次故事" → add_memory(scope=session)
+            - 用户说"忘记之前的偏好" → remove_memory
+
+            默认使用全局记忆，除非用户明确指定"本次会话"。
 
             ## 回复格式
 

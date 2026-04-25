@@ -5,10 +5,16 @@ import java.time.LocalDateTime;
 
 /**
  * 跨会话记忆实体类
- * 用于存储用户的偏好和重要信息，跨会话保持
+ * 用于存储用户的偏好和重要信息
+ *
+ * 支持两种记忆模式：
+ * 1. 全局记忆（sessionId = null）：跨会话共享的用户偏好
+ * 2. 会话记忆（sessionId != null）：特定会话的独立记忆，优先级高于全局记忆
  */
 @Entity
-@Table(name = "creative_memories")
+@Table(name = "creative_memories", indexes = {
+    @Index(name = "idx_session_key", columnList = "session_id, `key`")
+})
 public class CreativeMemory {
 
     @Id
@@ -21,8 +27,11 @@ public class CreativeMemory {
     @Column(nullable = false, columnDefinition = "TEXT", name = "`value`")
     private String value;            // 记忆内容
 
+    @Column(name = "session_id", length = 64)
+    private String sessionId;        // 所属会话 ID，null 表示全局记忆
+
     @Column(name = "source_session_id", length = 64)
-    private String sourceSessionId;  // 来源会话 ID
+    private String sourceSessionId;  // 来源会话 ID（兼容旧数据）
 
     @Column(name = "create_time", nullable = false)
     private LocalDateTime createTime;
@@ -35,6 +44,9 @@ public class CreativeMemory {
         this.updateTime = LocalDateTime.now();
     }
 
+    /**
+     * 创建全局记忆
+     */
     public CreativeMemory(String key, String value) {
         this.key = key;
         this.value = value;
@@ -42,6 +54,21 @@ public class CreativeMemory {
         this.updateTime = LocalDateTime.now();
     }
 
+    /**
+     * 创建会话特定记忆
+     */
+    public CreativeMemory(String key, String value, String sessionId, boolean isSessionMemory) {
+        this.key = key;
+        this.value = value;
+        this.sessionId = isSessionMemory ? sessionId : null;
+        this.sourceSessionId = sessionId;
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
+    }
+
+    /**
+     * 兼容旧构造函数
+     */
     public CreativeMemory(String key, String value, String sourceSessionId) {
         this.key = key;
         this.value = value;
@@ -86,6 +113,15 @@ public class CreativeMemory {
         this.sourceSessionId = sourceSessionId;
     }
 
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+        this.updateTime = LocalDateTime.now();
+    }
+
     public LocalDateTime getCreateTime() {
         return createTime;
     }
@@ -108,6 +144,7 @@ public class CreativeMemory {
                 "id=" + id +
                 ", key='" + key + '\'' +
                 ", value='" + value + '\'' +
+                ", sessionId='" + sessionId + '\'' +
                 ", sourceSessionId='" + sourceSessionId + '\'' +
                 '}';
     }
