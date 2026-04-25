@@ -1048,6 +1048,89 @@ public class CreativeSessionService {
     }
 
     /**
+     * 生成角色图片工具实现
+     */
+    private String generateCharacterImage(String argumentsJson, CreativeSession session, SseEmitter emitter) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            Long characterId = ((Number) args.get("characterId")).longValue();
+            String size = (String) args.getOrDefault("size", "1:1");
+
+            // 获取角色卡
+            CharacterCard card = characterCardService.getCharacterCardById(characterId);
+            if (card == null) {
+                return "{\"error\": \"角色卡不存在，请先创建\", \"errorCode\": \"CHARACTER_NOT_FOUND\"}";
+            }
+
+            // 构建提示词
+            StringBuilder prompt = new StringBuilder();
+            if (card.getAppearanceDescription() != null && !card.getAppearanceDescription().isEmpty()) {
+                prompt.append(card.getAppearanceDescription());
+            } else {
+                prompt.append("beautiful character portrait");
+            }
+            prompt.append(", character art, ").append(card.getName());
+
+            // 从 notes 中提取 seed（如果存在）
+            Integer seed = null;
+            if (card.getNotes() != null && card.getNotes().startsWith("seed:")) {
+                try {
+                    seed = Integer.parseInt(card.getNotes().substring(5).trim());
+                } catch (NumberFormatException e) {
+                    // 忽略解析错误
+                }
+            }
+
+            // 调用 EvoLink 生成图片
+            String taskId = evoLinkImageService.generateImage(prompt.toString(), size, seed);
+
+            // 轮询获取结果（最多等待60秒）
+            String imageUrl = null;
+            int maxAttempts = 30;
+            for (int i = 0; i < maxAttempts; i++) {
+                Thread.sleep(2000);
+                EvoLinkImageService.TaskStatus status = evoLinkImageService.getTaskStatus(taskId);
+                if ("completed".equals(status.getStatus())) {
+                    imageUrl = status.getImageUrl();
+                    break;
+                } else if ("failed".equals(status.getStatus())) {
+                    return "{\"error\": \"图片生成失败: " + status.getError() + "\", \"errorCode\": \"IMAGE_GENERATION_FAILED\"}";
+                }
+            }
+
+            if (imageUrl == null) {
+                return "{\"error\": \"图片生成超时\", \"errorCode\": \"IMAGE_GENERATION_FAILED\"}";
+            }
+
+            // 更新角色卡图片
+            characterCardService.updateCharacterCardAIGeneratedFields(characterId, card.getAppearanceDescription(), imageUrl);
+
+            // 发送图片结果事件
+            emitter.send(SseEmitter.event()
+                .name("image_result")
+                .data(objectMapper.writeValueAsString(Map.of(
+                    "imageUrl", imageUrl,
+                    "type", "character",
+                    "id", characterId,
+                    "name", card.getName()
+                ))));
+
+            logger.info("生成角色图片成功: characterId={}, imageUrl={}", characterId, imageUrl);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "imageUrl", imageUrl,
+                "characterId", characterId,
+                "characterName", card.getName()
+            ));
+        } catch (Exception e) {
+            logger.error("生成角色图片失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages) {
