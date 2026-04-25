@@ -799,6 +799,7 @@ public class CreativeSessionService {
 
     /**
      * 填充参数（内部方法），并添加系统消息
+     * 支持多选参数（数组格式）
      */
     private String fillParamsInternal(CreativeSession session, String argumentsJson, List<Map<String, Object>> messages) {
         try {
@@ -814,6 +815,8 @@ public class CreativeSessionService {
                     String key = entry.getKey();
                     Object value = entry.getValue();
                     if (value != null) {
+                        // 支持多选：值可能是 String 或 List
+                        // Jackson 会自动解析 JSON 数组为 List
                         params.put(key, value);
                         updatedFields.put(key, value);
                     }
