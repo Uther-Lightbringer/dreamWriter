@@ -1127,6 +1127,43 @@ public class CreativeSessionService {
         showExamplesProps.put("genre", Map.of("type", "string", "description", "题材类型"));
         tools.add(createTool("show_examples", "展示相似题材的作品片段作为参考", showExamplesProps, Arrays.asList("genre")));
 
+        // ========== 新增创作工具 ==========
+
+        // create_novel 工具
+        Map<String, Object> createNovelProps = new LinkedHashMap<>();
+        createNovelProps.put("title", Map.of("type", "string", "description", "小说标题"));
+        tools.add(createTool("create_novel", "创建一部新小说。当用户明确提供小说标题时调用。", createNovelProps, Arrays.asList("title")));
+
+        // add_chapter 工具
+        Map<String, Object> addChapterProps = new LinkedHashMap<>();
+        addChapterProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
+        addChapterProps.put("title", Map.of("type", "string", "description", "章节标题"));
+        addChapterProps.put("content", Map.of("type", "string", "description", "章节内容"));
+        addChapterProps.put("afterChapterId", Map.of("type", "integer", "description", "插入到指定章节之后"));
+        tools.add(createTool("add_chapter", "为小说添加新章节。需要先创建小说。", addChapterProps, Arrays.asList("title", "content")));
+
+        // create_character_card 工具
+        Map<String, Object> createCharProps = new LinkedHashMap<>();
+        createCharProps.put("novelId", Map.of("type", "integer", "description", "小说ID"));
+        createCharProps.put("name", Map.of("type", "string", "description", "角色姓名"));
+        createCharProps.put("role", Map.of("type", "string", "description", "角色定位：主角/配角/反派/路人"));
+        createCharProps.put("description", Map.of("type", "string", "description", "角色描述"));
+        createCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征（用于生成图片）"));
+        createCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
+        tools.add(createTool("create_character_card", "创建角色卡。自动生成seed用于图片一致性。", createCharProps, Arrays.asList("name")));
+
+        // generate_character_image 工具
+        Map<String, Object> genCharImgProps = new LinkedHashMap<>();
+        genCharImgProps.put("characterId", Map.of("type", "integer", "description", "角色卡ID"));
+        genCharImgProps.put("size", Map.of("type", "string", "description", "图片尺寸", "enum", Arrays.asList("1:1", "16:9", "9:16")));
+        tools.add(createTool("generate_character_image", "根据角色卡生成角色图片，使用seed保持一致性。", genCharImgProps, Arrays.asList("characterId")));
+
+        // generate_chapter_images 工具
+        Map<String, Object> genChapterImgProps = new LinkedHashMap<>();
+        genChapterImgProps.put("chapterId", Map.of("type", "integer", "description", "章节ID"));
+        genChapterImgProps.put("mode", Map.of("type", "string", "description", "auto-自动生成/confirm-先确认后生成", "enum", Arrays.asList("auto", "confirm")));
+        tools.add(createTool("generate_chapter_images", "为章节生成配图。confirm模式返回推荐位置供用户确认。", genChapterImgProps, Arrays.asList("chapterId")));
+
         return tools;
     }
 
