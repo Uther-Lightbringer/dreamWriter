@@ -281,7 +281,7 @@ public class CreativeSessionService {
             requestBody.put("messages", messages);
             requestBody.put("stream", true);
             requestBody.put("stream_options", Map.of("include_usage", true));
-            requestBody.put("max_tokens", 2000);
+            requestBody.put("max_tokens", deepSeekConfig.getMaxTokens());
             requestBody.put("tools", getGuidanceTools());
 
             // 思考模式配置
@@ -577,7 +577,7 @@ public class CreativeSessionService {
             requestBody.put("messages", messages);
             requestBody.put("stream", true);
             requestBody.put("stream_options", Map.of("include_usage", true));
-            requestBody.put("max_tokens", 2000);
+            requestBody.put("max_tokens", deepSeekConfig.getMaxTokens());
             requestBody.put("tools", getGuidanceTools());
 
             // 思考模式配置
