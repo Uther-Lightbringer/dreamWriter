@@ -171,7 +171,7 @@ public class CreativeSessionService {
     }
 
     /**
-     * 流式调用 DeepSeek API
+     * 流式调用 DeepSeek API（真正的流式处理）
      */
     private void chatStream(List<Map<String, Object>> messages, SseEmitter emitter, CreativeSession session) {
         try {
@@ -188,123 +188,118 @@ public class CreativeSessionService {
             // 添加工具定义
             requestBody.put("tools", getGuidanceTools());
 
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+            String requestBodyStr = objectMapper.writeValueAsString(requestBody);
 
-            logger.info("调用 DeepSeek API, model={}, messages={}", deepSeekConfig.getModel(), messages.size());
+            logger.info("调用 DeepSeek API (流式), model={}, messages={}", deepSeekConfig.getModel(), messages.size());
 
-            // 使用 RestTemplate 执行请求
-            ResponseEntity<String> response = restTemplate.postForEntity(
+            // 使用 RestTemplate.execute 实现真正的流式请求
+            restTemplate.execute(
                     deepSeekConfig.getApiUrl(),
-                    request,
-                    String.class
-            );
+                    org.springframework.http.HttpMethod.POST,
+                    request -> {
+                        request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                        request.getHeaders().set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
+                        request.getBody().write(requestBodyStr.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    },
+                    response -> {
+                        try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                                new java.io.InputStreamReader(response.getBody(), java.nio.charset.StandardCharsets.UTF_8))) {
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                processStreamResponse(response.getBody(), emitter, session, messages);
-            } else {
-                sendError(emitter, "API 调用失败: " + response.getStatusCode());
-            }
+                            StringBuilder fullContent = new StringBuilder();
+                            List<Map<String, Object>> toolCalls = new ArrayList<>();
+                            String line;
+
+                            while ((line = reader.readLine()) != null) {
+                                if (line.trim().isEmpty() || line.startsWith(":")) {
+                                    continue;
+                                }
+
+                                if (line.startsWith("data: ")) {
+                                    String data = line.substring(6);
+
+                                    if ("[DONE]".equals(data.trim())) {
+                                        break;
+                                    }
+
+                                    try {
+                                        JsonNode jsonNode = objectMapper.readTree(data);
+                                        JsonNode choices = jsonNode.path("choices");
+
+                                        if (choices.isArray() && choices.size() > 0) {
+                                            JsonNode delta = choices.get(0).path("delta");
+
+                                            // 处理内容
+                                            JsonNode contentNode = delta.get("content");
+                                            if (contentNode != null && !contentNode.isNull() && contentNode.isTextual()) {
+                                                String content = contentNode.asText();
+                                                if (content != null && !content.isEmpty()) {
+                                                    fullContent.append(content);
+                                                    // 实时发送内容事件
+                                                    emitter.send(SseEmitter.event()
+                                                            .name("content")
+                                                            .data(objectMapper.writeValueAsString(Map.of("text", content))));
+                                                }
+                                            }
+
+                                            // 处理工具调用
+                                            JsonNode toolCallsDelta = delta.path("tool_calls");
+                                            if (toolCallsDelta.isArray() && toolCallsDelta.size() > 0) {
+                                                for (JsonNode tc : toolCallsDelta) {
+                                                    String toolCallId = tc.path("id").asText();
+                                                    JsonNode function = tc.path("function");
+                                                    String functionName = function.path("name").asText();
+                                                    String arguments = function.path("arguments").asText();
+
+                                                    Map<String, Object> toolCall = new LinkedHashMap<>();
+                                                    toolCall.put("id", toolCallId);
+                                                    toolCall.put("type", "function");
+                                                    Map<String, Object> func = new LinkedHashMap<>();
+                                                    func.put("name", functionName);
+                                                    func.put("arguments", arguments);
+                                                    toolCall.put("function", func);
+                                                    toolCalls.add(toolCall);
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        logger.warn("解析 SSE 数据块失败: {}", e.getMessage());
+                                    }
+                                }
+                            }
+
+                            // 构建助手消息
+                            Map<String, Object> assistantMessage = new LinkedHashMap<>();
+                            assistantMessage.put("role", "assistant");
+                            assistantMessage.put("content", fullContent.toString());
+                            if (!toolCalls.isEmpty()) {
+                                assistantMessage.put("tool_calls", toolCalls);
+                            }
+                            messages.add(assistantMessage);
+
+                            // 处理工具调用
+                            if (!toolCalls.isEmpty()) {
+                                processToolCalls(toolCalls, emitter, session, messages);
+                            }
+
+                            // 更新会话消息历史
+                            session.setMessages(toJson(messages));
+                            sessionRepository.save(session);
+
+                            // 发送完成事件
+                            emitter.send(SseEmitter.event().name("done").data("{}"));
+                            emitter.complete();
+
+                        } catch (Exception e) {
+                            logger.error("处理流式响应失败: {}", e.getMessage(), e);
+                            sendError(emitter, "处理响应失败: " + e.getMessage());
+                        }
+                        return null;
+                    }
+            );
 
         } catch (Exception e) {
             logger.error("流式调用失败: {}", e.getMessage(), e);
             sendError(emitter, "流式调用失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 处理流式响应
-     */
-    private void processStreamResponse(String responseBody, SseEmitter emitter,
-                                       CreativeSession session, List<Map<String, Object>> messages) {
-        StringBuilder fullContent = new StringBuilder();
-        List<Map<String, Object>> toolCalls = new ArrayList<>();
-
-        try {
-            String[] lines = responseBody.split("\\n");
-
-            for (String line : lines) {
-                if (line.trim().isEmpty() || line.startsWith(":")) {
-                    continue;
-                }
-
-                if (line.startsWith("data: ")) {
-                    String data = line.substring(6);
-
-                    if ("[DONE]".equals(data.trim())) {
-                        break;
-                    }
-
-                    try {
-                        JsonNode jsonNode = objectMapper.readTree(data);
-                        JsonNode choices = jsonNode.path("choices");
-
-                        if (choices.isArray() && choices.size() > 0) {
-                            JsonNode delta = choices.get(0).path("delta");
-
-                            // 处理内容
-                            JsonNode contentNode = delta.get("content");
-                            if (contentNode != null && !contentNode.isNull() && contentNode.isTextual()) {
-                                String content = contentNode.asText();
-                                if (content != null && !content.isEmpty()) {
-                                    fullContent.append(content);
-                                    // 发送内容事件
-                                    emitter.send(SseEmitter.event()
-                                            .name("content")
-                                            .data(objectMapper.writeValueAsString(Map.of("text", content))));
-                                }
-                            }
-
-                            // 处理工具调用
-                            JsonNode toolCallsDelta = delta.path("tool_calls");
-                            if (toolCallsDelta.isArray() && toolCallsDelta.size() > 0) {
-                                for (JsonNode tc : toolCallsDelta) {
-                                    String toolCallId = tc.path("id").asText();
-                                    JsonNode function = tc.path("function");
-                                    String functionName = function.path("name").asText();
-                                    String arguments = function.path("arguments").asText();
-
-                                    Map<String, Object> toolCall = new LinkedHashMap<>();
-                                    toolCall.put("id", toolCallId);
-                                    toolCall.put("type", "function");
-                                    Map<String, Object> func = new LinkedHashMap<>();
-                                    func.put("name", functionName);
-                                    func.put("arguments", arguments);
-                                    toolCall.put("function", func);
-                                    toolCalls.add(toolCall);
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.warn("解析 SSE 数据块失败: {}", e.getMessage());
-                    }
-                }
-            }
-
-            // 构建助手消息
-            Map<String, Object> assistantMessage = new LinkedHashMap<>();
-            assistantMessage.put("role", "assistant");
-            assistantMessage.put("content", fullContent.toString());
-            if (!toolCalls.isEmpty()) {
-                assistantMessage.put("tool_calls", toolCalls);
-            }
-            messages.add(assistantMessage);
-
-            // 处理工具调用
-            if (!toolCalls.isEmpty()) {
-                processToolCalls(toolCalls, emitter, session, messages);
-            }
-
-            // 更新会话消息历史
-            session.setMessages(toJson(messages));
-            sessionRepository.save(session);
-
-            // 发送完成事件
-            emitter.send(SseEmitter.event().name("done").data("{}"));
-            emitter.complete();
-
-        } catch (Exception e) {
-            logger.error("处理流式响应失败: {}", e.getMessage(), e);
-            sendError(emitter, "处理响应失败: " + e.getMessage());
         }
     }
 

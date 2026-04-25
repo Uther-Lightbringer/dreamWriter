@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <!-- Markdown 渲染库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -674,6 +676,36 @@
         .message.assistant .message-content {
             background: rgba(255, 255, 255, 0.8);
             color: var(--text-dark);
+            line-height: 1.7;
+        }
+
+        .message.assistant .message-content p {
+            margin: 0 0 10px 0;
+        }
+
+        .message.assistant .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.assistant .message-content ul,
+        .message.assistant .message-content ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .message.assistant .message-content li {
+            margin: 5px 0;
+        }
+
+        .message.assistant .message-content strong {
+            color: var(--accent-purple);
+        }
+
+        .message.assistant .message-content code {
+            background: rgba(156, 39, 176, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
         }
 
         .message.user .message-content {
@@ -1472,6 +1504,7 @@
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
+                let fullResponse = '';
 
                 // 创建 AI 消息容器
                 let aiMessageEl = null;
@@ -1487,7 +1520,6 @@
 
                     for (const line of lines) {
                         if (line.startsWith('event:')) {
-                            const eventType = line.substring(6).trim();
                             continue;
                         }
 
@@ -1500,6 +1532,8 @@
 
                                 // 确保 text 存在且不是 null
                                 if (json.text && json.text !== 'null' && json.text !== null) {
+                                    fullResponse += json.text;
+
                                     // 创建或更新 AI 消息
                                     if (!aiMessageEl) {
                                         aiMessageEl = document.createElement('div');
@@ -1511,18 +1545,21 @@
                                         aiContentEl = aiMessageEl.querySelector('.message-content');
                                         document.getElementById('chatMessages').appendChild(aiMessageEl);
                                     }
-                                    aiContentEl.textContent += json.text;
-                                    scrollToBottom();
-                                }
 
-                                if (json.options) {
-                                    renderOptions(json.options, json.field);
+                                    // 实时显示原始文本（流式效果）
+                                    aiContentEl.textContent = fullResponse;
+                                    scrollToBottom();
                                 }
                             } catch (e) {
                                 // 忽略解析错误
                             }
                         }
                     }
+                }
+
+                // 流式响应完成后，解析标记并渲染 Markdown
+                if (aiContentEl && fullResponse) {
+                    renderAIMessage(aiContentEl, fullResponse);
                 }
 
                 enableInput();
@@ -1532,6 +1569,70 @@
                 console.error('发送消息失败:', e);
                 enableInput();
             }
+        }
+
+        // 渲染 AI 消息（解析标记 + Markdown）
+        function renderAIMessage(contentEl, text) {
+            // 1. 提取并处理参数更新
+            const paramRegex = /\[PARAM:(\w+)=([^\]]+)\]/g;
+            let match;
+            while ((match = paramRegex.exec(text)) !== null) {
+                const field = match[1];
+                const value = match[2];
+                currentParams[field] = value;
+            }
+            // 更新参数面板
+            renderParamsPanel();
+
+            // 2. 提取并处理选项
+            const optionsRegex = /\[OPTIONS:(\w+)\]([\s\S]*?)\[\/OPTIONS\]/g;
+            let optionsMatch;
+            const allOptions = [];
+
+            while ((optionsMatch = optionsRegex.exec(text)) !== null) {
+                const field = optionsMatch[1];
+                const optionsStr = optionsMatch[2].trim();
+                const options = optionsStr.split('|').map(opt => {
+                    const parts = opt.split(':');
+                    if (parts.length > 1 && parts[0] === '其他') {
+                        return { label: parts[0], value: '__custom__', hint: parts.slice(1).join(':'), field };
+                    }
+                    return { label: opt.trim(), value: opt.trim(), field };
+                });
+                allOptions.push({ field, options });
+            }
+
+            // 3. 清理标记，准备 Markdown 渲染
+            let cleanText = text
+                .replace(paramRegex, '')
+                .replace(optionsRegex, '')
+                .trim();
+
+            // 4. 渲染 Markdown
+            if (typeof marked !== 'undefined') {
+                contentEl.innerHTML = marked.parse(cleanText);
+            } else {
+                // 如果 marked 未加载，简单处理换行
+                contentEl.innerHTML = cleanText.replace(/\n/g, '<br>');
+            }
+
+            // 5. 添加选项按钮
+            allOptions.forEach(({ field, options }) => {
+                const optionsEl = document.createElement('div');
+                optionsEl.className = 'message-options';
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn' + (opt.value === '__custom__' ? ' custom' : '');
+                    btn.textContent = opt.label;
+                    btn.onclick = () => selectOption(field, opt.value, opt.label);
+                    optionsEl.appendChild(btn);
+                });
+
+                contentEl.appendChild(optionsEl);
+            });
+
+            scrollToBottom();
         }
 
         // 渲染选项按钮
