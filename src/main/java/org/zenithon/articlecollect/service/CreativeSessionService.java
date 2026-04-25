@@ -69,6 +69,9 @@ public class CreativeSessionService {
     @Autowired
     private EvoLinkImageService evoLinkImageService;
 
+    @Autowired
+    private ChapterImageService chapterImageService;
+
     public CreativeSessionService(
             CreativeSessionRepository sessionRepository,
             CreativeMemoryRepository memoryRepository,
@@ -1126,6 +1129,97 @@ public class CreativeSessionService {
             ));
         } catch (Exception e) {
             logger.error("生成角色图片失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
+     * 生成章节配图工具实现
+     */
+    @SuppressWarnings("unchecked")
+    private String generateChapterImages(String argumentsJson, CreativeSession session, SseEmitter emitter) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            Long chapterId = ((Number) args.get("chapterId")).longValue();
+            String mode = (String) args.getOrDefault("mode", "confirm");
+
+            // 调用 ChapterImageService 分析章节
+            List<Map<String, Object>> recommendations = chapterImageService.analyzeChapterForImages(chapterId);
+
+            if (recommendations == null || recommendations.isEmpty()) {
+                return "{\"success\": true, \"message\": \"该章节无需配图\"}";
+            }
+
+            // confirm 模式：返回推荐列表
+            if ("confirm".equals(mode)) {
+                // 为每个推荐构建 prompt
+                List<Map<String, Object>> formattedRecs = new ArrayList<>();
+                for (Map<String, Object> rec : recommendations) {
+                    String description = (String) rec.get("description");
+                    String prompt = chapterImageService.generateImagePrompt(description);
+                    formattedRecs.add(Map.of(
+                        "position", rec.get("position"),
+                        "reason", rec.get("reason"),
+                        "description", description,
+                        "prompt", prompt
+                    ));
+                }
+
+                return objectMapper.writeValueAsString(Map.of(
+                    "success", true,
+                    "mode", "confirm",
+                    "recommendations", formattedRecs
+                ));
+            }
+
+            // auto 模式：直接生成
+            List<Map<String, Object>> images = new ArrayList<>();
+            for (Map<String, Object> rec : recommendations) {
+                String description = (String) rec.get("description");
+                String prompt = chapterImageService.generateImagePrompt(description);
+                String taskId = evoLinkImageService.generateImage(prompt, "16:9", null);
+
+                // 轮询获取结果
+                String imageUrl = null;
+                int maxAttempts = 30;
+                for (int i = 0; i < maxAttempts; i++) {
+                    Thread.sleep(2000);
+                    EvoLinkImageService.TaskStatus status = evoLinkImageService.getTaskStatus(taskId);
+                    if ("completed".equals(status.getStatus())) {
+                        imageUrl = status.getImageUrl();
+                        break;
+                    } else if ("failed".equals(status.getStatus())) {
+                        break;
+                    }
+                }
+
+                if (imageUrl != null) {
+                    images.add(Map.of(
+                        "imageUrl", imageUrl,
+                        "position", rec.get("position")
+                    ));
+
+                    // 发送图片结果事件
+                    emitter.send(SseEmitter.event()
+                        .name("image_result")
+                        .data(objectMapper.writeValueAsString(Map.of(
+                            "imageUrl", imageUrl,
+                            "type", "chapter",
+                            "chapterId", chapterId,
+                            "position", rec.get("position")
+                        ))));
+                }
+            }
+
+            logger.info("生成章节配图成功: chapterId={}, count={}", chapterId, images.size());
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "images", images
+            ));
+        } catch (Exception e) {
+            logger.error("生成章节配图失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
         }
     }
