@@ -732,6 +732,21 @@ public class CreativeSessionService {
                     case "summarize":
                         result = summarizeConversation(messages);
                         break;
+                    case "create_novel":
+                        result = createNovel(argumentsJson, session, messages);
+                        break;
+                    case "add_chapter":
+                        result = addChapter(argumentsJson, session, messages);
+                        break;
+                    case "create_character_card":
+                        result = createCharacterCard(argumentsJson, session, messages);
+                        break;
+                    case "generate_character_image":
+                        result = generateCharacterImage(argumentsJson, session, emitter);
+                        break;
+                    case "generate_chapter_images":
+                        result = generateChapterImages(argumentsJson, session, emitter);
+                        break;
                     default:
                         result = "{\"error\": \"未知工具: " + functionName + "\"}";
                 }
