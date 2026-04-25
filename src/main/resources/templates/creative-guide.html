@@ -714,6 +714,7 @@
                     </div>
                     <button class="config-reset" onclick="resetRuntimeConfig()">恢复默认</button>
                 </div>
+                <button class="header-btn" onclick="startNewSession()">✨ 新会话</button>
                 <button class="header-btn" onclick="toggleHistory()">📜 历史</button>
                 <a href="/" class="header-btn">🏠 首页</a>
             </div>
@@ -788,6 +789,45 @@
                 loadSession(currentSessionId);
             }
         });
+
+        // 开始新会话
+        async function startNewSession() {
+            try {
+                const response = await fetch('/api/creative-sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const session = await response.json();
+                currentSessionId = session.sessionId;
+                window.history.replaceState({}, '', '/creative-guide/' + currentSessionId);
+
+                // 清空聊天消息，显示欢迎界面
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = `
+                    <div class="welcome-message" id="welcomeMessage">
+                        <h2>欢迎来到创作引导</h2>
+                        <p>我是您的 AI 创作助手，让我帮您从零开始构建故事</p>
+                        <div class="quick-actions">
+                            <button class="quick-action-btn" onclick="startWith('我想写一部小说')">开始新小说</button>
+                            <button class="quick-action-btn" onclick="startWith('帮我构思一个故事')">构思故事</button>
+                            <button class="quick-action-btn" onclick="startWith('我想创建角色')">创建角色</button>
+                        </div>
+                    </div>
+                `;
+
+                // 重置参数
+                currentParams = {};
+                pendingSelections = {};
+
+                // 关闭历史面板
+                closeHistory();
+
+                console.log('创建新会话:', currentSessionId);
+            } catch (e) {
+                console.error('创建新会话失败', e);
+            }
+        }
 
         function startWith(message) {
             document.getElementById('welcomeMessage').style.display = 'none';
