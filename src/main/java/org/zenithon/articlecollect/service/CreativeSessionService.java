@@ -944,6 +944,54 @@ public class CreativeSessionService {
     }
 
     /**
+     * 添加章节工具实现
+     */
+    private String addChapter(String argumentsJson, CreativeSession session, List<Map<String, Object>> messages) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            // 获取小说ID
+            SessionContext context = getContext(session);
+            Long novelId = args.get("novelId") != null
+                ? ((Number) args.get("novelId")).longValue()
+                : context.getCurrentNovelId();
+
+            if (novelId == null) {
+                return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
+            }
+
+            String title = (String) args.get("title");
+            String content = (String) args.get("content");
+
+            if (title == null || title.trim().isEmpty()) {
+                return "{\"error\": \"章节标题不能为空\"}";
+            }
+            if (content == null || content.trim().isEmpty()) {
+                return "{\"error\": \"章节内容不能为空\"}";
+            }
+
+            // 调用 NovelService 添加章节
+            Chapter chapter = novelService.createChapter(novelId, title.trim(), content.trim(), null, null);
+
+            // 更新上下文
+            context.setCurrentChapterId(chapter.getId());
+            updateContext(session, context);
+
+            logger.info("添加章节成功: novelId={}, chapterId={}, title={}", novelId, chapter.getId(), title);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "chapterId", chapter.getId(),
+                "title", title,
+                "wordCount", content.length()
+            ));
+        } catch (Exception e) {
+            logger.error("添加章节失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages) {
