@@ -242,13 +242,16 @@ public class CreativeSessionService {
                             JsonNode delta = choices.get(0).path("delta");
 
                             // 处理内容
-                            String content = delta.path("content").asText();
-                            if (content != null && !content.isEmpty()) {
-                                fullContent.append(content);
-                                // 发送内容事件
-                                emitter.send(SseEmitter.event()
-                                        .name("content")
-                                        .data(objectMapper.writeValueAsString(Map.of("text", content))));
+                            JsonNode contentNode = delta.get("content");
+                            if (contentNode != null && !contentNode.isNull() && contentNode.isTextual()) {
+                                String content = contentNode.asText();
+                                if (content != null && !content.isEmpty()) {
+                                    fullContent.append(content);
+                                    // 发送内容事件
+                                    emitter.send(SseEmitter.event()
+                                            .name("content")
+                                            .data(objectMapper.writeValueAsString(Map.of("text", content))));
+                                }
                             }
 
                             // 处理工具调用

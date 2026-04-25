@@ -1498,7 +1498,8 @@
                             try {
                                 const json = JSON.parse(data);
 
-                                if (json.text) {
+                                // 确保 text 存在且不是 null
+                                if (json.text && json.text !== 'null' && json.text !== null) {
                                     // 创建或更新 AI 消息
                                     if (!aiMessageEl) {
                                         aiMessageEl = document.createElement('div');
