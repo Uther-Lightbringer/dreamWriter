@@ -571,6 +571,135 @@
             opacity: 1;
         }
 
+        /* 角色卡按钮 */
+        .character-card-btn {
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .character-card-btn:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        /* 角色卡抽屉面板 */
+        .character-drawer {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: -4px 0 16px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 200;
+        }
+
+        .character-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+
+        .drawer-header h4 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .drawer-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .drawer-content {
+            padding: 12px;
+        }
+
+        .character-card-item {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .character-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .character-image:hover {
+            transform: scale(1.02);
+        }
+
+        .character-placeholder {
+            width: 100%;
+            height: 150px;
+            background: var(--dream-lavender);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .character-info {
+            margin-top: 10px;
+        }
+
+        .character-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .character-desc {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .no-characters {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .no-characters-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
         /* 配置切换组件 */
         .config-toggle-btn {
             background: rgba(156, 39, 176, 0.1);
@@ -714,6 +843,7 @@
                     </div>
                     <button class="config-reset" onclick="resetRuntimeConfig()">恢复默认</button>
                 </div>
+                <button class="character-card-btn" onclick="toggleCharacterDrawer()">👥 角色</button>
                 <button class="header-btn" onclick="startNewSession()">✨ 新会话</button>
                 <button class="header-btn" onclick="toggleHistory()">📜 历史</button>
                 <a href="/" class="header-btn">🏠 首页</a>
@@ -746,6 +876,17 @@
             <button class="history-close" onclick="closeHistory()">×</button>
         </div>
         <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- 角色卡抽屉面板 -->
+    <div class="character-drawer" id="characterDrawer">
+        <div class="drawer-header">
+            <h4>👥 角色卡</h4>
+            <button class="drawer-close" onclick="closeCharacterDrawer()">×</button>
+        </div>
+        <div class="drawer-content" id="characterDrawerContent">
+            <!-- 角色卡列表将动态加载 -->
+        </div>
     </div>
 
     <script>
@@ -819,9 +960,11 @@
                 // 重置参数
                 currentParams = {};
                 pendingSelections = {};
+                currentNovelId = null;
 
-                // 关闭历史面板
+                // 关闭面板
                 closeHistory();
+                closeCharacterDrawer();
 
                 console.log('创建新会话:', currentSessionId);
             } catch (e) {
@@ -1340,6 +1483,88 @@
             document.getElementById('historyPanel').classList.remove('open');
         }
 
+        // ==================== 角色卡面板功能 ====================
+        let characterDrawerOpen = false;
+        let currentNovelId = null;
+
+        function toggleCharacterDrawer() {
+            if (characterDrawerOpen) {
+                closeCharacterDrawer();
+            } else {
+                openCharacterDrawer();
+            }
+        }
+
+        function openCharacterDrawer() {
+            document.getElementById('characterDrawer').classList.add('open');
+            characterDrawerOpen = true;
+            loadCharacterCards();
+        }
+
+        function closeCharacterDrawer() {
+            document.getElementById('characterDrawer').classList.remove('open');
+            characterDrawerOpen = false;
+        }
+
+        async function loadCharacterCards() {
+            const content = document.getElementById('characterDrawerContent');
+            content.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light)">加载中...</p>';
+
+            try {
+                // 先获取当前会话的上下文（包含 novelId）
+                if (currentSessionId) {
+                    const session = await fetch('/api/creative-sessions/' + currentSessionId).then(r => r.json());
+                    if (session.contextData) {
+                        const context = JSON.parse(session.contextData);
+                        currentNovelId = context.currentNovelId;
+                    }
+                }
+
+                if (!currentNovelId) {
+                    content.innerHTML = `
+                        <div class="no-characters">
+                            <div class="no-characters-icon">📖</div>
+                            <p>暂无关联小说</p>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">在对话中创建小说后可查看角色卡</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 获取角色卡列表
+                const cards = await fetch('/api/novels/' + currentNovelId + '/character-cards').then(r => r.json());
+
+                if (!cards || cards.length === 0) {
+                    content.innerHTML = `
+                        <div class="no-characters">
+                            <div class="no-characters-icon">👥</div>
+                            <p>暂无角色卡</p>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">在对话中创建角色卡</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 渲染角色卡列表
+                content.innerHTML = cards.map(card => `
+                    <div class="character-card-item" data-id="${card.id}">
+                        ${card.generatedImageUrl
+                            ? `<img src="${card.generatedImageUrl}" class="character-image" onclick="viewImageFullscreen('${card.generatedImageUrl}')" alt="${card.name}"/>`
+                            : `<div class="character-placeholder">👤</div>`
+                        }
+                        <div class="character-info">
+                            <div class="character-name">${escapeHtml(card.name)}</div>
+                            ${card.background ? `<div class="character-desc">${escapeHtml(card.background)}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error('加载角色卡失败', e);
+                content.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light)">加载失败</p>';
+            }
+        }
+
         async function loadHistoryList() {
             const list = document.getElementById('historyList');
             list.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light)">加载中...</p>';
@@ -1373,6 +1598,19 @@
             // 加载会话消息
             try {
                 const session = await fetch('/api/creative-sessions/' + sessionId).then(r => r.json());
+
+                // 从上下文中获取当前小说ID
+                if (session.contextData) {
+                    try {
+                        const context = JSON.parse(session.contextData);
+                        currentNovelId = context.currentNovelId || null;
+                    } catch (e) {
+                        currentNovelId = null;
+                    }
+                } else {
+                    currentNovelId = null;
+                }
+
                 if (session.messages) {
                     const messages = JSON.parse(session.messages);
                     const chatMessages = document.getElementById('chatMessages');
