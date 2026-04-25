@@ -241,6 +241,9 @@ public class CreativeSessionService {
             // 解析现有消息历史
             List<Map<String, Object>> messages = parseMessages(session.getMessages());
 
+            // 刷新系统消息中的记忆部分（每次请求都更新）
+            refreshMemoriesInSystemMessage(messages);
+
             // 添加用户消息
             messages.add(Map.of("role", "user", "content", content));
 
@@ -1359,6 +1362,60 @@ public class CreativeSessionService {
         }
 
         return prompt.toString();
+    }
+
+    /**
+     * 刷新消息列表中系统消息的记忆部分
+     * 每次对话请求前调用，确保记忆始终是最新的
+     */
+    @SuppressWarnings("unchecked")
+    private void refreshMemoriesInSystemMessage(List<Map<String, Object>> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+
+        // 查找系统消息（通常是第一条）
+        int systemMessageIndex = -1;
+        for (int i = 0; i < messages.size(); i++) {
+            if ("system".equals(messages.get(i).get("role"))) {
+                systemMessageIndex = i;
+                break;
+            }
+        }
+
+        if (systemMessageIndex == -1) {
+            // 没有系统消息，创建一个
+            String newSystemPrompt = buildSystemPromptWithMemories();
+            messages.add(0, Map.of("role", "system", "content", newSystemPrompt));
+            logger.debug("创建新的系统消息（含记忆）");
+            return;
+        }
+
+        // 获取当前记忆
+        List<CreativeMemory> memories = memoryRepository.findAllByOrderByUpdateTimeDesc();
+
+        // 构建新的系统提示词
+        String newSystemPrompt;
+        if (!memories.isEmpty()) {
+            StringBuilder prompt = new StringBuilder(SYSTEM_PROMPT_BASE);
+            prompt.append("\n\n## 用户偏好记忆\n");
+            prompt.append("以下是用户之前保存的偏好，请在引导时参考：\n\n");
+            for (CreativeMemory memory : memories) {
+                prompt.append("- ").append(memory.getKey()).append("：").append(memory.getValue()).append("\n");
+            }
+            newSystemPrompt = prompt.toString();
+        } else {
+            newSystemPrompt = SYSTEM_PROMPT_BASE;
+        }
+
+        // 更新系统消息
+        // 由于 Map.of() 创建的是不可变 Map，需要创建新的 Map
+        Map<String, Object> newSystemMessage = new LinkedHashMap<>();
+        newSystemMessage.put("role", "system");
+        newSystemMessage.put("content", newSystemPrompt);
+        messages.set(systemMessageIndex, newSystemMessage);
+
+        logger.debug("已刷新系统消息中的记忆部分，当前记忆数: {}", memories.size());
     }
 
     /**
