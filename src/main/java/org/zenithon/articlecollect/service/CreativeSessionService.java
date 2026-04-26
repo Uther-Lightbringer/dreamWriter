@@ -214,9 +214,18 @@ public class CreativeSessionService {
     @Transactional
     public CreativeSession updateSession(String sessionId, String title, CreativeSession.SessionStatus status) {
         CreativeSession session = getSession(sessionId);
+
+        // 如果会话已绑定小说，拒绝修改标题
         if (title != null && !title.trim().isEmpty()) {
-            session.setTitle(title);
+            SessionContext context = getContext(session);
+            if (context.getCurrentNovelId() != null) {
+                logger.warn("会话已绑定小说，拒绝修改标题: sessionId={}", sessionId);
+                // 忽略标题修改，继续处理其他字段
+            } else {
+                session.setTitle(title);
+            }
         }
+
         if (status != null) {
             session.setStatus(status);
         }
