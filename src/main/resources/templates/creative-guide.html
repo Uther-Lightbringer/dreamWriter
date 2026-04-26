@@ -1084,6 +1084,73 @@
             color: var(--text-light);
             text-align: center;
         }
+
+        .outline-section {
+            padding: 12px;
+            border-bottom: 1px solid rgba(156, 39, 176, 0.1);
+        }
+
+        .outline-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .outline-content {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .outline-empty {
+            text-align: center;
+            color: var(--text-light);
+            padding: 15px;
+        }
+
+        .outline-empty span {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .outline-generate-btn {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .outline-generate-btn:hover {
+            background: #7b1fa2;
+        }
+
+        .outline-text {
+            white-space: pre-wrap;
+        }
+
+        .character-status {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .status-item {
+            padding: 4px 0;
+            font-size: 0.85rem;
+        }
+
+        .status-item.ok { color: #4caf50; }
+        .status-item.warn { color: #f44336; }
+        .status-item.info { color: #ff9800; }
     </style>
 </head>
 <body>
@@ -1198,9 +1265,28 @@
                 </ul>
             </div>
 
+            <!-- 大纲区域 -->
+            <div class="outline-section">
+                <div class="section-header">
+                    <span>📖 大纲</span>
+                    <button class="refresh-btn" onclick="generateOutline()" title="生成大纲">✨</button>
+                </div>
+                <div id="outlineContent" class="outline-content">
+                    <div class="outline-empty">
+                        <span>尚未生成大纲</span>
+                        <button class="outline-generate-btn" onclick="generateOutline()">生成大纲</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- 分隔线 -->
             <div class="section-divider">
                 <span>角色卡</span>
+            </div>
+
+            <!-- 角色卡状态提示 -->
+            <div class="character-status" id="characterStatus">
+                <!-- 动态加载 -->
             </div>
 
             <!-- 角色卡列表 -->
@@ -2348,6 +2434,78 @@
                 panel.classList.remove('show');
             }
         });
+
+        // 生成大纲
+        async function generateOutline() {
+            if (!currentSessionId) {
+                alert('请先开始一个会话');
+                return;
+            }
+
+            try {
+                const message = '请帮我生成小说大纲';
+                await sendMessage(message);
+            } catch (error) {
+                console.error('生成大纲失败:', error);
+                alert('生成大纲失败');
+            }
+        }
+
+        // 加载大纲内容
+        async function loadOutline(novelId) {
+            try {
+                const response = await fetch('/api/novels/' + novelId);
+                const novel = await response.json();
+
+                const outlineContent = document.getElementById('outlineContent');
+                if (novel.outline) {
+                    outlineContent.innerHTML = `
+                        <div class="outline-text">${escapeHtml(novel.outline)}</div>
+                        <div class="outline-actions" style="margin-top: 8px;">
+                            <button class="outline-generate-btn" onclick="generateOutline()">重新生成</button>
+                        </div>
+                    `;
+                } else {
+                    outlineContent.innerHTML = `
+                        <div class="outline-empty">
+                            <span>尚未生成大纲</span>
+                            <button class="outline-generate-btn" onclick="generateOutline()">生成大纲</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载大纲失败:', error);
+            }
+        }
+
+        // 更新角色卡状态提示
+        function updateCharacterStatus(novelId) {
+            fetch('/api/novels/' + novelId + '/character-cards')
+                .then(res => res.json())
+                .then(cards => {
+                    const statusEl = document.getElementById('characterStatus');
+                    if (!statusEl) return;
+
+                    const protagonists = cards.filter(c => c.role === 'protagonist');
+                    const supporting = cards.filter(c => c.role === 'supporting');
+
+                    let html = '';
+                    if (protagonists.length > 0) {
+                        html += '<div class="status-item ok">✅ 主角：' + protagonists.map(p => p.name).join('、') + ' (已创建)</div>';
+                    } else {
+                        html += '<div class="status-item warn">⚠️ 主角：未创建 (必须创建)</div>';
+                    }
+
+                    if (supporting.length > 0) {
+                        html += '<div class="status-item ok">✅ 配角：' + supporting.map(s => s.name).join('、') + '</div>';
+                    } else {
+                        html += '<div class="status-item info">📝 配角：未创建 (建议创建)</div>';
+                    }
+
+                    statusEl.innerHTML = html;
+                })
+                .catch(err => console.error('更新角色卡状态失败:', err));
+        }
     </script>
 </body>
 </html>
