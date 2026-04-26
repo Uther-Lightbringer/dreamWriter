@@ -570,7 +570,7 @@ public class CreativeSessionService {
     }
 
     /**
-     * 工具调用完成后继续生成响应
+     * 工具调用完成后继续生成响应（支持递归工具调用）
      */
     private void continueAfterToolCalls(List<Map<String, Object>> messages, SseEmitter emitter, CreativeSession session, DeepSeekRuntimeConfig config) {
         try {
@@ -607,6 +607,8 @@ public class CreativeSessionService {
 
                             StringBuilder fullContent = new StringBuilder();
                             StringBuilder reasoningContent = new StringBuilder();
+                            // 使用 Map 按 toolCallId 累积工具调用（与 chatStream 相同逻辑）
+                            Map<String, Map<String, Object>> toolCallsMap = new LinkedHashMap<>();
                             Map<String, Object> usageInfo = new LinkedHashMap<>();
                             String line;
 
@@ -652,6 +654,49 @@ public class CreativeSessionService {
                                                             .data(objectMapper.writeValueAsString(Map.of("text", content))));
                                                 }
                                             }
+
+                                            // 处理工具调用（累积模式，与 chatStream 相同）
+                                            JsonNode toolCallsDelta = delta.path("tool_calls");
+                                            if (toolCallsDelta.isArray() && toolCallsDelta.size() > 0) {
+                                                for (JsonNode tc : toolCallsDelta) {
+                                                    int index = tc.path("index").asInt(-1);
+                                                    String toolCallId = tc.path("id").asText(null);
+                                                    JsonNode function = tc.path("function");
+                                                    String functionName = function.path("name").asText(null);
+                                                    String argumentsChunk = function.path("arguments").asText(null);
+
+                                                    String mapKey = (index >= 0) ? String.valueOf(index) : "_default_";
+
+                                                    Map<String, Object> toolCall = toolCallsMap.computeIfAbsent(
+                                                            mapKey,
+                                                            k -> {
+                                                                Map<String, Object> tc2 = new LinkedHashMap<>();
+                                                                tc2.put("id", "pending_id_" + index);
+                                                                tc2.put("type", "function");
+                                                                tc2.put("index", index);
+                                                                Map<String, Object> func = new LinkedHashMap<>();
+                                                                func.put("name", "");
+                                                                func.put("arguments", new StringBuilder());
+                                                                tc2.put("function", func);
+                                                                logger.info("递归工具调用累积: index={}, mapKey={}", index, mapKey);
+                                                                return tc2;
+                                                            }
+                                                    );
+
+                                                    if (toolCallId != null && !toolCallId.isEmpty()) {
+                                                        toolCall.put("id", toolCallId);
+                                                    }
+
+                                                    Map<String, Object> func = (Map<String, Object>) toolCall.get("function");
+                                                    if (functionName != null && !functionName.isEmpty()) {
+                                                        func.put("name", functionName);
+                                                        logger.info("递归工具调用名称: index={}, name={}", index, functionName);
+                                                    }
+                                                    if (argumentsChunk != null && !argumentsChunk.isEmpty()) {
+                                                        ((StringBuilder) func.get("arguments")).append(argumentsChunk);
+                                                    }
+                                                }
+                                            }
                                         }
                                     } catch (Exception e) {
                                         logger.warn("解析 SSE 数据块失败: {}", e.getMessage());
@@ -659,28 +704,72 @@ public class CreativeSessionService {
                                 }
                             }
 
-                            // 添加助手消息
+                            // 将累积的 toolCallsMap 转换为最终格式
+                            List<Map<String, Object>> toolCalls = new ArrayList<>();
+                            for (Map<String, Object> tc : toolCallsMap.values()) {
+                                Map<String, Object> finalTc = new LinkedHashMap<>();
+                                String finalId = (String) tc.get("id");
+                                if (finalId == null || finalId.startsWith("pending_id_")) {
+                                    finalId = "auto_id_" + UUID.randomUUID().toString().substring(0, 8);
+                                }
+                                finalTc.put("id", finalId);
+                                finalTc.put("type", tc.get("type"));
+                                Map<String, Object> func = (Map<String, Object>) tc.get("function");
+                                Map<String, Object> finalFunc = new LinkedHashMap<>();
+                                String funcName = (String) func.get("name");
+                                finalFunc.put("name", funcName);
+                                finalFunc.put("arguments", func.get("arguments").toString());
+                                finalTc.put("function", finalFunc);
+                                toolCalls.add(finalTc);
+
+                                logger.info("递归工具调用完成: id={}, name={}, arguments={}", finalId, funcName, finalFunc.get("arguments"));
+                            }
+
+                            // 构建助手消息
                             Map<String, Object> assistantMessage = new LinkedHashMap<>();
                             assistantMessage.put("role", "assistant");
                             assistantMessage.put("content", fullContent.toString());
                             if (reasoningContent.length() > 0) {
                                 assistantMessage.put("reasoning_content", reasoningContent.toString());
                             }
+
+                            if (!toolCalls.isEmpty()) {
+                                assistantMessage.put("tool_calls", toolCalls);
+                            }
                             messages.add(assistantMessage);
 
-                            // 更新会话
-                            session.setMessages(toJson(messages));
-                            sessionRepository.save(session);
+                            // 处理递归工具调用
+                            boolean hasToolCalls = !toolCalls.isEmpty();
+                            if (hasToolCalls) {
+                                processToolCalls(toolCalls, emitter, session, messages);
 
-                            // 发送 usage 和 done
-                            if (!usageInfo.isEmpty()) {
+                                // 更新会话消息历史
+                                session.setMessages(toJson(messages));
+                                sessionRepository.save(session);
+
+                                // 发送分隔事件
                                 emitter.send(SseEmitter.event()
-                                        .name("usage")
-                                        .data(objectMapper.writeValueAsString(usageInfo)));
-                            }
+                                        .name("tool_calls_done")
+                                        .data("{}"));
 
-                            emitter.send(SseEmitter.event().name("done").data("{}"));
-                            emitter.complete();
+                                // 递归调用，支持连续工具调用
+                                logger.info("递归工具调用检测到 {} 个工具，继续生成响应", toolCalls.size());
+                                continueAfterToolCalls(messages, emitter, session, config);
+                            } else {
+                                // 没有工具调用，正常结束
+                                session.setMessages(toJson(messages));
+                                sessionRepository.save(session);
+
+                                // 发送 usage 和 done
+                                if (!usageInfo.isEmpty()) {
+                                    emitter.send(SseEmitter.event()
+                                            .name("usage")
+                                            .data(objectMapper.writeValueAsString(usageInfo)));
+                                }
+
+                                emitter.send(SseEmitter.event().name("done").data("{}"));
+                                emitter.complete();
+                            }
 
                         } catch (Exception e) {
                             logger.error("继续生成响应失败: {}", e.getMessage(), e);
@@ -755,6 +844,9 @@ public class CreativeSessionService {
                         break;
                     case "create_character_card":
                         result = createCharacterCard(argumentsJson, session, messages);
+                        break;
+                    case "update_character_card":
+                        result = updateCharacterCard(argumentsJson, session, messages);
                         break;
                     case "generate_character_image":
                         result = generateCharacterImage(argumentsJson, session, emitter);
@@ -1090,6 +1182,64 @@ public class CreativeSessionService {
             ));
         } catch (Exception e) {
             logger.error("创建角色卡失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
+     * 更新角色卡工具实现
+     */
+    private String updateCharacterCard(String argumentsJson, CreativeSession session, List<Map<String, Object>> messages) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            Long characterId = args.get("characterId") != null
+                ? ((Number) args.get("characterId")).longValue()
+                : null;
+
+            if (characterId == null) {
+                // 尝试从上下文获取最近创建的角色卡
+                SessionContext context = getContext(session);
+                List<Long> characterIds = context.getCreatedCharacterIds();
+                if (characterIds != null && !characterIds.isEmpty()) {
+                    characterId = characterIds.get(characterIds.size() - 1);
+                } else {
+                    return "{\"error\": \"请提供角色卡ID，或先创建角色卡\", \"errorCode\": \"CHARACTER_ID_REQUIRED\"}";
+                }
+            }
+
+            // 获取现有角色卡
+            CharacterCard card = characterCardService.getCharacterCardById(characterId);
+            if (card == null) {
+                return "{\"error\": \"角色卡不存在\", \"errorCode\": \"CHARACTER_NOT_FOUND\"}";
+            }
+
+            // 更新字段（只更新提供的字段）
+            if (args.get("name") != null) {
+                card.setName((String) args.get("name"));
+            }
+            if (args.get("appearance") != null) {
+                card.setAppearanceDescription((String) args.get("appearance"));
+            }
+            if (args.get("personality") != null) {
+                card.setPersonality((String) args.get("personality"));
+            }
+            if (args.get("description") != null) {
+                card.setBackground((String) args.get("description"));
+            }
+
+            // 保存更新
+            characterCardService.updateCharacterCard(characterId, card);
+
+            logger.info("更新角色卡成功: characterId={}, name={}", characterId, card.getName());
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "characterId", characterId,
+                "name", card.getName()
+            ));
+        } catch (Exception e) {
+            logger.error("更新角色卡失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
         }
     }
@@ -1613,7 +1763,17 @@ public class CreativeSessionService {
         createCharProps.put("description", Map.of("type", "string", "description", "角色描述"));
         createCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征（用于生成图片）"));
         createCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
-        tools.add(createTool("create_character_card", "创建角色卡。自动生成seed用于图片一致性。", createCharProps, Arrays.asList("name")));
+        tools.add(createTool("create_character_card", "创建角色卡。自动生成seed用于图片一致性。当讨论角色细节时主动创建。", createCharProps, Arrays.asList("name")));
+
+        // update_character_card 工具
+        Map<String, Object> updateCharProps = new LinkedHashMap<>();
+        updateCharProps.put("characterId", Map.of("type", "integer", "description", "角色卡ID"));
+        updateCharProps.put("name", Map.of("type", "string", "description", "角色姓名"));
+        updateCharProps.put("role", Map.of("type", "string", "description", "角色定位：主角/配角/反派/路人"));
+        updateCharProps.put("description", Map.of("type", "string", "description", "角色描述"));
+        updateCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征（用于生成图片）"));
+        updateCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
+        tools.add(createTool("update_character_card", "更新已存在的角色卡信息。当用户补充或修改角色设定时调用。", updateCharProps, Arrays.asList("characterId")));
 
         // generate_character_image 工具
         Map<String, Object> genCharImgProps = new LinkedHashMap<>();
@@ -1807,8 +1967,32 @@ public class CreativeSessionService {
             - create_novel：创建小说（需要先询问标题）
             - add_chapter：添加章节（需要小说已创建）
             - create_character_card：创建角色卡（需要小说已创建）
+            - update_character_card：更新角色卡信息
             - generate_character_image：生成角色图片（需要角色卡已创建）
             - generate_chapter_images：生成章节配图（需要章节已创建）
+
+            ## 角色卡主动创建规则
+
+            **重要**：当讨论角色细节时，你应该主动创建或更新角色卡，而不是等待用户明确要求。
+
+            ### 何时主动创建角色卡
+            - 用户详细描述了主角或重要配角的外貌、性格、背景
+            - 用户提到"这个角色..."并给出具体设定
+            - 用户补充了角色的更多信息
+
+            ### 创建时机
+            1. 当用户首次完整描述一个角色时 → 调用 create_character_card
+            2. 当用户补充或修改已有角色信息时 → 调用 update_character_card
+
+            ### 示例场景
+            - 用户说"主角叫林清雅，是个清冷型的美少女" → 创建角色卡
+            - 用户说"她有一头银色长发" → 更新角色卡（添加外貌描述）
+            - 用户说"性格有点傲娇" → 更新角色卡（添加性格）
+
+            ### 注意事项
+            - 创建角色卡前，小说必须已存在
+            - 每个角色创建后返回 characterId，后续更新时使用该ID
+            - 如果用户没有明确说小说标题，先创建小说或询问
             """;
     }
 
