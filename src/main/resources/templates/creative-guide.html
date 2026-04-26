@@ -2194,11 +2194,15 @@
                 // 先获取当前会话的上下文（包含 novelId）
                 if (currentSessionId) {
                     const session = await fetch('/api/creative-sessions/' + currentSessionId).then(r => r.json());
+                    console.log('loadCharacterCards - session:', session);
                     if (session.contextData) {
                         const context = JSON.parse(session.contextData);
+                        console.log('loadCharacterCards - context:', context);
                         currentNovelId = context.currentNovelId;
                     }
                 }
+
+                console.log('loadCharacterCards - currentSessionId:', currentSessionId, 'currentNovelId:', currentNovelId);
 
                 if (!currentNovelId) {
                     content.innerHTML = `

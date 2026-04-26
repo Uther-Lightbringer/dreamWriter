@@ -87,6 +87,7 @@ public class CreativeSessionController {
             response.put("status", session.getStatus());
             response.put("messages", session.getMessages());
             response.put("extractedParams", session.getExtractedParams());
+            response.put("contextData", session.getContextData());  // 添加上下文数据
             response.put("createdAt", session.getCreateTime());
             response.put("updatedAt", session.getUpdateTime());
 
