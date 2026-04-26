@@ -1823,6 +1823,70 @@ public class CreativeSessionService {
     }
 
     /**
+     * 从最近消息中推断当前讨论焦点
+     */
+    private String extractCurrentFocus(List<Map<String, Object>> recentMessages) {
+        // 关键词映射
+        Map<String, String> keywordFocusMap = new LinkedHashMap<>();
+        keywordFocusMap.put("大纲", "大纲讨论");
+        keywordFocusMap.put("章节", "章节创作");
+        keywordFocusMap.put("角色", "角色设定");
+        keywordFocusMap.put("世界观", "世界观设定");
+        keywordFocusMap.put("主角", "主角设定");
+        keywordFocusMap.put("配角", "配角设定");
+        keywordFocusMap.put("风格", "风格确定");
+        keywordFocusMap.put("题材", "题材确定");
+
+        // 工具名到焦点的映射
+        Map<String, String> toolFocusMap = new LinkedHashMap<>();
+        toolFocusMap.put("create_novel", "小说创建");
+        toolFocusMap.put("create_character_card", "角色设定");
+        toolFocusMap.put("update_character_card", "角色设定");
+        toolFocusMap.put("add_chapter", "章节创作");
+        toolFocusMap.put("update_chapter", "章节创作");
+        toolFocusMap.put("update_novel", "世界观设定");
+        toolFocusMap.put("generate_outline", "大纲讨论");
+        toolFocusMap.put("update_outline", "大纲讨论");
+
+        // 从最近消息向前遍历
+        for (int i = recentMessages.size() - 1; i >= 0; i--) {
+            Map<String, Object> msg = recentMessages.get(i);
+            String role = (String) msg.get("role");
+
+            // 检查工具调用
+            if ("assistant".equals(role)) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> toolCalls = (List<Map<String, Object>>) msg.get("tool_calls");
+                if (toolCalls != null && !toolCalls.isEmpty()) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> function = (Map<String, Object>) toolCalls.get(0).get("function");
+                    if (function != null) {
+                        String toolName = (String) function.get("name");
+                        String focus = toolFocusMap.get(toolName);
+                        if (focus != null) {
+                            return focus;
+                        }
+                    }
+                }
+            }
+
+            // 检查用户消息中的关键词
+            if ("user".equals(role)) {
+                String content = (String) msg.get("content");
+                if (content != null) {
+                    for (Map.Entry<String, String> entry : keywordFocusMap.entrySet()) {
+                        if (content.contains(entry.getKey())) {
+                            return entry.getValue();
+                        }
+                    }
+                }
+            }
+        }
+
+        return "创作引导";
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized) {
