@@ -2109,6 +2109,21 @@ public class CreativeSessionService {
             - update_character_card：更新角色卡信息
             - generate_character_image：生成角色图片（需要角色卡已创建）
             - generate_chapter_images：生成章节配图（需要章节已创建）
+            - get_chapter_summaries：获取已有章节概括（创建新章节前调用）
+
+            ## 章节创作规则
+
+            创建新章节前，必须：
+            1. 先调用 `get_chapter_summaries` 获取已有章节概括
+            2. 根据概括了解剧情进度和人物发展
+            3. 确保新章节与已有内容连贯
+
+            创建章节时，必须提供：
+            1. 章节标题
+            2. 章节内容
+            3. 章节概括（100-200字），用于后续章节参考
+
+            **重要**：不要读取已有章节的完整内容，只读取概括，避免上下文过长。
 
             ## 角色卡主动创建规则
 
