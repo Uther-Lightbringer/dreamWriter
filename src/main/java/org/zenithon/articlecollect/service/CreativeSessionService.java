@@ -45,10 +45,10 @@ public class CreativeSessionService {
 
     private static final Logger logger = LoggerFactory.getLogger(CreativeSessionService.class);
 
-    // 对话轮数阈值，超过此值触发摘要
-    private static final int SUMMARY_THRESHOLD = 20;
-    // 保留最近对话轮数
-    private static final int KEEP_RECENT_TURNS = 10;
+    // 对话轮数阈值，超过此值触发压缩
+    private static final int SUMMARY_THRESHOLD = 15;
+    // 保留最近对话轮数（不压缩）
+    private static final int KEEP_RECENT_TURNS = 5;
     // 工具调用最大递归深度，防止无限递归
     private static final int MAX_TOOL_RECURSION_DEPTH = 5;
 
@@ -1668,6 +1668,16 @@ public class CreativeSessionService {
 
             // 调用 AI 生成大纲
             String outline = callDeepSeekForOutline(outlinePrompt);
+
+            // 检查是否生成成功
+            if (outline == null || outline.isEmpty() || outline.equals("大纲生成失败")) {
+                logger.error("AI生成大纲失败: novelId={}", novelId);
+                return objectMapper.writeValueAsString(Map.of(
+                    "success", false,
+                    "error", "AI生成大纲失败，请重试",
+                    "errorCode", "AI_GENERATION_FAILED"
+                ));
+            }
 
             // 保存大纲到小说
             novel.setOutline(outline);
