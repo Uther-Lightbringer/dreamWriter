@@ -67,7 +67,9 @@ public class CreativeSessionService {
         Map.entry("add_memory", "保存偏好"),
         Map.entry("preview_params", "预览参数"),
         Map.entry("remove_memory", "删除记忆"),
-        Map.entry("show_examples", "展示示例")
+        Map.entry("show_examples", "展示示例"),
+        Map.entry("generate_outline", "生成大纲"),
+        Map.entry("update_outline", "更新大纲")
     );
 
     // 系统提示词（固定部分）
@@ -926,6 +928,12 @@ public class CreativeSessionService {
                     case "update_novel":
                         result = updateNovel(argumentsJson, session);
                         break;
+                    case "generate_outline":
+                        result = generateOutline(argumentsJson, session, messages);
+                        break;
+                    case "update_outline":
+                        result = updateOutline(argumentsJson, session, messages);
+                        break;
                     default:
                         result = "{\"error\": \"未知工具: " + functionName + "\"}";
                 }
@@ -1146,7 +1154,6 @@ public class CreativeSessionService {
             Novel novel = novelService.createNovel(title.trim());
 
             // 更新会话上下文
-            SessionContext context = getContext(session);
             context.setCurrentNovelId(novel.getId());
             updateContext(session, context);
 
@@ -1636,6 +1643,133 @@ public class CreativeSessionService {
     }
 
     /**
+     * 生成大纲工具实现
+     */
+    private String generateOutline(String argumentsJson, CreativeSession session, List<Map<String, Object>> messages) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            // 获取小说ID
+            SessionContext context = getContext(session);
+            Long novelId = args.get("novelId") != null
+                ? ((Number) args.get("novelId")).longValue()
+                : context.getCurrentNovelId();
+
+            if (novelId == null) {
+                return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
+            }
+
+            // 获取小说和已收集的参数
+            Novel novel = novelService.getNovelById(novelId);
+            Map<String, Object> params = parseParams(session.getExtractedParams());
+
+            // 构建大纲生成提示词
+            String outlinePrompt = buildOutlinePrompt(params, novel);
+
+            // 调用 AI 生成大纲
+            String outline = callDeepSeekForOutline(outlinePrompt);
+
+            // 保存大纲到小说
+            novel.setOutline(outline);
+            novelService.updateNovel(novel);
+
+            logger.info("生成大纲成功: novelId={}", novelId);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "outline", outline
+            ));
+        } catch (Exception e) {
+            logger.error("生成大纲失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
+     * 构建大纲生成提示词
+     */
+    private String buildOutlinePrompt(Map<String, Object> params, Novel novel) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("请根据以下设定生成小说大纲：\n\n");
+
+        if (params.get("theme") != null) {
+            sb.append("- 题材：").append(params.get("theme")).append("\n");
+        }
+        if (params.get("style") != null) {
+            sb.append("- 风格：").append(params.get("style")).append("\n");
+        }
+        if (params.get("protagonistName") != null) {
+            sb.append("- 主角：").append(params.get("protagonistName"));
+            if (params.get("protagonistIdentity") != null) {
+                sb.append("，").append(params.get("protagonistIdentity"));
+            }
+            sb.append("\n");
+        }
+        if (params.get("mainPlot") != null) {
+            sb.append("- 故事主线：").append(params.get("mainPlot")).append("\n");
+        }
+        if (params.get("conflictType") != null) {
+            sb.append("- 核心冲突：").append(params.get("conflictType")).append("\n");
+        }
+        if (params.get("endingType") != null) {
+            sb.append("- 结局类型：").append(params.get("endingType")).append("\n");
+        }
+        if (params.get("chapterCount") != null) {
+            sb.append("- 章节数量：").append(params.get("chapterCount")).append("\n");
+        }
+
+        if (novel.getWorldView() != null && !novel.getWorldView().isEmpty()) {
+            sb.append("\n世界观设定：\n").append(novel.getWorldView()).append("\n");
+        }
+
+        sb.append("\n请生成一个结构化大纲，包含：\n");
+        sb.append("1. 故事概述（100-200字）\n");
+        sb.append("2. 主要剧情线\n");
+        sb.append("3. 每个章节的简要说明\n");
+
+        return sb.toString();
+    }
+
+    /**
+     * 更新大纲工具实现
+     */
+    private String updateOutline(String argumentsJson, CreativeSession session, List<Map<String, Object>> messages) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            // 获取小说ID
+            SessionContext context = getContext(session);
+            Long novelId = args.get("novelId") != null
+                ? ((Number) args.get("novelId")).longValue()
+                : context.getCurrentNovelId();
+
+            if (novelId == null) {
+                return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
+            }
+
+            String outline = (String) args.get("outline");
+            if (outline == null || outline.trim().isEmpty()) {
+                return "{\"error\": \"大纲内容不能为空\"}";
+            }
+
+            // 更新大纲
+            Novel novel = novelService.getNovelById(novelId);
+            novel.setOutline(outline.trim());
+            novelService.updateNovel(novel);
+
+            logger.info("更新大纲成功: novelId={}", novelId);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "message", "大纲更新成功"
+            ));
+        } catch (Exception e) {
+            logger.error("更新大纲失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized) {
@@ -1733,6 +1867,51 @@ public class CreativeSessionService {
         } catch (Exception e) {
             logger.error("调用 DeepSeek 生成摘要失败: {}", e.getMessage());
             return "摘要生成失败";
+        }
+    }
+
+    /**
+     * 调用 DeepSeek 生成大纲
+     */
+    private String callDeepSeekForOutline(String prompt) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("model", deepSeekConfig.getModel());
+            requestBody.put("max_tokens", 4096);
+            requestBody.put("messages", new Object[]{
+                    Map.of("role", "system", "content", "你是一位专业的小说大纲设计师。请根据给定的设定生成结构化的小说大纲。"),
+                    Map.of("role", "user", "content", prompt)
+            });
+
+            String requestBodyStr = objectMapper.writeValueAsString(requestBody);
+
+            String response = restTemplate.execute(
+                    deepSeekConfig.getApiUrl(),
+                    org.springframework.http.HttpMethod.POST,
+                    request -> {
+                        request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                        request.getHeaders().set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
+                        request.getBody().write(requestBodyStr.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    },
+                    responseEntity -> {
+                        String body = new String(responseEntity.getBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                        JsonNode jsonNode = objectMapper.readTree(body);
+                        JsonNode choices = jsonNode.path("choices");
+                        if (choices.isArray() && choices.size() > 0) {
+                            return choices.get(0).path("message").path("content").asText();
+                        }
+                        return "大纲生成失败";
+                    }
+            );
+
+            return response != null ? response : "大纲生成失败";
+        } catch (Exception e) {
+            logger.error("调用 DeepSeek 生成大纲失败: {}", e.getMessage());
+            return "大纲生成失败";
         }
     }
 
@@ -2006,6 +2185,17 @@ public class CreativeSessionService {
         updateNovelProps.put("worldView", Map.of("type", "string", "description", "小说世界观/概述"));
         tools.add(createTool("update_novel", "修改小说的世界观或概述。", updateNovelProps, Collections.emptyList()));
 
+        // generate_outline 工具
+        Map<String, Object> genOutlineProps = new LinkedHashMap<>();
+        genOutlineProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
+        tools.add(createTool("generate_outline", "根据已收集的参数生成小说大纲。用户要求生成大纲时调用。", genOutlineProps, Collections.emptyList()));
+
+        // update_outline 工具
+        Map<String, Object> updateOutlineProps = new LinkedHashMap<>();
+        updateOutlineProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
+        updateOutlineProps.put("outline", Map.of("type", "string", "description", "新的大纲内容"));
+        tools.add(createTool("update_outline", "更新小说大纲。用户要求修改大纲时调用。", updateOutlineProps, Arrays.asList("outline")));
+
         // create_character_card 工具
         Map<String, Object> createCharProps = new LinkedHashMap<>();
         createCharProps.put("novelId", Map.of("type", "integer", "description", "小说ID"));
@@ -2092,9 +2282,58 @@ public class CreativeSessionService {
             按以下顺序引导，但可根据对话自然调整：
 
             1. 题材和风格
-            2. 主角设定（姓名、性别、身份）
-            3. 故事主线（主线剧情、核心冲突、结局类型）
-            4. 细节参数（章节数、字数、视角等）
+            2. 主角设定（姓名、性别、身份、年龄）
+            3. 配角数量和设定（先询问主要配角数量，再逐一引导设定）
+            4. 故事主线（主线剧情、核心冲突、结局类型）
+            5. 细节参数（章节数、字数、视角等）
+
+            ### 主角设定完成后的角色卡创建
+
+            当主角的基本信息（姓名、性别、身份、年龄）和性格特征都已确认后，主动询问：
+            ```
+            关于主角的设定，你想更详细一些吗？我可以帮你创建一个角色卡，记录外貌、性格、背景等详细信息。
+            [OPTIONS:createProtagonistCard:创建主角角色卡]创建角色卡|暂时不需要|先继续后面的设定[/OPTIONS]
+            ```
+
+            用户选择"创建角色卡"后：
+            1. 引导用户描述主角的外貌特征、性格特点、背景故事等
+            2. 收集完信息后，调用 `create_character_card` 创建角色卡
+            3. 创建成功后告知用户，并继续后续引导
+
+            ### 配角引导流程
+
+            在主角设定完成后，主动询问配角数量：
+            ```
+            这个故事除了主角，还有几个重要角色呢？
+            [OPTIONS:supportingCharacterCount:配角数量]只有主角|1-2个|3-5个|5个以上[/OPTIONS]
+            ```
+
+            根据用户选择的数量，逐一引导配角设定：
+            - 用户选择"只有主角" → 跳过配角设定，进入故事主线
+            - 用户选择"1-2个" → 引导设定1-2个配角的基本信息
+            - 用户选择"3-5个" → 引导设定主要配角，次要角色可在创作中自然出现
+
+            每个配角的引导内容：
+            1. 姓名
+            2. 与主角的关系
+            3. 基本性格/身份
+
+            示例对话：
+            ```
+            好的，先来设定第一个配角：
+
+            这位配角叫什么名字？和主角是什么关系？
+            [OPTIONS:supportingCharacter1Name:配角姓名]参考:苏明远|林雨彤|陈默然[/OPTIONS]
+            [OPTIONS:supportingCharacter1Relation:与主角关系]青梅竹马|死对头|暗恋者|挚友|宿敌[/OPTIONS]
+            ```
+
+            **每个配角设定完成后**，同样询问是否创建角色卡：
+            ```
+            要为这个配角创建角色卡吗？可以记录更详细的外貌和设定。
+            [OPTIONS:createSupportingCharacter1Card:创建配角角色卡]创建角色卡|先继续下一个角色|暂时不需要[/OPTIONS]
+            ```
+
+            **重要**：用户确认创建角色卡后，立即调用 `create_character_card` 工具。
 
             ## 参数更新规则
 
@@ -2185,6 +2424,10 @@ public class CreativeSessionService {
             | protagonistName | 主角姓名 | 开放式，可提供参考选项 |
             | protagonistIdentity | 主角身份 | 皇帝/公主、总裁/秘书、修仙者、学生、教师、医生/律师等 |
             | protagonistAge | 主角年龄 | 开放式，可提供参考：十八九岁、二十出头、二十五六、三十左右 |
+            | supportingCharacterCount | 配角数量 | 只有主角、1-2个、3-5个、5个以上 |
+            | supportingCharacter1Name | 配角1姓名 | 开放式 |
+            | supportingCharacter1Relation | 配角1与主角关系 | 青梅竹马、死对头、暗恋者、挚友、宿敌、师徒、对手、亲人 |
+            | supportingCharacter1Identity | 配角1身份 | 开放式 |
             | mainPlot | 故事主线 | 开放式，引导用户描述 |
             | conflictType | 核心冲突 | 身份对立、家族恩怨、误会隔阂、命运捉弄、情敌竞争 |
             | endingType | 结局类型 | 圆满结局、悲剧结局、开放式结局、复仇成功、逆袭成功 |
@@ -2260,6 +2503,97 @@ public class CreativeSessionService {
             3. 章节概括（100-200字），用于后续章节参考
 
             **重要**：不要读取已有章节的完整内容，只读取概括，避免上下文过长。
+
+            ## 写作风格指南（去AI味）
+
+            你创作的小说内容必须避免典型的"AI味"，让读者感觉是在阅读真人创作的作品。
+
+            ### 绝对禁止的写作习惯
+
+            1. **禁止工整结构**：不要使用"首先、其次、最后"、"第一、第二、第三"等刻板框架
+            2. **禁止过度过渡词**：避免"此外"、"因此"、"总的来说"、"综上所述"等论文式表达
+            3. **禁止空泛情感描述**：如"他感到非常震惊"、"她内心十分复杂"等下定义式描述
+            4. **禁止千篇一律的开头**：不要总用环境描写或时间陈述开篇
+            5. **禁止绝对化表述**：避免"无疑"、"显然"、"毫无疑问"等过于确定的表达
+
+            ### 必须遵循的写作原则
+
+            **1. 情感要具体可感**
+            - ❌ "她感到十分悲伤"
+            - ✅ "她的手指微微颤抖，茶杯里的水洒出来几滴，她却像没察觉一样"
+
+            **2. 用细节代替概括**
+            - ❌ "他是一个很有钱的人"
+            - ✅ "他随手把那块价值六位数的百达翡丽扔在茶几上，和一堆打火机混在一起"
+
+            **3. 句式长短交替**
+            - 混合使用长句和短句，创造节奏感
+            - 偶尔用一个极短的句子制造冲击力
+            - 避免连续三个以上相似长度的句子
+
+            **4. 加入人物思维的跳跃**
+            - 人物的想法可以突然转折，可以有未完成的思绪
+            - 用省略号或破折号表示思维的停顿
+            - 例："她想说什么，却又——算了，没必要。"
+
+            **5. 使用感官细节**
+            - 视觉：光线、颜色、动作细节
+            - 听觉：声音、语调、背景噪音
+            - 触觉：温度、质地、身体感受
+            - 嗅觉：气味能触发记忆和情感
+
+            **6. 对话要自然**
+            - 口语化，不要书面腔
+            - 可以有打断、重复、语病
+            - 每个人物有自己的说话习惯和口头禅
+            - 例：不要"我认为这个想法是正确的"→"我觉得，这想法没错。"
+
+            **7. 适当使用比喻**
+            - 用生活化的事物做比喻
+            - 避免陈词滥调（如"美如天仙"）
+            - 可以用反差制造惊喜
+
+            **8. 控制信息密度**
+            - 不要一次性灌输太多信息
+            - 通过情节自然展开设定
+            - 让读者自己推理，而不是直接告诉答案
+
+            ### 章节开头技巧
+
+            避免以下开头方式：
+            - ❌ "清晨的阳光洒在..."
+            - ❌ "今天是..."
+            - ❌ "在...的地方，有一个..."
+
+            尝试以下开头方式：
+            - 从对话或动作切入
+            - 从人物的某个感官体验开始
+            - 设置悬念或抛出问题
+            - 用一个出人意料的陈述
+
+            ### 段落组织建议
+
+            1. 段落长短不一，避免整齐划一
+            2. 重要信息可以独占一段，制造强调
+            3. 适当穿插闪回、内心独白
+            4. 留白和节奏同样重要
+
+            ### 角色塑造要点
+
+            1. 每个角色有独特的说话方式、习惯动作
+            2. 角色可以有矛盾的性格特点
+            3. 通过行动展示性格，不要直接说"他很善良"
+            4. 角色的情绪可以有波动，不必始终如一
+
+            ### 语言风格示例
+
+            **AI味重的写法：**
+            > 林晓雪是一个性格温柔的女孩，她从小就喜欢读书。今天，她像往常一样来到图书馆，开始她的阅读时光。阳光透过窗户洒在她的脸上，使她看起来格外美丽。
+
+            **自然生动的写法：**
+            > 林晓雪又来了。图书馆的老阿姨已经认识她了——每个周五下午准时出现，借三本书还两本，雷打不动。她今天穿了一件洗得发白的淡蓝色衬衫，头发随手扎了个丸子，有几缕散在耳边。阳光从百叶窗的缝隙里漏进来，在她脸上画了几道明暗交界线。她低头翻书的侧脸，倒是有点像那谁——算了，想不起来。
+
+            **记住：你的目标是让读者完全感觉不到AI的存在，写出有温度、有个性、有惊喜的故事。**
 
             ## 角色卡主动创建规则
 
@@ -2368,6 +2702,14 @@ public class CreativeSessionService {
                 case "update_novel":
                     if (args.get("worldView") != null) {
                         parts.add("世界观: " + truncate(String.valueOf(args.get("worldView")), 30));
+                    }
+                    break;
+                case "generate_outline":
+                    // 无特殊参数需要显示
+                    break;
+                case "update_outline":
+                    if (args.get("outline") != null) {
+                        parts.add("大纲: " + truncate(String.valueOf(args.get("outline")), 30));
                     }
                     break;
                 case "create_character_card":

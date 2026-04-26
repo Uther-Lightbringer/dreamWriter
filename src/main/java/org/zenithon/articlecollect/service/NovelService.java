@@ -346,6 +346,13 @@ public class NovelService {
         }
         throw new RuntimeException("小说不存在，ID: " + novelId);
     }
+
+    /**
+     * 更新小说（通用方法）
+     */
+    public Novel updateNovel(Novel novel) {
+        return novelRepository.save(novel);
+    }
     
 
     /**
