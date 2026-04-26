@@ -1103,6 +1103,19 @@ public class CreativeSessionService {
                 return "{\"error\": \"小说标题不能为空\"}";
             }
 
+            // 检查是否已绑定小说
+            SessionContext context = getContext(session);
+            if (context.getCurrentNovelId() != null) {
+                Novel existingNovel = novelService.getNovelById(context.getCurrentNovelId());
+                String existingTitle = existingNovel != null ? existingNovel.getTitle() : "未知";
+                logger.warn("会话已绑定小说，拒绝重复创建: sessionId={}, existingNovelId={}", session.getSessionId(), context.getCurrentNovelId());
+                return objectMapper.writeValueAsString(Map.of(
+                    "success", false,
+                    "error", "当前会话已绑定小说《" + existingTitle + "》，如需创建新小说请新开会话",
+                    "errorCode", "NOVEL_ALREADY_BOUND"
+                ));
+            }
+
             // 调用 NovelService 创建小说
             Novel novel = novelService.createNovel(title.trim());
 
