@@ -1273,7 +1273,10 @@
             if (!content || isStreaming) return;
 
             // 隐藏欢迎消息
-            document.getElementById('welcomeMessage').style.display = 'none';
+            const welcomeEl = document.getElementById('welcomeMessage');
+            if (welcomeEl) {
+                welcomeEl.style.display = 'none';
+            }
 
             // 添加用户消息
             addUserMessage(content);
@@ -2154,7 +2157,7 @@
                         chatMessages.appendChild(msgEl);
                     }
 
-                    document.getElementById('welcomeMessage').style.display = 'none';
+                    // 欢迎消息已在清空 chatMessages 时被移除，无需再隐藏
                     scrollToBottom();
                 }
             } catch (e) {
