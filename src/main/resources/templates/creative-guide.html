@@ -2280,8 +2280,8 @@
             pendingSelections = {};
 
             // 1. 提取 [OPTIONS:字段名:显示名称] 标记格式的选项
-            // 字段名支持字母、数字、下划线和连字符
-            const optionsRegex = /\[OPTIONS:([\w-]+)(?::([^\]]+))?\]([\s\S]*?)\[\/OPTIONS\]/g;
+            // 字段名支持字母、数字、下划线、连字符和中文字符
+            const optionsRegex = /\[OPTIONS:([\w\u4e00-\u9fa5-]+)(?::([^\]]+))?\]([\s\S]*?)\[\/OPTIONS\]/g;
             const taggedOptions = [];
             let optionsMatch;
 
