@@ -24,6 +24,7 @@ import org.zenithon.articlecollect.repository.CreativeSessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zenithon.articlecollect.dto.CharacterCard;
 import org.zenithon.articlecollect.dto.CharacterCardAppearance;
+import org.zenithon.articlecollect.dto.CharacterCardRelationship;
 import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.Novel;
 
@@ -1545,6 +1546,21 @@ public class CreativeSessionService {
                 card.setAppearanceDescription(desc);
             }
 
+            // 解析关系字段
+            Object relationshipsArg = args.get("relationships");
+            if (relationshipsArg instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> relationshipsList = (List<Map<String, Object>>) relationshipsArg;
+                List<CharacterCardRelationship> relationships = new ArrayList<>();
+                for (Map<String, Object> relMap : relationshipsList) {
+                    CharacterCardRelationship relationship = new CharacterCardRelationship();
+                    relationship.setTargetName((String) relMap.get("targetName"));
+                    relationship.setRelationship((String) relMap.get("relationship"));
+                    relationships.add(relationship);
+                }
+                card.setRelationships(relationships);
+            }
+
             // 存储 seed 在 notes 字段（临时方案）
             card.setNotes("seed:" + seed);
 
@@ -1702,6 +1718,21 @@ public class CreativeSessionService {
             }
             if (args.get("description") != null) {
                 card.setBackground((String) args.get("description"));
+            }
+
+            // 解析关系字段
+            Object relationshipsArg = args.get("relationships");
+            if (relationshipsArg instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> relationshipsList = (List<Map<String, Object>>) relationshipsArg;
+                List<CharacterCardRelationship> relationships = new ArrayList<>();
+                for (Map<String, Object> relMap : relationshipsList) {
+                    CharacterCardRelationship relationship = new CharacterCardRelationship();
+                    relationship.setTargetName((String) relMap.get("targetName"));
+                    relationship.setRelationship((String) relMap.get("relationship"));
+                    relationships.add(relationship);
+                }
+                card.setRelationships(relationships);
             }
 
             // 保存更新
@@ -2923,6 +2954,15 @@ public class CreativeSessionService {
         appearanceObj.put("properties", appearanceProps);
         createCharProps.put("appearance", appearanceObj);
         createCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
+        // 关系字段
+        Map<String, Object> relationshipItemProps = new LinkedHashMap<>();
+        relationshipItemProps.put("targetName", Map.of("type", "string", "description", "关联角色姓名"));
+        relationshipItemProps.put("relationship", Map.of("type", "string", "description", "关系描述，如：青梅竹马、死对头、暗恋者"));
+        Map<String, Object> relationshipsObj = new LinkedHashMap<>();
+        relationshipsObj.put("type", "array");
+        relationshipsObj.put("description", "与其他角色的关系列表（可选）");
+        relationshipsObj.put("items", Map.of("type", "object", "properties", relationshipItemProps));
+        createCharProps.put("relationships", relationshipsObj);
         tools.add(createTool("create_character_card", "创建角色卡。调用前必须先调用list_character_cards查看现有角色。同名角色不可重复创建。每部小说只能有一个主角。外貌字段必须全部填写，用于AI生成图片。自动生成seed用于图片一致性。", createCharProps, Arrays.asList("name", "appearance")));
 
         // update_character_card 工具
@@ -2952,6 +2992,15 @@ public class CreativeSessionService {
         updateAppearanceObj.put("properties", updateAppearanceProps);
         updateCharProps.put("appearance", updateAppearanceObj);
         updateCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
+        // 关系字段
+        Map<String, Object> updateRelationshipItemProps = new LinkedHashMap<>();
+        updateRelationshipItemProps.put("targetName", Map.of("type", "string", "description", "关联角色姓名"));
+        updateRelationshipItemProps.put("relationship", Map.of("type", "string", "description", "关系描述，如：青梅竹马、死对头、暗恋者"));
+        Map<String, Object> updateRelationshipsObj = new LinkedHashMap<>();
+        updateRelationshipsObj.put("type", "array");
+        updateRelationshipsObj.put("description", "与其他角色的关系列表（可选）");
+        updateRelationshipsObj.put("items", Map.of("type", "object", "properties", updateRelationshipItemProps));
+        updateCharProps.put("relationships", updateRelationshipsObj);
         tools.add(createTool("update_character_card", "更新已存在的角色卡信息。当用户补充或修改角色设定时调用。外貌字段必须全部填写。", updateCharProps, Arrays.asList("characterId")));
 
         // generate_character_image 工具
@@ -3233,6 +3282,11 @@ public class CreativeSessionService {
             - distinguishingFeatures：显著特征（如：左眉有一道疤痕）
 
             外貌描述用于AI生成角色图片，必须具体、准确，禁止使用比喻。
+
+            **角色关系字段说明**：
+            - relationships：与其他角色的关系列表（可选，数组格式）
+            - 每个关系包含：targetName（关联角色姓名）、relationship（关系描述）
+            - 示例：`[{"targetName": "张三", "relationship": "青梅竹马"}]`
 
             ## 工具调用确认规则
 

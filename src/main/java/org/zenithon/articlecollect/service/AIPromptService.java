@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.zenithon.articlecollect.config.DeepSeekConfig;
 import org.zenithon.articlecollect.dto.CharacterCard;
+import org.zenithon.articlecollect.dto.CharacterCardRelationship;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -255,6 +256,16 @@ public class AIPromptService {
         // 背景故事
         if (card.getBackground() != null && !card.getBackground().isEmpty()) {
             sb.append("\n【背景故事】\n").append(card.getBackground()).append("\n");
+        }
+
+        // 人际关系
+        if (card.getRelationships() != null && !card.getRelationships().isEmpty()) {
+            sb.append("\n【人际关系】\n");
+            for (CharacterCardRelationship rel : card.getRelationships()) {
+                if (rel.getTargetName() != null && rel.getRelationship() != null) {
+                    sb.append("- 与").append(rel.getTargetName()).append("的关系：").append(rel.getRelationship()).append("\n");
+                }
+            }
         }
 
         return sb.toString();
