@@ -1177,8 +1177,11 @@ public class CreativeSessionService {
                 return "{\"error\": \"章节内容不能为空\"}";
             }
 
+            // 获取章节概括
+            String summary = (String) args.get("summary");
+
             // 调用 NovelService 添加章节
-            Chapter chapter = novelService.createChapter(novelId, title.trim(), content.trim(), null, null);
+            Chapter chapter = novelService.createChapter(novelId, title.trim(), content.trim(), null, summary);
 
             // 更新上下文
             context.setCurrentChapterId(chapter.getId());
@@ -1848,6 +1851,7 @@ public class CreativeSessionService {
         addChapterProps.put("title", Map.of("type", "string", "description", "章节标题"));
         addChapterProps.put("content", Map.of("type", "string", "description", "章节内容"));
         addChapterProps.put("afterChapterId", Map.of("type", "integer", "description", "插入到指定章节之后"));
+        addChapterProps.put("summary", Map.of("type", "string", "description", "章节概括（100-200字），用于后续章节参考剧情进度"));
         tools.add(createTool("add_chapter", "为小说添加新章节。需要先创建小说。", addChapterProps, Arrays.asList("title", "content")));
 
         // create_character_card 工具
