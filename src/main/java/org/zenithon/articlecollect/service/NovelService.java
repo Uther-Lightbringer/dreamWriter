@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.zenithon.articlecollect.config.EvoLinkConfig;
 import org.zenithon.articlecollect.dto.ChapterWithTags;
@@ -196,7 +195,26 @@ public class NovelService {
         chapters.forEach(this::ensureFormattedTime);
         return chapters;
     }
-    
+
+    /**
+     * 获取小说所有章节的概括列表（不含内容）
+     * 用于创建新章节时了解剧情进度，避免上下文爆炸
+     */
+    public List<Map<String, Object>> getChapterSummaries(Long novelId) {
+        List<Chapter> chapters = chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId);
+        List<Map<String, Object>> summaries = new ArrayList<>();
+
+        for (Chapter chapter : chapters) {
+            Map<String, Object> summary = new LinkedHashMap<>();
+            summary.put("chapterNumber", chapter.getChapterNumber());
+            summary.put("title", chapter.getTitle());
+            summary.put("summary", chapter.getStorySummary() != null ? chapter.getStorySummary() : "暂无概括");
+            summaries.add(summary);
+        }
+
+        return summaries;
+    }
+
     /**
      * 根据小说ID获取所有带标签的章节
      */
@@ -326,7 +344,6 @@ public class NovelService {
     /**
      * 批量更新小说的角色卡（结构化数据）- 保存到数据库表
      */
-    @Transactional
     public Novel updateCharacterCardsBatch(Long novelId, List<CharacterCard> characterCards) {
         Optional<Novel> novelOpt = novelRepository.findById(novelId);
         if (novelOpt.isPresent()) {
@@ -340,7 +357,6 @@ public class NovelService {
     /**
      * 保存单个角色卡（新增或更新）
      */
-    @Transactional
     public CharacterCard saveSingleCharacterCard(Long novelId, CharacterCard characterCard) {
         return characterCardService.saveSingleCharacterCard(novelId, characterCard);
     }
@@ -350,7 +366,6 @@ public class NovelService {
     /**
      * 保存角色卡到数据库表
      */
-    @Transactional
     public List<CharacterCard> saveCharacterCardsToDatabase(Long novelId, List<CharacterCard> characterCards) {
         return characterCardService.saveCharacterCards(novelId, characterCards);
     }
