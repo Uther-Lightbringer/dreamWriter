@@ -2044,6 +2044,10 @@
             loadGlobalMemories();
             loadSessionParams();
             loadCharacterCards();
+            // 加载大纲内容
+            if (currentNovelId) {
+                loadOutline(currentNovelId);
+            }
         }
 
         function closeCharacterDrawer() {
@@ -2208,7 +2212,19 @@
                 }
 
                 // 获取角色卡列表
-                const cards = await fetch('/api/novels/' + currentNovelId + '/character-cards').then(r => r.json());
+                const response = await fetch('/api/novels/' + currentNovelId + '/character-cards').then(r => r.json());
+
+                // 解析 API 返回的格式: {success: true, characterCards: "JSON字符串"}
+                let cards = [];
+                if (response.success && response.characterCards) {
+                    try {
+                        cards = typeof response.characterCards === 'string'
+                            ? JSON.parse(response.characterCards)
+                            : response.characterCards;
+                    } catch (e) {
+                        console.error('解析角色卡数据失败', e);
+                    }
+                }
 
                 if (!cards || cards.length === 0) {
                     content.innerHTML = `
@@ -2218,6 +2234,8 @@
                             <p style="font-size: 0.8rem; opacity: 0.7;">在对话中创建角色卡</p>
                         </div>
                     `;
+                    // 更新角色卡状态提示（无角色卡）
+                    updateCharacterStatus(currentNovelId);
                     return;
                 }
 
@@ -2234,6 +2252,9 @@
                         </div>
                     </div>
                 `).join('');
+
+                // 更新角色卡状态提示
+                updateCharacterStatus(currentNovelId);
 
             } catch (e) {
                 console.error('加载角色卡失败', e);
@@ -2482,9 +2503,21 @@
         function updateCharacterStatus(novelId) {
             fetch('/api/novels/' + novelId + '/character-cards')
                 .then(res => res.json())
-                .then(cards => {
+                .then(response => {
                     const statusEl = document.getElementById('characterStatus');
                     if (!statusEl) return;
+
+                    // 解析 API 返回的格式
+                    let cards = [];
+                    if (response.success && response.characterCards) {
+                        try {
+                            cards = typeof response.characterCards === 'string'
+                                ? JSON.parse(response.characterCards)
+                                : response.characterCards;
+                        } catch (e) {
+                            console.error('解析角色卡数据失败', e);
+                        }
+                    }
 
                     const protagonists = cards.filter(c => c.role === 'protagonist');
                     const supporting = cards.filter(c => c.role === 'supporting');
