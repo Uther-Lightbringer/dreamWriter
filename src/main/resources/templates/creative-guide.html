@@ -595,8 +595,24 @@
             color: var(--text-dark);
             animation: slideIn 0.3s ease;
             display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 150px;
+        }
+
+        .tool-toast-main {
+            display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .tool-toast-params {
+            font-size: 12px;
+            color: var(--text-light);
+            padding-left: 24px;
+            border-top: 1px dashed rgba(0, 0, 0, 0.1);
+            padding-top: 4px;
+            margin-top: 2px;
         }
 
         .tool-toast.success {
@@ -1828,21 +1844,31 @@
             'generate_character_image': { pending: '正在生成角色图片...', success: '角色图片生成成功' },
             'generate_chapter_images': { pending: '正在生成章节配图...', success: '章节配图生成成功' },
             'fill_params': { pending: '正在更新参数...', success: '参数已更新' },
-            'add_memory': { pending: '正在保存偏好...', success: '偏好已保存' }
+            'add_memory': { pending: '正在保存偏好...', success: '偏好已保存' },
+            'update_chapter': { pending: '正在修改章节...', success: '章节已修改' },
+            'update_novel': { pending: '正在修改小说...', success: '小说已修改' },
+            'get_chapter_summaries': { pending: '正在获取章节概括...', success: '章节概括获取成功' }
         };
 
         let activeToolToasts = new Map(); // toolName -> toastElement
 
-        function showToolToast(toolName, status) {
+        function showToolToast(toolName, status, params = '') {
             const container = document.getElementById('toolToastContainer');
             const operation = toolOperationMap[toolName] || { pending: toolName + '...', success: toolName + ' 完成' };
             const message = status === 'pending' ? operation.pending : operation.success;
 
             const toast = document.createElement('div');
             toast.className = `tool-toast ${status}`;
+
+            // 显示参数信息
+            let paramsHtml = '';
+            if (params && params.trim()) {
+                paramsHtml = `<div class="tool-toast-params">${escapeHtml(params)}</div>`;
+            }
+
             toast.innerHTML = status === 'pending'
-                ? `🔄 ${message}`
-                : `✅ ${message}`;
+                ? `<div class="tool-toast-main">🔄 ${message}</div>${paramsHtml}`
+                : `<div class="tool-toast-main">✅ ${message}</div>`;
 
             container.appendChild(toast);
 
@@ -1874,7 +1900,7 @@
         }
 
         function handleToolCallStart(data) {
-            const toast = showToolToast(data.tool, 'pending');
+            const toast = showToolToast(data.tool, 'pending', data.params || '');
             activeToolToasts.set(data.tool, toast);
         }
 

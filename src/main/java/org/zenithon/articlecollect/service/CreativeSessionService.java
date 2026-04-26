@@ -836,14 +836,19 @@ public class CreativeSessionService {
             for (Map<String, Object> toolCall : toolCalls) {
                 Map<String, Object> function = (Map<String, Object>) toolCall.get("function");
                 String functionName = function != null ? (String) function.get("name") : "";
+                String argumentsJson = function != null ? (String) function.get("arguments") : "{}";
                 String displayName = TOOL_NAME_MAP.getOrDefault(functionName, functionName);
+
+                // 解析参数并提取关键信息用于显示
+                String paramsDisplay = extractParamsDisplay(functionName, argumentsJson);
 
                 try {
                     emitter.send(SseEmitter.event()
                             .name("tool_call_start")
                             .data(objectMapper.writeValueAsString(Map.of(
                                     "tool", functionName,
-                                    "displayName", displayName
+                                    "displayName", displayName,
+                                    "params", paramsDisplay
                             ))));
                 } catch (Exception e) {
                     logger.warn("发送工具调用开始事件失败: {}", e.getMessage());
@@ -2304,6 +2309,104 @@ public class CreativeSessionService {
             logger.error("JSON 序列化失败: {}", e.getMessage());
             return "{}";
         }
+    }
+
+    /**
+     * 提取工具参数的简要显示信息
+     */
+    @SuppressWarnings("unchecked")
+    private String extractParamsDisplay(String functionName, String argumentsJson) {
+        try {
+            if (argumentsJson == null || argumentsJson.isEmpty() || "{}".equals(argumentsJson)) {
+                return "";
+            }
+
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+            List<String> parts = new ArrayList<>();
+
+            switch (functionName) {
+                case "create_novel":
+                    if (args.get("title") != null) {
+                        parts.add("标题: " + truncate(String.valueOf(args.get("title")), 20));
+                    }
+                    break;
+                case "add_chapter":
+                    if (args.get("title") != null) {
+                        parts.add("标题: " + truncate(String.valueOf(args.get("title")), 20));
+                    }
+                    if (args.get("novelId") != null) {
+                        parts.add("小说ID: " + args.get("novelId"));
+                    }
+                    break;
+                case "update_chapter":
+                    if (args.get("chapterId") != null) {
+                        parts.add("章节ID: " + args.get("chapterId"));
+                    }
+                    if (args.get("title") != null) {
+                        parts.add("新标题: " + truncate(String.valueOf(args.get("title")), 15));
+                    }
+                    break;
+                case "update_novel":
+                    if (args.get("worldView") != null) {
+                        parts.add("世界观: " + truncate(String.valueOf(args.get("worldView")), 30));
+                    }
+                    break;
+                case "create_character_card":
+                case "update_character_card":
+                    if (args.get("name") != null) {
+                        parts.add("角色: " + args.get("name"));
+                    }
+                    if (args.get("characterId") != null) {
+                        parts.add("ID: " + args.get("characterId"));
+                    }
+                    break;
+                case "generate_character_image":
+                    if (args.get("characterId") != null) {
+                        parts.add("角色ID: " + args.get("characterId"));
+                    }
+                    break;
+                case "generate_chapter_images":
+                    if (args.get("chapterId") != null) {
+                        parts.add("章节ID: " + args.get("chapterId"));
+                    }
+                    break;
+                case "fill_params":
+                    // 只显示更新的字段
+                    args.forEach((key, value) -> {
+                        if (value != null && !Arrays.asList("novelId", "chapterId").contains(key)) {
+                            parts.add(key + ": " + truncate(String.valueOf(value), 15));
+                        }
+                    });
+                    break;
+                case "add_memory":
+                    if (args.get("key") != null) {
+                        parts.add("键: " + args.get("key"));
+                    }
+                    break;
+                default:
+                    // 默认显示前两个参数
+                    int count = 0;
+                    for (Map.Entry<String, Object> entry : args.entrySet()) {
+                        if (count++ >= 2) break;
+                        if (entry.getValue() != null) {
+                            parts.add(entry.getKey() + ": " + truncate(String.valueOf(entry.getValue()), 15));
+                        }
+                    }
+            }
+
+            return String.join(" | ", parts);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /**
+     * 截断字符串
+     */
+    private String truncate(String str, int maxLen) {
+        if (str == null) return "";
+        if (str.length() <= maxLen) return str;
+        return str.substring(0, maxLen) + "...";
     }
 
     /**
