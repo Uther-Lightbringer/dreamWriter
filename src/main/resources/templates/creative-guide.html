@@ -1256,7 +1256,10 @@
         }
 
         function startWith(message) {
-            document.getElementById('welcomeMessage').style.display = 'none';
+            const welcomeEl = document.getElementById('welcomeMessage');
+            if (welcomeEl) {
+                welcomeEl.style.display = 'none';
+            }
             document.getElementById('chatInput').value = message;
             sendMessage();
         }
@@ -1532,7 +1535,8 @@
                     options.forEach(opt => {
                         const btn = document.createElement('button');
                         btn.className = 'option-btn';
-                        btn.textContent = opt.label;
+                        // 支持 Markdown 格式（**加粗**）
+                        btn.innerHTML = opt.label.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                         btn.dataset.value = opt.value;
                         btn.dataset.field = field;
                         btn.dataset.label = opt.label;
