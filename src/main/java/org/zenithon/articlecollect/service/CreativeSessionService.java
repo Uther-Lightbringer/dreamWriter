@@ -1191,6 +1191,18 @@ public class CreativeSessionService {
                 return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
             }
 
+            // ===== 检查主角角色卡 =====
+            if (!characterCardService.hasProtagonistCard(novelId)) {
+                logger.warn("尝试添加章节但缺少主角角色卡: novelId={}", novelId);
+                return objectMapper.writeValueAsString(Map.of(
+                    "success", false,
+                    "error", "请先创建主角角色卡后再开始写章节",
+                    "errorCode", "NO_PROTAGONIST_CARD",
+                    "hint", "在左侧信息面板中创建主角角色卡"
+                ));
+            }
+            // ===== 检查结束 =====
+
             String title = (String) args.get("title");
             String content = (String) args.get("content");
 
@@ -1777,6 +1789,37 @@ public class CreativeSessionService {
             logger.error("更新大纲失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
         }
+    }
+
+    /**
+     * 从消息历史中提取工具调用记录
+     */
+    private List<Map<String, Object>> extractToolCallHistory(List<Map<String, Object>> messages) {
+        List<Map<String, Object>> toolCalls = new ArrayList<>();
+
+        for (Map<String, Object> msg : messages) {
+            if ("assistant".equals(msg.get("role"))) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> calls = (List<Map<String, Object>>) msg.get("tool_calls");
+                if (calls != null) {
+                    for (Map<String, Object> call : calls) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> function = (Map<String, Object>) call.get("function");
+                        if (function != null) {
+                            String toolName = (String) function.get("name");
+                            if (toolName != null) {
+                                Map<String, Object> toolInfo = new LinkedHashMap<>();
+                                toolInfo.put("name", toolName);
+                                toolInfo.put("displayName", TOOL_NAME_MAP.getOrDefault(toolName, toolName));
+                                toolCalls.add(toolInfo);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return toolCalls;
     }
 
     /**
