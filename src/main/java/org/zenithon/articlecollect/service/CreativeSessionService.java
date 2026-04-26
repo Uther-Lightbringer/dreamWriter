@@ -56,10 +56,13 @@ public class CreativeSessionService {
     private static final Map<String, String> TOOL_NAME_MAP = Map.ofEntries(
         Map.entry("create_novel", "创建小说"),
         Map.entry("add_chapter", "添加章节"),
+        Map.entry("update_chapter", "修改章节"),
+        Map.entry("update_novel", "修改小说"),
         Map.entry("create_character_card", "创建角色卡"),
         Map.entry("update_character_card", "更新角色卡"),
         Map.entry("generate_character_image", "生成角色图片"),
         Map.entry("generate_chapter_images", "生成章节配图"),
+        Map.entry("get_chapter_summaries", "获取章节概括"),
         Map.entry("fill_params", "更新参数"),
         Map.entry("add_memory", "保存偏好"),
         Map.entry("preview_params", "预览参数"),
@@ -912,6 +915,12 @@ public class CreativeSessionService {
                     case "get_chapter_summaries":
                         result = getChapterSummaries(argumentsJson, session);
                         break;
+                    case "update_chapter":
+                        result = updateChapter(argumentsJson, session);
+                        break;
+                    case "update_novel":
+                        result = updateNovel(argumentsJson, session);
+                        break;
                     default:
                         result = "{\"error\": \"未知工具: " + functionName + "\"}";
                 }
@@ -1533,6 +1542,95 @@ public class CreativeSessionService {
     }
 
     /**
+     * 修改章节工具实现
+     */
+    private String updateChapter(String argumentsJson, CreativeSession session) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            Long chapterId = args.get("chapterId") != null
+                ? ((Number) args.get("chapterId")).longValue()
+                : null;
+
+            if (chapterId == null) {
+                return "{\"error\": \"请提供章节ID\", \"errorCode\": \"CHAPTER_ID_REQUIRED\"}";
+            }
+
+            // 获取修改参数
+            String title = (String) args.get("title");
+            String content = (String) args.get("content");
+            String summary = (String) args.get("summary");
+
+            // 至少需要一个修改项
+            if (title == null && content == null && summary == null) {
+                return "{\"error\": \"请提供至少一个修改项（标题、内容或概括）\", \"errorCode\": \"NO_UPDATE_FIELD\"}";
+            }
+
+            // 调用 NovelService 更新章节
+            Chapter chapter = novelService.updateChapter(chapterId, title, content, summary);
+
+            if (chapter == null) {
+                return "{\"error\": \"章节不存在\", \"errorCode\": \"CHAPTER_NOT_FOUND\"}";
+            }
+
+            logger.info("修改章节成功: chapterId={}, title={}", chapterId, title != null ? title : "未修改");
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "chapterId", chapterId,
+                "title", chapter.getTitle(),
+                "updatedFields", Map.of(
+                    "title", title != null,
+                    "content", content != null,
+                    "summary", summary != null
+                )
+            ));
+        } catch (Exception e) {
+            logger.error("修改章节失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
+     * 修改小说工具实现
+     */
+    private String updateNovel(String argumentsJson, CreativeSession session) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            // 获取小说ID
+            SessionContext context = getContext(session);
+            Long novelId = args.get("novelId") != null
+                ? ((Number) args.get("novelId")).longValue()
+                : context.getCurrentNovelId();
+
+            if (novelId == null) {
+                return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
+            }
+
+            String worldView = (String) args.get("worldView");
+
+            if (worldView == null || worldView.trim().isEmpty()) {
+                return "{\"error\": \"世界观不能为空\"}";
+            }
+
+            // 调用 NovelService 更新世界观
+            Novel novel = novelService.updateWorldView(novelId, worldView.trim());
+
+            logger.info("修改小说世界观成功: novelId={}", novelId);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "novelId", novelId,
+                "worldView", worldView.trim()
+            ));
+        } catch (Exception e) {
+            logger.error("修改小说失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized) {
@@ -1887,7 +1985,21 @@ public class CreativeSessionService {
         addChapterProps.put("content", Map.of("type", "string", "description", "章节内容"));
         addChapterProps.put("afterChapterId", Map.of("type", "integer", "description", "插入到指定章节之后"));
         addChapterProps.put("summary", Map.of("type", "string", "description", "章节概括（100-200字），用于后续章节参考剧情进度"));
-        tools.add(createTool("add_chapter", "为小说添加新章节。需要先创建小说。", addChapterProps, Arrays.asList("title", "content")));
+        tools.add(createTool("add_chapter", "为小说添加新章节。需要先创建小说。调用前必须先向用户确认。", addChapterProps, Arrays.asList("title", "content")));
+
+        // update_chapter 工具
+        Map<String, Object> updateChapterProps = new LinkedHashMap<>();
+        updateChapterProps.put("chapterId", Map.of("type", "integer", "description", "章节ID"));
+        updateChapterProps.put("title", Map.of("type", "string", "description", "新章节标题"));
+        updateChapterProps.put("content", Map.of("type", "string", "description", "新章节内容"));
+        updateChapterProps.put("summary", Map.of("type", "string", "description", "新章节概括（100-200字）"));
+        tools.add(createTool("update_chapter", "修改已有章节的标题、内容或概括。调用前必须先向用户确认。", updateChapterProps, Arrays.asList("chapterId")));
+
+        // update_novel 工具
+        Map<String, Object> updateNovelProps = new LinkedHashMap<>();
+        updateNovelProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
+        updateNovelProps.put("worldView", Map.of("type", "string", "description", "小说世界观/概述"));
+        tools.add(createTool("update_novel", "修改小说的世界观或概述。", updateNovelProps, Collections.emptyList()));
 
         // create_character_card 工具
         Map<String, Object> createCharProps = new LinkedHashMap<>();
