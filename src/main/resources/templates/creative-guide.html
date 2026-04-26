@@ -989,6 +989,39 @@
             pointer-events: none;
         }
 
+        /* 小说信息区域样式 */
+        .novel-info-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .novel-info-content {
+            font-size: 0.9rem;
+        }
+
+        .novel-title {
+            font-weight: 600;
+            color: var(--accent-purple);
+            font-size: 1rem;
+        }
+
+        .novel-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .no-novel-hint {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 8px 0;
+        }
+
         /* 公共记忆管理样式 */
         .memory-section {
             background: rgba(255, 255, 255, 0.5);
@@ -1648,6 +1681,16 @@
                 </div>
                 <div id="globalMemoriesList" class="memories-list">
                     <!-- 公共记忆列表 -->
+                </div>
+            </div>
+
+            <!-- 当前小说区域 -->
+            <div class="novel-info-section">
+                <div class="section-header">
+                    <span>📚 当前小说</span>
+                </div>
+                <div class="novel-info-content" id="novelInfoContent">
+                    <div class="no-novel-hint">尚未创建小说</div>
                 </div>
             </div>
 
@@ -2551,12 +2594,31 @@
                         showToolToast(data.tool, 'success');
                     }
 
-                    // 刷新角色卡列表（如果是角色卡相关操作）
+                    // 创建小说后，更新 currentNovelId 并刷新面板
+                    if (data.tool === 'create_novel') {
+                        const newNovelId = result.novelId;
+                        if (newNovelId) {
+                            currentNovelId = newNovelId;
+                            console.log('小说创建成功，更新 currentNovelId:', currentNovelId);
+                        }
+                        // 刷新会话参数（可能包含小说标题等）
+                        setTimeout(() => {
+                            loadNovelInfo(newNovelId);
+                            loadSessionParams();
+                            loadSessionStats();
+                            if (characterDrawerOpen) {
+                                loadCharacterCards(newNovelId);
+                                loadOutline(newNovelId);
+                            }
+                        }, 300);
+                    }
+
+                    // 创建角色卡后刷新列表
                     if (data.tool === 'create_character_card' ||
                         data.tool === 'update_character_card' ||
                         data.tool === 'generate_character_image') {
                         if (typeof loadCharacterCards === 'function' && characterDrawerOpen) {
-                            setTimeout(() => loadCharacterCards(), 500);
+                            setTimeout(() => loadCharacterCards(), 300);
                         }
                     }
                 }
@@ -2582,6 +2644,7 @@
             characterDrawerOpen = true;
             loadBalance();
             loadGlobalMemories();
+            loadNovelInfo();
             loadSessionParams();
             loadCharacterCards();
             // 加载大纲内容
@@ -2648,6 +2711,40 @@
                 console.error('加载余额失败', e);
                 balanceEl.textContent = '获取失败';
                 balanceEl.className = 'stats-value balance-value empty';
+            }
+        }
+
+        // 加载小说信息
+        async function loadNovelInfo(novelId = null) {
+            const content = document.getElementById('novelInfoContent');
+
+            // 使用传入的 novelId 或当前的 currentNovelId
+            const targetNovelId = novelId || currentNovelId;
+
+            if (!targetNovelId) {
+                content.innerHTML = '<div class="no-novel-hint">尚未创建小说</div>';
+                return;
+            }
+
+            try {
+                const novel = await fetch('/api/novels/' + targetNovelId).then(r => r.json());
+
+                if (novel.id) {
+                    currentNovelId = novel.id;  // 确保 currentNovelId 同步
+                    const chapterCount = novel.chapterCount || 0;
+                    content.innerHTML = `
+                        <div class="novel-title">${escapeHtml(novel.title || '未命名小说')}</div>
+                        <div class="novel-meta">
+                            <span>📝 ${chapterCount} 章</span>
+                            <span>📅 ${novel.createTime ? new Date(novel.createTime).toLocaleDateString('zh-CN') : ''}</span>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<div class="no-novel-hint">小说不存在</div>';
+                }
+            } catch (e) {
+                console.error('加载小说信息失败', e);
+                content.innerHTML = '<div class="no-novel-hint">加载失败</div>';
             }
         }
 
@@ -2838,18 +2935,19 @@
             }
         }
 
-        async function loadCharacterCards() {
+        async function loadCharacterCards(forceNovelId = null) {
             const content = document.getElementById('characterDrawerContent');
             content.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light)">加载中...</p>';
 
             try {
-                // 先获取当前会话的上下文（包含 novelId）
-                if (currentSessionId) {
+                // 如果提供了 forceNovelId，直接使用；否则从会话获取
+                if (forceNovelId) {
+                    currentNovelId = forceNovelId;
+                } else if (currentSessionId && !currentNovelId) {
+                    // 只在 currentNovelId 未设置时才从会话获取
                     const session = await fetch('/api/creative-sessions/' + currentSessionId).then(r => r.json());
-                    console.log('loadCharacterCards - session:', session);
                     if (session.contextData) {
                         const context = JSON.parse(session.contextData);
-                        console.log('loadCharacterCards - context:', context);
                         currentNovelId = context.currentNovelId;
                     }
                 }
