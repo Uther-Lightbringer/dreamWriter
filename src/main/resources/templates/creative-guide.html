@@ -886,6 +886,30 @@
             position: relative;
         }
 
+        /* 账户余额样式 */
+        .balance-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .balance-content {
+            font-size: 0.85rem;
+        }
+
+        .balance-value {
+            color: #4caf50;
+        }
+
+        .balance-value.low {
+            color: #ff9800;
+        }
+
+        .balance-value.empty {
+            color: #f44336;
+        }
+
         /* 会话统计样式 */
         .session-stats-section {
             background: rgba(255, 255, 255, 0.5);
@@ -1476,6 +1500,21 @@
             background: rgba(93, 64, 55, 0.1);
             margin: 8px 0;
         }
+
+        .usage-row.cost-row {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .usage-row .cost-value {
+            color: #f44336;
+            font-weight: 600;
+        }
+
+        .usage-row.saved-row {
+            color: #4caf50;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -1558,6 +1597,20 @@
             <button class="drawer-close" onclick="closeCharacterDrawer()">×</button>
         </div>
         <div class="drawer-content">
+            <!-- 账户余额区域 -->
+            <div class="balance-section">
+                <div class="section-header">
+                    <span>💰 账户余额</span>
+                    <button class="refresh-btn" onclick="loadBalance()" title="刷新">🔄</button>
+                </div>
+                <div class="balance-content" id="balanceContent">
+                    <div class="stats-row">
+                        <span class="stats-label">可用余额</span>
+                        <span class="stats-value balance-value" id="balanceAmount">加载中...</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 对话统计区域 -->
             <div class="session-stats-section">
                 <div class="section-header">
@@ -1940,6 +1993,27 @@
             const cacheMiss = usage.prompt_cache_miss_tokens || 0;
             const reasoningTokens = usage.completion_tokens_details?.reasoning_tokens || 0;
 
+            // 计算费用（DeepSeek 定价：元/百万 tokens）
+            // 缓存命中: 0.5, 缓存未命中: 2.0, 输出: 8.0
+            const actualCacheHit = cacheHit || 0;
+            const actualCacheMiss = cacheMiss || (cacheHit > 0 ? 0 : promptTokens);
+
+            const cacheHitCost = (actualCacheHit / 1_000_000) * 0.5;
+            const cacheMissCost = (actualCacheMiss / 1_000_000) * 2.0;
+            const outputCost = (completionTokens / 1_000_000) * 8.0;
+            const totalCost = cacheHitCost + cacheMissCost + outputCost;
+
+            // 计算节省的费用（如果没有缓存命中）
+            const costWithoutCache = (promptTokens / 1_000_000) * 2.0 + outputCost;
+            const savedCost = costWithoutCache - totalCost;
+
+            // 格式化费用显示
+            const formatCost = (cost) => {
+                if (cost < 0.01) return '¥' + cost.toFixed(6);
+                if (cost < 1) return '¥' + cost.toFixed(4);
+                return '¥' + cost.toFixed(2);
+            };
+
             popup.innerHTML = `
                 <div class="usage-header">Token 用量详情</div>
                 <div class="usage-row">
@@ -1970,6 +2044,17 @@
                 <div class="usage-row">
                     <span>推理 tokens</span>
                     <span>${reasoningTokens.toLocaleString()}</span>
+                </div>
+                ` : ''}
+                <div class="usage-divider"></div>
+                <div class="usage-row cost-row">
+                    <span>💰 本次费用</span>
+                    <span class="cost-value">${formatCost(totalCost)}</span>
+                </div>
+                ${savedCost > 0.0001 ? `
+                <div class="usage-row saved-row">
+                    <span>缓存节省</span>
+                    <span>${formatCost(savedCost)}</span>
                 </div>
                 ` : ''}
             `;
@@ -2495,6 +2580,7 @@
         function openCharacterDrawer() {
             document.getElementById('characterDrawer').classList.add('open');
             characterDrawerOpen = true;
+            loadBalance();
             loadGlobalMemories();
             loadSessionParams();
             loadCharacterCards();
@@ -2531,6 +2617,37 @@
             } catch (e) {
                 console.error('加载会话参数失败', e);
                 renderParamsPanel({});
+            }
+        }
+
+        // 加载账户余额
+        async function loadBalance() {
+            const balanceEl = document.getElementById('balanceAmount');
+            balanceEl.textContent = '加载中...';
+            balanceEl.className = 'stats-value balance-value';
+
+            try {
+                const response = await fetch('/api/deepseek-config/balance');
+                const result = await response.json();
+
+                if (result.success && result.totalBalance) {
+                    const balance = parseFloat(result.totalBalance);
+                    balanceEl.textContent = '¥' + balance.toFixed(2);
+
+                    // 根据余额设置颜色
+                    if (balance <= 0) {
+                        balanceEl.className = 'stats-value balance-value empty';
+                    } else if (balance < 10) {
+                        balanceEl.className = 'stats-value balance-value low';
+                    }
+                } else {
+                    balanceEl.textContent = result.error || '获取失败';
+                    balanceEl.className = 'stats-value balance-value empty';
+                }
+            } catch (e) {
+                console.error('加载余额失败', e);
+                balanceEl.textContent = '获取失败';
+                balanceEl.className = 'stats-value balance-value empty';
             }
         }
 
