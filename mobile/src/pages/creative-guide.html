@@ -1,165 +1,358 @@
-<div class="page-enter h-screen flex flex-col">
-  <div class="px-4 py-3 border-b border-gray-100 bg-white/95 backdrop-blur flex items-center justify-between">
-    <h1 class="text-lg font-semibold text-gray-800">创作引导</h1>
-    <button onclick="alert('菜单功能开发中')" class="p-2">
+<div class="page-enter flex flex-col" style="height: calc(100vh - 64px);">
+  <!-- 顶部栏 -->
+  <div class="px-4 py-3 border-b border-gray-100 bg-white/95 backdrop-blur flex items-center justify-between flex-shrink-0">
+    <h1 class="text-lg font-semibold text-gray-800" id="creative-title">创作引导</h1>
+    <button onclick="toggleMenu()" class="p-2 relative z-10">
       <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
     </button>
   </div>
 
-  <div id="creative-content" class="flex-1 overflow-y-auto hide-scrollbar">
+  <!-- 下拉菜单 - 使用 fixed 定位突破层叠上下文 -->
+  <div id="creative-menu" class="hidden" style="position: fixed; top: 56px; right: 16px; width: 192px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid #f3f4f6; z-index: 99999; overflow: hidden;">
+    <button onclick="switchTab('home')" class="creative-menu-item w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2" data-tab="home">
+      <span>🏠</span>
+      <span class="text-sm">首页</span>
+    </button>
+    <button onclick="switchTab('chat')" class="creative-menu-item w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2" data-tab="chat">
+      <span>💬</span>
+      <span class="text-sm">AI 对话</span>
+    </button>
+    <button onclick="switchTab('config')" class="creative-menu-item w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2" data-tab="config">
+      <span>⚙️</span>
+      <span class="text-sm">配置</span>
+    </button>
+    <button onclick="switchTab('characters')" class="creative-menu-item w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2" data-tab="characters">
+      <span>👤</span>
+      <span class="text-sm">角色</span>
+    </button>
+    <button onclick="switchTab('history')" class="creative-menu-item w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2" data-tab="history">
+      <span>📜</span>
+      <span class="text-sm">历史会话</span>
+    </button>
+    <div class="border-t border-gray-100"></div>
+    <button onclick="createNewSession()" class="creative-menu-item w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 text-dream-purple">
+      <span>➕</span>
+      <span class="text-sm">新会话</span>
+    </button>
   </div>
 
-  <div class="border-t border-gray-100 bg-white/95 backdrop-blur px-2 py-1">
-    <div class="flex justify-around">
-      <button onclick="switchTab('chat')" class="creative-tab active flex flex-col items-center py-2 px-4 rounded-lg" data-tab="chat">
-        <span class="text-lg">💬</span>
-        <span class="text-xs mt-0.5">对话</span>
-      </button>
-      <button onclick="switchTab('characters')" class="creative-tab flex flex-col items-center py-2 px-4 rounded-lg" data-tab="characters">
-        <span class="text-lg">👤</span>
-        <span class="text-xs mt-0.5">角色</span>
-      </button>
-      <button onclick="switchTab('tokens')" class="creative-tab flex flex-col items-center py-2 px-4 rounded-lg" data-tab="tokens">
-        <span class="text-lg">📊</span>
-        <span class="text-xs mt-0.5">Token</span>
-      </button>
-      <button onclick="switchTab('novel')" class="creative-tab flex flex-col items-center py-2 px-4 rounded-lg" data-tab="novel">
-        <span class="text-lg">⚙️</span>
-        <span class="text-xs mt-0.5">小说</span>
-      </button>
-    </div>
+  <div id="creative-content" class="flex-1 overflow-hidden">
   </div>
 </div>
 
 <script type="module">
-  import { api, getNovels } from '../js/api-client.js';
+  import { api, getNovels, getCreativeSessions, getCreativeSession, createCreativeSession, deleteCreativeSession, chatWithSession } from '../js/api-client.js';
   import { VoiceInput } from '../js/voice-input.js';
+  import { navigate } from '../js/router.js';
   
-  let currentTab = 'chat';
+  window.router = { navigate };
+  
+  let currentTab = 'home';
+  let currentSessionId = null;
   let voiceInput = null;
-  let currentNovelId = null;
+  let sessions = [];
+  
+  const tabTitles = {
+    'home': '创作引导',
+    'chat': 'AI 对话',
+    'config': '会话配置',
+    'characters': '角色卡',
+    'history': '历史会话'
+  };
+  
+  window.toggleMenu = () => {
+    const menu = document.getElementById('creative-menu');
+    menu.classList.toggle('hidden');
+  };
+  
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('creative-menu');
+    const menuBtn = e.target.closest('button[onclick="toggleMenu()"]');
+    if (!menuBtn && !e.target.closest('#creative-menu')) {
+      menu?.classList.add('hidden');
+    }
+  });
   
   window.switchTab = (tab) => {
     currentTab = tab;
+    document.getElementById('creative-title').textContent = tabTitles[tab] || '创作引导';
     
-    document.querySelectorAll('.creative-tab').forEach(el => {
-      el.classList.toggle('active', el.dataset.tab === tab);
-      el.classList.toggle('text-dream-purple', el.dataset.tab === tab);
-      el.classList.toggle('bg-dream-pink/30', el.dataset.tab === tab);
+    document.querySelectorAll('.creative-menu-item').forEach(el => {
+      if (el.dataset.tab === tab) {
+        el.classList.add('text-dream-purple', 'bg-dream-pink/30');
+      } else {
+        el.classList.remove('text-dream-purple', 'bg-dream-pink/30');
+      }
     });
+    
+    document.getElementById('creative-menu')?.classList.add('hidden');
     
     const container = document.getElementById('creative-content');
     switch(tab) {
+      case 'home': renderHome(container); break;
       case 'chat': renderChatTab(container); break;
+      case 'config': renderConfigTab(container); break;
       case 'characters': renderCharactersTab(container); break;
-      case 'tokens': renderTokensTab(container); break;
-      case 'novel': renderNovelTab(container); break;
+      case 'history': renderHistoryTab(container); break;
     }
   };
   
-  function renderChatTab(container) {
-    container.innerHTML = `
-      <div class="flex flex-col h-full">
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
-          <div class="flex justify-start">
-            <div class="max-w-[85%] bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
-              <p class="text-sm text-gray-700">你好！我是你的 AI 创作助手。有什么可以帮你的吗？</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="border-t border-gray-100 p-3 bg-white">
-          <div class="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-2">
-            <button id="voice-btn" class="p-2 text-gray-400 hover:text-dream-purple transition">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-              </svg>
-            </button>
-            <input 
-              type="text" 
-              id="chat-input"
-              placeholder="输入消息..."
-              class="flex-1 bg-transparent outline-none text-sm"
-              onkeypress="if(event.key==='Enter') sendMessage()"
-            >
-            <button onclick="sendMessage()" class="p-2 bg-dream-purple text-white rounded-xl">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
+  // 添加 Markdown 渲染函数
+  function renderMarkdown(text) {
+    if (!text) return '';
+    // 简单的 Markdown 解析
+    return text
+      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
+      .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+      .replace(/`(.*?)`/gim, '<code class="bg-gray-200 px-1 rounded text-sm">$1</code>')
+      .replace(/\n/g, '<br>');
+  }
+  
+  // 首页
+  async function renderHome(container) {
+    container.innerHTML = '<div class="flex justify-center py-8"><div class="loading-spinner"></div></div>';
     
-    const input = document.getElementById('chat-input');
-    const voiceBtn = document.getElementById('voice-btn');
-    voiceInput = new VoiceInput();
-    
-    voiceBtn.addEventListener('click', () => {
-      const supported = voiceInput.init();
-      if (!supported) {
-        alert('您的设备不支持语音输入，请使用系统键盘的语音功能');
+    try {
+      const result = await getCreativeSessions();
+      sessions = result.sessions || [];
+      
+      if (sessions.length === 0) {
+        container.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full p-6">
+            <div class="text-6xl mb-4">✍️</div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">开始创作</h2>
+            <p class="text-gray-500 text-center mb-6">创建一个新会话，让 AI 协助你创作小说</p>
+            <button onclick="createNewSession()" class="px-6 py-3 bg-dream-purple text-white rounded-xl font-medium">
+              ➕ 创建新会话
+            </button>
+          </div>
+        `;
         return;
       }
       
-      const isListening = voiceInput.toggle();
-      voiceBtn.classList.toggle('text-red-500', isListening);
-      voiceBtn.classList.toggle('animate-pulse', isListening);
-      
-      if (isListening) {
-        voiceInput.onResult = (final, interim) => {
-          if (final) {
-            input.value += final;
-          }
-        };
-      }
-    });
+      // 显示最近会话
+      const recentSessions = sessions.slice(0, 5);
+      container.innerHTML = `
+        <div class="p-4">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">最近会话</h2>
+            <button onclick="createNewSession()" class="text-sm text-dream-purple">➕ 新建</button>
+          </div>
+          <div class="space-y-3">
+            ${recentSessions.map(session => `
+              <div class="dream-card p-4 cursor-pointer" onclick="openSession('${session.sessionId}')">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="font-medium text-gray-800">${session.title || '未命名会话'}</h3>
+                    <p class="text-sm text-gray-500 mt-1">${session.paramsComplete || 0}% 完成度</p>
+                  </div>
+                  <span class="text-xs px-2 py-1 rounded-full ${session.status === 'ACTIVE' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}">
+                    ${session.status === 'ACTIVE' ? '进行中' : '已完成'}
+                  </span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          ${sessions.length > 5 ? `
+            <button onclick="switchTab('history')" class="w-full mt-4 text-center text-sm text-gray-500 py-2">
+              查看全部 ${sessions.length} 个会话 →
+            </button>
+          ` : ''}
+        </div>
+      `;
+    } catch (error) {
+      container.innerHTML = `<div class="text-center py-8 text-red-400">加载失败: ${error.message}</div>`;
+    }
   }
   
-  window.sendMessage = async () => {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-    
-    addMessage(message, 'user');
-    input.value = '';
-    
-    const loadingId = addMessage('思考中...', 'ai', true);
+  // AI 对话
+  async function renderChatTab(container) {
+    if (!currentSessionId) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full p-6">
+          <p class="text-gray-500 mb-4">请先选择一个会话或创建新会话</p>
+          <button onclick="switchTab('history')" class="px-4 py-2 bg-dream-purple text-white rounded-lg">
+            查看历史会话
+          </button>
+        </div>
+      `;
+      return;
+    }
     
     try {
-      const response = await api.post('/api/ai/chat', { message });
-      removeMessage(loadingId);
-      addMessage(response.reply || '抱歉，我没有理解您的问题。', 'ai');
+      const session = await getCreativeSession(currentSessionId);
+      
+      // messages 可能是 JSON 字符串，需要解析
+      let messages = [];
+      if (session.messages) {
+        try {
+          messages = typeof session.messages === 'string' 
+            ? JSON.parse(session.messages) 
+            : session.messages;
+        } catch (e) {
+          console.error('Failed to parse messages:', e);
+          messages = [];
+        }
+      }
+      
+      // 过滤掉 system 消息（太长了，不显示）
+      const displayMessages = messages.filter(msg => msg.role !== 'system');
+      
+      let messagesHtml = '';
+      if (displayMessages.length > 0) {
+        messagesHtml = displayMessages.map(msg => {
+          if (msg.role === 'user') {
+            return `
+              <div class="flex justify-end">
+                <div class="max-w-[85%] bg-dream-purple text-white rounded-2xl rounded-tr-sm px-4 py-3">
+                  <p class="text-sm">${msg.content}</p>
+                </div>
+              </div>
+            `;
+          }
+          // AI 消息使用 Markdown 渲染
+          return `
+            <div class="flex justify-start">
+              <div class="max-w-[90%] bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
+                <div class="text-sm text-gray-800 markdown-content">${renderMarkdown(msg.content || '')}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        // 自定义欢迎语
+        messagesHtml = `
+          <div class="flex justify-start">
+            <div class="max-w-[85%] bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
+              <p class="text-sm text-gray-700">您好，你想开始创作你的第一部小说吗？</p>
+            </div>
+          </div>
+        `;
+      }
+      
+      container.innerHTML = `
+        <div class="flex flex-col h-full overflow-hidden">
+          <div class="px-4 py-2 bg-dream-pink/30 border-b border-dream-pink/20">
+            <p class="text-sm text-gray-600">当前会话: ${session.title || '未命名'}</p>
+          </div>
+          <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+            ${messagesHtml}
+          </div>
+          
+          <div class="border-t border-gray-100 p-3 bg-white flex-shrink-0">
+            <div class="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-2">
+              <button id="voice-btn" class="p-2 text-gray-400 hover:text-dream-purple transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                </svg>
+              </button>
+              <input 
+                type="text" 
+                id="chat-input"
+                placeholder="输入消息..."
+                class="flex-1 bg-transparent outline-none text-sm"
+                onkeypress="if(event.key==='Enter') sendMessage()"
+              >
+              <button onclick="sendMessage()" class="p-2 bg-dream-purple text-white rounded-xl">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // 初始化语音输入
+      const input = document.getElementById('chat-input');
+      const voiceBtn = document.getElementById('voice-btn');
+      voiceInput = new VoiceInput();
+      
+      voiceBtn.addEventListener('click', () => {
+        const supported = voiceInput.init();
+        if (!supported) {
+          alert('您的设备不支持语音输入');
+          return;
+        }
+        
+        const isListening = voiceInput.toggle();
+        voiceBtn.classList.toggle('text-red-500', isListening);
+        voiceBtn.classList.toggle('animate-pulse', isListening);
+        
+        if (isListening) {
+          voiceInput.onResult = (final) => {
+            if (final) input.value += final;
+          };
+        }
+      });
+      
+      // 滚动到底部
+      const chatContainer = document.getElementById('chat-messages');
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     } catch (error) {
-      removeMessage(loadingId);
-      addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
+      container.innerHTML = `<div class="text-center py-8 text-red-400">加载失败: ${error.message}</div>`;
     }
-  };
-  
-  function addMessage(text, type, isLoading = false) {
-    const container = document.getElementById('chat-messages');
-    const id = Date.now();
-    const div = document.createElement('div');
-    div.id = `msg-${id}`;
-    div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'}`;
-    div.innerHTML = `
-      <div class="max-w-[85%] ${type === 'user' ? 'bg-dream-purple text-white rounded-2xl rounded-tr-sm' : 'bg-gray-100 rounded-2xl rounded-tl-sm'} px-4 py-3">
-        <p class="text-sm ${isLoading ? 'animate-pulse' : ''}">${text}</p>
-      </div>
-    `;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-    return id;
   }
   
-  function removeMessage(id) {
-    const msg = document.getElementById(`msg-${id}`);
-    if (msg) msg.remove();
+  // 配置页面
+  async function renderConfigTab(container) {
+    if (!currentSessionId) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full p-6">
+          <p class="text-gray-500 mb-4">请先选择一个会话</p>
+          <button onclick="switchTab('history')" class="px-4 py-2 bg-dream-purple text-white rounded-lg">
+            查看历史会话
+          </button>
+        </div>
+      `;
+      return;
+    }
+    
+    try {
+      const session = await getCreativeSession(currentSessionId);
+      const params = session.extractedParams ? JSON.parse(session.extractedParams) : {};
+      
+      container.innerHTML = `
+        <div class="p-4">
+          <h2 class="text-lg font-semibold mb-4">会话配置</h2>
+          <div class="dream-card p-4 mb-4">
+            <label class="block text-sm text-gray-500 mb-2">会话名称</label>
+            <input type="text" value="${session.title || ''}" id="session-title-input" 
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-3"
+              placeholder="输入会话名称">
+            <button onclick="updateSessionTitle()" class="px-4 py-2 bg-dream-purple text-white rounded-lg text-sm">
+              保存名称
+            </button>
+          </div>
+          
+          <h3 class="text-base font-semibold mb-3">提取的参数</h3>
+          <div class="space-y-3">
+            ${Object.entries(params).map(([key, value]) => `
+              <div class="dream-card p-3">
+                <span class="text-sm text-gray-500">${key}</span>
+                <p class="text-sm text-gray-800 mt-1">${value || '未设置'}</p>
+              </div>
+            `).join('') || '<p class="text-gray-400 text-center py-4">暂无提取的参数</p>'}
+          </div>
+          
+          <div class="mt-6">
+            <button onclick="deleteCurrentSession()" class="w-full py-3 text-red-500 border border-red-200 rounded-xl text-sm">
+              删除会话
+            </button>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      container.innerHTML = `<div class="text-center py-8 text-red-400">加载失败: ${error.message}</div>`;
+    }
   }
   
+  // 角色卡
   async function renderCharactersTab(container) {
     container.innerHTML = '<div class="flex justify-center py-8"><div class="loading-spinner"></div></div>';
     
@@ -171,9 +364,18 @@
       }
       
       const novel = novels[0];
-      currentNovelId = novel.id;
+      const result = await api.get(`/api/novels/${novel.id}/character-cards`);
       
-      const cards = await api.get(`/api/novels/${novel.id}/character-cards`);
+      let cards = [];
+      if (result && result.characterCards) {
+        try {
+          cards = typeof result.characterCards === 'string' 
+            ? JSON.parse(result.characterCards) 
+            : result.characterCards;
+        } catch (e) {
+          console.error('Failed to parse character cards:', e);
+        }
+      }
       
       if (!cards || cards.length === 0) {
         container.innerHTML = '<div class="text-center py-8 text-gray-400">暂无角色卡</div>';
@@ -206,48 +408,216 @@
     }
   }
   
-  function renderTokensTab(container) {
-    container.innerHTML = `
-      <div class="p-4">
-        <h3 class="text-lg font-semibold mb-4">Token 用量</h3>
-        <div class="dream-card p-6 text-center mb-4">
-          <div class="text-3xl font-bold text-dream-purple mb-1">--</div>
-          <div class="text-sm text-gray-500">今日消耗</div>
-        </div>
-        <div class="dream-card p-6 text-center mb-4">
-          <div class="text-3xl font-bold text-dream-blue mb-1">--</div>
-          <div class="text-sm text-gray-500">本月消耗</div>
-        </div>
-        <p class="text-xs text-gray-400 text-center">详细统计功能开发中</p>
-      </div>
-    `;
-  }
-  
-  async function renderNovelTab(container) {
+  // 历史会话
+  async function renderHistoryTab(container) {
+    container.innerHTML = '<div class="flex justify-center py-8"><div class="loading-spinner"></div></div>';
+    
     try {
-      const novels = await getNovels();
+      const result = await getCreativeSessions();
+      sessions = result.sessions || [];
+      
       container.innerHTML = `
         <div class="p-4">
-          <h3 class="text-lg font-semibold mb-4">当前小说</h3>
-          ${novels.map(novel => `
-            <div class="dream-card p-4 mb-3 cursor-pointer" onclick="window.router.navigate('/novel/${novel.id}')">
-              <h4 class="font-medium text-gray-800">${novel.title}</h4>
-              <p class="text-sm text-gray-500 mt-1">${novel.chaptersCount || 0} 章</p>
-            </div>
-          `).join('')}
-          
-          <h3 class="text-lg font-semibold mb-4 mt-6">快捷入口</h3>
-          <div class="space-y-2">
-            <button onclick="window.router.navigate('/settings')" class="w-full dream-card p-4 text-left">
-              ⚙️ 服务器设置
-            </button>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">历史会话</h2>
+            <button onclick="createNewSession()" class="text-sm text-dream-purple">➕ 新建</button>
           </div>
+          
+          ${sessions.length === 0 ? 
+            '<div class="text-center py-8 text-gray-400">暂无会话记录</div>' :
+            `<div class="space-y-3">
+              ${sessions.map(session => `
+                <div class="dream-card p-4 cursor-pointer" onclick="openSession('${session.sessionId}')">
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                      <h3 class="font-medium text-gray-800">${session.title || '未命名会话'}</h3>
+                      <p class="text-sm text-gray-500 mt-1">
+                        ${new Date(session.createdAt).toLocaleDateString()} · ${session.paramsComplete || 0}% 完成度
+                      </p>
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteSession('${session.sessionId}')" class="p-2 text-gray-400 hover:text-red-500">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>`
+          }
         </div>
       `;
     } catch (error) {
-      container.innerHTML = `<div class="text-center py-8 text-red-400">加载失败</div>`;
+      container.innerHTML = `<div class="text-center py-8 text-red-400">加载失败: ${error.message}</div>`;
     }
   }
   
-  switchTab('chat');
+  // 创建新会话
+  window.createNewSession = async () => {
+    const title = prompt('请输入会话名称（可选）:');
+    if (title === null) return; // 用户点击取消
+    
+    try {
+      const result = await createCreativeSession(title || undefined);
+      if (result.success) {
+        currentSessionId = result.sessionId;
+        switchTab('chat');
+      } else {
+        alert('创建失败: ' + result.error);
+      }
+    } catch (error) {
+      alert('创建失败: ' + error.message);
+    }
+  };
+  
+  // 打开会话
+  window.openSession = (sessionId) => {
+    currentSessionId = sessionId;
+    switchTab('chat');
+  };
+  
+  // 删除会话
+  window.deleteSession = async (sessionId) => {
+    if (!confirm('确定要删除这个会话吗？')) return;
+    
+    try {
+      await deleteCreativeSession(sessionId);
+      if (currentSessionId === sessionId) {
+        currentSessionId = null;
+      }
+      // 刷新当前页面
+      switchTab(currentTab);
+    } catch (error) {
+      alert('删除失败: ' + error.message);
+    }
+  };
+  
+  // 删除当前会话
+  window.deleteCurrentSession = async () => {
+    if (!currentSessionId) return;
+    await deleteSession(currentSessionId);
+    switchTab('history');
+  };
+  
+  // 更新会话标题
+  window.updateSessionTitle = async () => {
+    const input = document.getElementById('session-title-input');
+    if (!input || !currentSessionId) return;
+    
+    try {
+      await api.put(`/api/creative-sessions/${currentSessionId}`, { title: input.value });
+      alert('保存成功');
+    } catch (error) {
+      alert('保存失败: ' + error.message);
+    }
+  };
+  
+  // 发送消息（SSE 流式）
+  window.sendMessage = async () => {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message || !currentSessionId) return;
+    
+    // 添加用户消息到界面
+    addMessage(message, 'user');
+    input.value = '';
+    
+    // 添加AI加载中消息
+    const loadingId = addMessage('思考中...', 'ai', true);
+    let aiMessageEl = null;
+    let fullResponse = '';
+    
+    try {
+      await chatWithSession(
+        currentSessionId,
+        message,
+        (data) => {
+          // 收到流式数据
+          if (data.content) {
+            fullResponse += data.content;
+            
+            // 更新或创建AI消息元素
+            if (!aiMessageEl) {
+              removeMessage(loadingId);
+              aiMessageEl = addMessage(fullResponse, 'ai');
+            } else {
+              // 更新现有消息内容
+              const msgContainer = document.getElementById(`msg-${aiMessageEl}`);
+              if (msgContainer) {
+                const p = msgContainer.querySelector('p');
+                if (p) p.textContent = fullResponse;
+              }
+            }
+          }
+        },
+        (error) => {
+          console.error('Chat error:', error);
+          removeMessage(loadingId);
+          addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
+        }
+      );
+      
+      // 流式完成后，使用 Markdown 重新渲染
+      if (aiMessageEl) {
+        const msgContainer = document.getElementById(`msg-${aiMessageEl}`);
+        if (msgContainer) {
+          const contentDiv = msgContainer.querySelector('div');
+          if (contentDiv) {
+            contentDiv.innerHTML = renderMarkdown(fullResponse);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      removeMessage(loadingId);
+      addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
+    }
+  };
+  
+  function addMessage(text, type, isLoading = false) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return null;
+    
+    const id = Date.now() + Math.random();
+    const div = document.createElement('div');
+    div.id = `msg-${id}`;
+    div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'}`;
+    
+    // AI 消息始终使用 Markdown 渲染（加载状态除外）
+    const contentHtml = type === 'ai' && !isLoading
+      ? `<div class="markdown-content">${renderMarkdown(text)}</div>`
+      : `<p class="text-sm ${isLoading ? 'animate-pulse' : ''}">${text}</p>`;
+    
+    div.innerHTML = `
+      <div class="${type === 'user' ? 'max-w-[85%] bg-dream-purple text-white rounded-2xl rounded-tr-sm' : 'max-w-[90%] bg-gray-100 rounded-2xl rounded-tl-sm'} px-4 py-3">
+        ${contentHtml}
+      </div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+  }
+  
+  function removeMessage(id) {
+    if (!id) return;
+    const msg = document.getElementById(`msg-${id}`);
+    if (msg) msg.remove();
+  }
+  
+  // 默认显示 AI 对话 - 自动创建新会话
+  async function initChat() {
+    if (!currentSessionId) {
+      try {
+        const result = await createCreativeSession();
+        if (result.success) {
+          currentSessionId = result.sessionId;
+        }
+      } catch (error) {
+        console.error('自动创建会话失败:', error);
+      }
+    }
+    switchTab('chat');
+  }
+  
+  initChat();
 </script>

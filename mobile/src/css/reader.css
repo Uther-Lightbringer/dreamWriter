@@ -30,6 +30,122 @@
   text-align: justify;
 }
 
+/* Markdown 样式 */
+.chapter-content h1,
+.chapter-content h2,
+.chapter-content h3,
+.chapter-content h4,
+.chapter-content h5,
+.chapter-content h6 {
+  margin: 1.5em 0 0.8em;
+  font-weight: bold;
+  text-align: left;
+  text-indent: 0;
+}
+
+.chapter-content h1 { font-size: 1.5em; }
+.chapter-content h2 { font-size: 1.3em; }
+.chapter-content h3 { font-size: 1.2em; }
+.chapter-content h4 { font-size: 1.1em; }
+.chapter-content h5 { font-size: 1em; }
+.chapter-content h6 { font-size: 0.9em; }
+
+.chapter-content strong {
+  font-weight: bold;
+}
+
+.chapter-content em {
+  font-style: italic;
+}
+
+.chapter-content del {
+  text-decoration: line-through;
+}
+
+.chapter-content blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #9c27b0;
+  background: rgba(156, 39, 176, 0.05);
+  color: #666;
+  font-style: italic;
+}
+
+.reader-container.dark .chapter-content blockquote {
+  background: rgba(156, 39, 176, 0.1);
+  color: #bbb;
+}
+
+.chapter-content pre {
+  background: #f5f5f5;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.reader-container.dark .chapter-content pre {
+  background: #2d2d44;
+}
+
+.chapter-content code {
+  background: #f5f5f5;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.reader-container.dark .chapter-content code {
+  background: #2d2d44;
+}
+
+.chapter-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.chapter-content ul {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.chapter-content ul li {
+  margin-bottom: 0.5em;
+  text-indent: 0;
+}
+
+.chapter-content a {
+  color: #3f51b5;
+  text-decoration: underline;
+}
+
+.reader-container.dark .chapter-content a {
+  color: #7986cb;
+}
+
+.chapter-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+  border-radius: 8px;
+}
+
+.chapter-content hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 2em 0;
+}
+
+.reader-container.dark .chapter-content hr {
+  border-top-color: #444;
+}
+
+/* 章节分隔 */
+.chapter-section {
+  margin-bottom: 2em;
+}
+
 .reader-controls {
   position: fixed;
   inset: 0;

@@ -7,6 +7,7 @@
   <title>梦境文阁</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="./css/mobile.css">
+  <link rel="stylesheet" href="./css/reader.css">
   <script>
     tailwind.config = {
       theme: {
@@ -78,8 +79,8 @@
     </div>
   </div>
 
-  <div id="app-shell" class="hidden min-h-screen flex flex-col">
-    <div id="app-container" class="flex-1 overflow-y-auto pb-16"></div>
+  <div id="app-shell" class="hidden h-screen flex flex-col">
+    <div id="app-container" class="flex-1 overflow-hidden"></div>
     
     <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-6 py-2 z-50">
       <div class="flex justify-around items-center">
@@ -110,7 +111,10 @@
 
   <script type="module">
     import { getServerUrl, setServerUrl, testConnection, hasConfiguredServer } from './js/config.js';
-    import { initRouter } from './js/router.js';
+    import { initRouter, navigate } from './js/router.js';
+    
+    // 提前暴露路由导航，供所有页面使用
+    window.router = { navigate };
     
     window.testConnection = async () => {
       const input = document.getElementById('server-url-input');
