@@ -109,6 +109,16 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
         .message.user {
             flex-direction: row-reverse;
         }
@@ -1429,6 +1439,132 @@
             font-size: 0.9rem;
         }
 
+        /* 角色详情增强样式 - 对标小说详情页 */
+        .character-detail-section {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 16px;
+        }
+
+        .character-detail-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 10px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .character-detail-content {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .character-detail-three-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .character-appearance-item {
+            display: flex;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .character-appearance-label {
+            font-weight: 600;
+            color: var(--text-light);
+            min-width: 70px;
+            font-size: 0.85rem;
+        }
+
+        .character-appearance-value {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+        }
+
+        .character-relationship-card {
+            margin-bottom: 10px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent-purple);
+        }
+
+        .character-relationship-header {
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .character-relationship-desc {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+        }
+
+        .character-btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .character-action-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .character-action-btn.primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+        }
+
+        .character-action-btn.secondary {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-dark);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+
+        .character-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .character-prompt-box {
+            background: rgba(255, 255, 255, 0.8);
+            border-left: 3px solid var(--accent-purple);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 8px;
+        }
+
+        .character-image-container {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .character-image-container img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
         .character-card-item {
             cursor: pointer;
             transition: all 0.2s ease;
@@ -2160,46 +2296,11 @@
                 taggedOptions.push({ field, displayName, options });
             }
 
-            // 2. 提取 Markdown 列表作为选项
-            // 匹配连续的列表项（- 或 * 开头）
-            const listRegex = /(?:^|\n)([-*])\s+([^\n]+)((?:\n[-*]\s+[^\n]+)*)/g;
-            let listMatch;
-            let autoFieldIndex = 1;
-
-            while ((listMatch = listRegex.exec(text)) !== null) {
-                // 收集整个列表的所有项
-                const fullList = (listMatch[2] + listMatch[3]).trim();
-                const items = fullList.split(/\n[-*]\s+/).filter(item => item.trim());
-
-                if (items.length >= 2) {
-                    // 至少2项才当作选项
-                    const field = 'auto_' + autoFieldIndex++;
-                    const options = items.map(item => {
-                        item = item.trim();
-                        return { label: item, value: item, field };
-                    });
-                    taggedOptions.push({
-                        field,
-                        displayName: null,
-                        options,
-                        isMarkdownList: true,
-                        originalText: listMatch[0]
-                    });
-                }
-            }
-
-            // 3. 清理标记和 Markdown 列表，准备 Markdown 渲染
+            // 2. 清理标记，准备 Markdown 渲染
             let cleanText = text.replace(optionsRegex, '');
-
-            // 移除已识别为选项的 Markdown 列表
-            taggedOptions.forEach(opt => {
-                if (opt.isMarkdownList && opt.originalText) {
-                    cleanText = cleanText.replace(opt.originalText, '');
-                }
-            });
             cleanText = cleanText.trim();
 
-            // 4. 渲染 Markdown
+            // 3. 渲染 Markdown
             if (typeof marked !== 'undefined') {
                 contentEl.innerHTML = marked.parse(cleanText);
             } else {
@@ -2551,6 +2652,48 @@
             return toast;
         }
 
+        // 小说创建成功提示 - 带跳转按钮
+        function showNovelCreatedToast(novelId, title) {
+            const container = document.getElementById('toolToastContainer');
+
+            const toast = document.createElement('div');
+            toast.className = 'tool-toast success';
+            toast.innerHTML = `
+                <div class="tool-toast-main">✅ 小说「${escapeHtml(title || '未命名')}」创建成功</div>
+                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                    <button onclick="window.open('/novel/${novelId}', '_blank')" style="
+                        background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+                        color: white;
+                        border: none;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.8rem;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                    ">📖 查看小说</button>
+                    <button onclick="this.closest('.tool-toast').remove()" style="
+                        background: rgba(255,255,255,0.8);
+                        color: var(--text-dark);
+                        border: 1px solid rgba(156,39,176,0.3);
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.8rem;
+                    ">关闭</button>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // 5秒后自动淡出（给用户更多时间点击）
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+        }
+
         // 显示通用通知
         function showNotification(message, type = 'info') {
             const container = document.getElementById('toolToastContainer');
@@ -2600,6 +2743,9 @@
                         if (newNovelId) {
                             currentNovelId = newNovelId;
                             console.log('小说创建成功，更新 currentNovelId:', currentNovelId);
+
+                            // 显示带有跳转按钮的成功提示
+                            showNovelCreatedToast(newNovelId, result.title);
                         }
                         // 刷新会话参数（可能包含小说标题等）
                         setTimeout(() => {
@@ -3322,7 +3468,7 @@
         // 存储当前加载的角色卡数据
         let currentCharacterCards = [];
 
-        // 显示角色详情模态框
+        // 显示角色详情模态框 - 完全对标小说详情页
         function showCharacterDetail(cardId) {
             const card = currentCharacterCards.find(c => c.id === cardId);
             if (!card) {
@@ -3339,11 +3485,6 @@
 
             let html = '';
 
-            // 角色图片
-            if (card.generatedImageUrl) {
-                html += `<img src="${escapeHtml(card.generatedImageUrl)}" class="character-modal-image" alt="${escapeHtml(card.name)}" onerror="this.style.display='none'"/>`;
-            }
-
             // 角色标签
             html += '<div class="character-modal-tags">';
             if (card.role === 'protagonist') {
@@ -3359,76 +3500,168 @@
             }
             html += '</div>';
 
+            // 角色图片
+            if (card.generatedImageUrl) {
+                html += `<div class="character-detail-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div class="character-detail-title" style="margin: 0;">🖼️ 角色图片</div>
+                        <button class="character-action-btn secondary" onclick="regenerateCharacterImage('${card.id}')">
+                            <span>🔄</span> 重新生成
+                        </button>
+                    </div>
+                    <div class="character-image-container">
+                        <img src="${escapeHtml(card.generatedImageUrl)}" alt="${escapeHtml(card.name)}"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'padding: 30px; text-align: center; background: rgba(255,255,255,0.5); border-radius: 12px; color: var(--text-light);\'>图片加载失败</div>';" />
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-light);">
+                        💡 图片有效期 24 小时，可重新生成
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="character-detail-section">
+                    <div class="character-detail-title">🖼️ 角色图片</div>
+                    <div style="text-align: center; padding: 30px; color: var(--text-light);">
+                        <div style="margin-bottom: 15px;">暂无图片</div>
+                        ${card.appearanceDescription ? `
+                            <button class="character-action-btn primary" onclick="generateCharacterImage('${card.id}')">
+                                <span>✨</span> 生成角色图片
+                            </button>
+                        ` : `
+                            <div style="font-size: 0.85rem; color: #ffa726;">
+                                ⚠️ 请先填写 AI 绘画提示词再生成图片
+                            </div>
+                        `}
+                    </div>
+                </div>`;
+            }
+
+            // 别名
+            if (card.alternativeNames && card.alternativeNames.length > 0) {
+                html += `<div class="character-detail-section">
+                    <div class="character-detail-title">🏷️ 别名</div>
+                    <div class="character-detail-content">${card.alternativeNames.map(n => escapeHtml(n)).join('、')}</div>
+                </div>`;
+            }
+
             // 基础信息网格
-            html += '<div class="character-modal-grid">';
-            html += `<div class="character-modal-grid-item">
-                <div class="character-modal-grid-label">年龄</div>
-                <div class="character-modal-grid-value">${card.age !== undefined && card.age !== null ? card.age + '岁' : '未知'}</div>
+            html += '<div class="character-detail-three-grid">';
+            html += `<div class="character-detail-section" style="margin-bottom: 0; text-align: center;">
+                <div class="character-detail-title" style="justify-content: center;">年龄</div>
+                <div class="character-detail-content" style="font-size: 1.1rem; font-weight: 600;">${card.age !== undefined && card.age !== null ? card.age + '岁' : '未知'}</div>
             </div>`;
-            html += `<div class="character-modal-grid-item">
-                <div class="character-modal-grid-label">性别</div>
-                <div class="character-modal-grid-value">${escapeHtml(card.gender || '未知')}</div>
+            html += `<div class="character-detail-section" style="margin-bottom: 0; text-align: center;">
+                <div class="character-detail-title" style="justify-content: center;">性别</div>
+                <div class="character-detail-content" style="font-size: 1.1rem; font-weight: 600;">${escapeHtml(card.gender || '未知')}</div>
             </div>`;
-            html += `<div class="character-modal-grid-item">
-                <div class="character-modal-grid-label">职业</div>
-                <div class="character-modal-grid-value">${escapeHtml(card.occupation || '无')}</div>
+            html += `<div class="character-detail-section" style="margin-bottom: 0; text-align: center;">
+                <div class="character-detail-title" style="justify-content: center;">职业</div>
+                <div class="character-detail-content" style="font-size: 1.1rem; font-weight: 600;">${escapeHtml(card.occupation || '无')}</div>
             </div>`;
             html += '</div>';
 
-            // 外貌特征
+            // 外貌特征 - 结构化显示
             if (card.appearance) {
                 const appearance = card.appearance;
-                let appearanceText = '';
-                if (appearance.height) appearanceText += `身高：${escapeHtml(appearance.height)}\n`;
-                if (appearance.hair) appearanceText += `发色：${escapeHtml(appearance.hair)}\n`;
-                if (appearance.eyes) appearanceText += `瞳色：${escapeHtml(appearance.eyes)}\n`;
-                if (appearance.face) appearanceText += `脸型：${escapeHtml(appearance.face)}\n`;
-                if (appearance.build) appearanceText += `体型：${escapeHtml(appearance.build)}\n`;
-                if (appearance.clothing) appearanceText += `穿着：${escapeHtml(appearance.clothing)}\n`;
-                if (appearance.distinguishingFeatures) appearanceText += `显著特征：${escapeHtml(appearance.distinguishingFeatures)}`;
+                let appearanceItems = '';
+                if (appearance.height) appearanceItems += `<div class="character-appearance-item"><span class="character-appearance-label">身高</span><span class="character-appearance-value">${escapeHtml(appearance.height)}</span></div>`;
+                if (appearance.hair) appearanceItems += `<div class="character-appearance-item"><span class="character-appearance-label">发色</span><span class="character-appearance-value">${escapeHtml(appearance.hair)}</span></div>`;
+                if (appearance.eyes) appearanceItems += `<div class="character-appearance-item"><span class="character-appearance-label">瞳色</span><span class="character-appearance-value">${escapeHtml(appearance.eyes)}</span></div>`;
+                if (appearance.face) appearanceItems += `<div class="character-appearance-item"><span class="character-appearance-label">脸型</span><span class="character-appearance-value">${escapeHtml(appearance.face)}</span></div>`;
+                if (appearance.build) appearanceItems += `<div class="character-appearance-item"><span class="character-appearance-label">体型</span><span class="character-appearance-value">${escapeHtml(appearance.build)}</span></div>`;
+                if (appearance.clothing) appearanceItems += `<div class="character-appearance-item"><span class="character-appearance-label">穿着</span><span class="character-appearance-value">${escapeHtml(appearance.clothing)}</span></div>`;
+                if (appearance.distinguishingFeatures) appearanceItems += `<div class="character-appearance-item"><span class="character-appearance-label">显著特征</span><span class="character-appearance-value">${escapeHtml(appearance.distinguishingFeatures)}</span></div>`;
 
-                if (appearanceText) {
-                    html += `<div class="character-modal-section">
-                        <div class="character-modal-section-title">🎨 外貌特征</div>
-                        <div class="character-modal-section-content">${appearanceText}</div>
+                if (appearanceItems) {
+                    html += `<div class="character-detail-section">
+                        <div class="character-detail-title">🎨 外貌特征</div>
+                        ${appearanceItems}
                     </div>`;
                 }
             }
 
             // 性格描述
             if (card.personality) {
-                html += `<div class="character-modal-section">
-                    <div class="character-modal-section-title">💖 性格描述</div>
-                    <div class="character-modal-section-content">${escapeHtml(card.personality)}</div>
+                html += `<div class="character-detail-section">
+                    <div class="character-detail-title">💖 性格描述</div>
+                    <div class="character-detail-content">${escapeHtml(card.personality)}</div>
                 </div>`;
             }
 
             // 背景故事
             if (card.background) {
-                html += `<div class="character-modal-section">
-                    <div class="character-modal-section-title">📜 背景故事</div>
-                    <div class="character-modal-section-content">${escapeHtml(card.background)}</div>
+                html += `<div class="character-detail-section">
+                    <div class="character-detail-title">📜 背景故事</div>
+                    <div class="character-detail-content" style="white-space: pre-wrap;">${escapeHtml(card.background)}</div>
                 </div>`;
             }
 
-            // 角色关系
+            // 角色关系 - 卡片样式
             if (card.relationships && card.relationships.length > 0) {
-                html += `<div class="character-modal-section">
-                    <div class="character-modal-section-title">🔗 角色关系</div>
-                    <div class="character-modal-section-content">`;
-                card.relationships.forEach(rel => {
-                    html += `• ${escapeHtml(rel.targetName || '未知')}：${escapeHtml(rel.relationship || '无')}<br>`;
-                });
-                html += '</div></div>';
+                html += `<div class="character-detail-section">
+                    <div class="character-detail-title">🔗 角色关系</div>
+                    ${card.relationships.map(rel => `
+                        <div class="character-relationship-card">
+                            <div class="character-relationship-header">
+                                ${escapeHtml(card.name)} → ${escapeHtml(rel.targetName || '未知')}
+                            </div>
+                            <div class="character-relationship-desc">
+                                <strong>关系：</strong>${escapeHtml(rel.relationship || '无')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
             }
 
             // 备注
             if (card.notes) {
-                html += `<div class="character-modal-section">
-                    <div class="character-modal-section-title">📝 备注</div>
-                    <div class="character-modal-section-content">${escapeHtml(card.notes)}</div>
+                html += `<div class="character-detail-section">
+                    <div class="character-detail-title">📝 备注</div>
+                    <div class="character-detail-content">${escapeHtml(card.notes)}</div>
                 </div>`;
             }
+
+            // AI 绘画提示词
+            if (card.appearanceDescription) {
+                html += `<div class="character-detail-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <div class="character-detail-title" style="margin: 0;">🤖 AI 绘画提示词</div>
+                        <div class="character-btn-group">
+                            <button class="character-action-btn secondary" onclick="regenerateAIPrompt('${card.id}')">
+                                <span>✨</span> 自动生成
+                            </button>
+                        </div>
+                    </div>
+                    <div class="character-prompt-box">
+                        ${escapeHtml(card.appearanceDescription)}
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-light);">
+                        💡 这是用于 AI 生成角色图片的描述词
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="character-detail-section">
+                    <div class="character-detail-title">🤖 AI 绘画提示词</div>
+                    <div style="text-align: center; padding: 30px; color: var(--text-light);">
+                        <div style="margin-bottom: 15px;">暂无 AI 绘画提示词</div>
+                        <button class="character-action-btn primary" onclick="regenerateAIPrompt('${card.id}')">
+                            <span>✨</span> 根据外貌特征生成
+                        </button>
+                        <div style="margin-top: 12px; font-size: 0.8rem;">
+                            💡 或者点击下方"编辑"手动填写提示词
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // 操作按钮
+            html += `<div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+                <button class="character-action-btn secondary" onclick="editCharacterCard('${card.id}')">
+                    <span>✏️</span> 编辑
+                </button>
+                <button class="character-action-btn secondary" onclick="closeCharacterModal()">
+                    <span>←</span> 返回列表
+                </button>
+            </div>`;
 
             body.innerHTML = html;
             modal.classList.add('show');
@@ -3437,6 +3670,161 @@
         // 关闭角色详情模态框
         function closeCharacterModal() {
             document.getElementById('characterModal').classList.remove('show');
+        }
+
+        // ==================== 角色卡编辑功能 ====================
+
+        // 编辑角色卡 - 跳转到小说详情页
+        function editCharacterCard(cardId) {
+            if (!currentNovelId) {
+                alert('无法编辑：未关联小说');
+                return;
+            }
+            // 关闭模态框
+            closeCharacterModal();
+            // 跳转到小说详情页的角色卡管理
+            window.open('/novel/' + currentNovelId + '?tab=character', '_blank');
+        }
+
+        // 生成角色图片
+        async function generateCharacterImage(cardId) {
+            if (!currentNovelId) {
+                alert('无法生成图片：未关联小说');
+                return;
+            }
+
+            if (!confirm('确定要生成角色图片吗？这将调用 AI 绘画服务。')) {
+                return;
+            }
+
+            try {
+                showToast('正在生成角色图片...', 'info');
+
+                const response = await fetch(`/api/novels/${currentNovelId}/character-cards/${cardId}/generate-image`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('角色图片生成成功！', 'success');
+                    // 刷新角色卡列表
+                    await loadCharacterCards();
+                    // 重新显示详情
+                    showCharacterDetail(cardId);
+                } else {
+                    showToast('生成失败：' + (result.message || '未知错误'), 'error');
+                }
+            } catch (error) {
+                console.error('生成角色图片失败:', error);
+                showToast('生成失败：' + error.message, 'error');
+            }
+        }
+
+        // 重新生成角色图片
+        async function regenerateCharacterImage(cardId) {
+            await generateCharacterImage(cardId);
+        }
+
+        // 轮询图片生成任务状态
+        async function pollImageTaskStatus(cardId, taskId) {
+            const maxAttempts = 60; // 最多轮询60次（约2分钟）
+            let attempts = 0;
+
+            const poll = async () => {
+                attempts++;
+                try {
+                    const response = await fetch(`/api/novels/${currentNovelId}/character-cards/tasks/${taskId}/status?timeout=30`);
+                    const result = await response.json();
+
+                    if (result.status === 'completed') {
+                        showToast('角色图片生成成功！', 'success');
+                        // 刷新角色卡列表
+                        await loadCharacterCards();
+                        // 重新显示详情
+                        showCharacterDetail(cardId);
+                    } else if (result.status === 'failed') {
+                        showToast('图片生成失败：' + (result.error || '未知错误'), 'error');
+                    } else if (attempts < maxAttempts) {
+                        // 继续轮询
+                        setTimeout(poll, 2000);
+                    } else {
+                        showToast('图片生成超时，请稍后刷新查看', 'warn');
+                    }
+                } catch (error) {
+                    console.error('轮询任务状态失败:', error);
+                    if (attempts < maxAttempts) {
+                        setTimeout(poll, 2000);
+                    }
+                }
+            };
+
+            poll();
+        }
+
+        // 生成 AI 绘画提示词
+        async function regenerateAIPrompt(cardId) {
+            if (!currentNovelId) {
+                alert('无法生成提示词：未关联小说');
+                return;
+            }
+
+            try {
+                showToast('正在生成 AI 绘画提示词...', 'info');
+
+                const response = await fetch(`/api/novels/${currentNovelId}/character-cards/${cardId}/generate-prompt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('AI 绘画提示词生成成功！', 'success');
+                    // 刷新角色卡列表
+                    await loadCharacterCards();
+                    // 重新显示详情
+                    showCharacterDetail(cardId);
+                } else {
+                    showToast('生成失败：' + (result.message || '未知错误'), 'error');
+                }
+            } catch (error) {
+                console.error('生成 AI 提示词失败:', error);
+                showToast('生成失败：' + error.message, 'error');
+            }
+        }
+
+        // Toast 提示
+        function showToast(message, type = 'info') {
+            // 检查是否已有 toast 容器
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : type === 'warn' ? '#ff9800' : '#2196f3';
+            toast.style.cssText = `
+                background: ${bgColor};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                font-size: 0.9rem;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            // 3秒后移除
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         // 点击模态框外部关闭
