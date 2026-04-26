@@ -22,4 +22,14 @@ public interface CharacterCardRepository extends JpaRepository<CharacterCardEnti
      * 删除指定小说的所有角色卡
      */
     void deleteByNovelId(Long novelId);
+
+    /**
+     * 按小说ID和角色类型查询角色卡
+     */
+    List<CharacterCardEntity> findByNovelIdAndRole(Long novelId, String role);
+
+    /**
+     * 检查是否存在指定小说ID和角色类型的角色卡
+     */
+    boolean existsByNovelIdAndRole(Long novelId, String role);
 }
