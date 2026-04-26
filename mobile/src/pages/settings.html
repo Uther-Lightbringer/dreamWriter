@@ -1,0 +1,159 @@
+<div class="page-enter">
+  <div class="px-4 py-3 border-b border-gray-100 bg-white/95 backdrop-blur flex items-center gap-3">
+    <button onclick="history.back()" class="p-2 -ml-2">
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h1 class="text-lg font-semibold text-gray-800">设置</h1>
+  </div>
+
+  <div class="p-4 space-y-6">
+    <div>
+      <h2 class="text-base font-semibold text-gray-700 mb-3">服务器配置</h2>
+      <div class="dream-card p-4">
+        <label class="block text-sm text-gray-500 mb-2">服务器地址</label>
+        <input 
+          type="text" 
+          id="settings-server-url"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm mb-3"
+          placeholder="例如: 192.168.1.94:38081"
+        >
+        <div class="flex gap-2">
+          <button onclick="testServerConnection()" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm">
+            测试连接
+          </button>
+          <button onclick="saveServerUrl()" class="flex-1 py-2 bg-dream-purple text-white rounded-lg text-sm">
+            保存
+          </button>
+        </div>
+        <div id="settings-status" class="text-sm mt-2 h-5"></div>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="text-base font-semibold text-gray-700 mb-3">阅读偏好</h2>
+      <div class="dream-card p-4 space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-600">默认字体大小</span>
+          <div class="flex items-center gap-2">
+            <button onclick="changeDefaultFontSize(-1)" class="w-8 h-8 bg-gray-100 rounded-lg">-</button>
+            <span id="default-font-size" class="w-8 text-center">18</span>
+            <button onclick="changeDefaultFontSize(1)" class="w-8 h-8 bg-gray-100 rounded-lg">+</button>
+          </div>
+        </div>
+        
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-600">默认主题</span>
+          <div class="flex gap-2">
+            <button onclick="setDefaultTheme('light')" id="default-theme-light" class="px-3 py-1.5 rounded-lg text-sm bg-dream-purple text-white">日间</button>
+            <button onclick="setDefaultTheme('dark')" id="default-theme-dark" class="px-3 py-1.5 rounded-lg text-sm bg-gray-100">夜间</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="text-base font-semibold text-gray-700 mb-3">关于</h2>
+      <div class="dream-card p-4 space-y-3">
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500">版本</span>
+          <span class="text-gray-700">1.0.0</span>
+        </div>
+        <button onclick="clearCache()" class="w-full py-2 text-red-500 text-sm border border-red-200 rounded-lg">
+          清除缓存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { getServerUrl, setServerUrl, testConnection } from '../js/config.js';
+  import { getReaderSettings, saveReaderSettings } from '../js/reader.js';
+  
+  async function loadSettings() {
+    const url = await getServerUrl();
+    document.getElementById('settings-server-url').value = url.replace('http://', '');
+    
+    const readerSettings = getReaderSettings();
+    document.getElementById('default-font-size').textContent = readerSettings.fontSize;
+    updateThemeButtons(readerSettings.theme);
+  }
+  
+  window.testServerConnection = async () => {
+    const input = document.getElementById('settings-server-url');
+    const url = input.value.trim();
+    const statusEl = document.getElementById('settings-status');
+    
+    if (!url) {
+      statusEl.textContent = '请输入地址';
+      statusEl.className = 'text-sm mt-2 h-5 text-red-500';
+      return;
+    }
+    
+    const fullUrl = url.startsWith('http') ? url : `http://${url}`;
+    statusEl.textContent = '测试连接中...';
+    statusEl.className = 'text-sm mt-2 h-5 text-gray-500';
+    
+    const success = await testConnection(fullUrl);
+    if (success) {
+      statusEl.textContent = '✅ 连接成功';
+      statusEl.className = 'text-sm mt-2 h-5 text-green-500';
+    } else {
+      statusEl.textContent = '❌ 连接失败';
+      statusEl.className = 'text-sm mt-2 h-5 text-red-500';
+    }
+  };
+  
+  window.saveServerUrl = async () => {
+    const input = document.getElementById('settings-server-url');
+    let url = input.value.trim();
+    if (!url) return;
+    
+    if (!url.startsWith('http')) {
+      url = 'http://' + url;
+    }
+    
+    await setServerUrl(url);
+    document.getElementById('settings-status').textContent = '✅ 已保存，重启应用后生效';
+    document.getElementById('settings-status').className = 'text-sm mt-2 h-5 text-green-500';
+  };
+  
+  window.changeDefaultFontSize = (delta) => {
+    const settings = getReaderSettings();
+    settings.fontSize = Math.max(12, Math.min(32, settings.fontSize + delta));
+    saveReaderSettings(settings);
+    document.getElementById('default-font-size').textContent = settings.fontSize;
+  };
+  
+  window.setDefaultTheme = (theme) => {
+    const settings = getReaderSettings();
+    settings.theme = theme;
+    saveReaderSettings(settings);
+    updateThemeButtons(theme);
+  };
+  
+  function updateThemeButtons(theme) {
+    const lightBtn = document.getElementById('default-theme-light');
+    const darkBtn = document.getElementById('default-theme-dark');
+    
+    if (theme === 'light') {
+      lightBtn.className = 'px-3 py-1.5 rounded-lg text-sm bg-dream-purple text-white';
+      darkBtn.className = 'px-3 py-1.5 rounded-lg text-sm bg-gray-100';
+    } else {
+      lightBtn.className = 'px-3 py-1.5 rounded-lg text-sm bg-gray-100';
+      darkBtn.className = 'px-3 py-1.5 rounded-lg text-sm bg-dream-purple text-white';
+    }
+  }
+  
+  window.clearCache = () => {
+    if (confirm('确定要清除所有本地缓存吗？阅读进度和设置将被重置。')) {
+      localStorage.clear();
+      alert('缓存已清除');
+      window.location.reload();
+    }
+  };
+  
+  loadSettings();
+</script>

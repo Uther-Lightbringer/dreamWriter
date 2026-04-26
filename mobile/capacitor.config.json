@@ -1,0 +1,15 @@
+{
+  "appId": "org.zenithon.articlecollect",
+  "appName": "梦境文阁",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#fce4ec"
+    }
+  }
+}

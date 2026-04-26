@@ -1,0 +1,197 @@
+<div class="page-enter">
+  <div class="sticky top-0 bg-white/90 backdrop-blur-lg border-b border-gray-100 px-4 py-3 z-40 flex items-center gap-3">
+    <button onclick="history.back()" class="p-2 -ml-2">
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h1 id="novel-title" class="text-lg font-semibold text-gray-800 truncate flex-1">加载中...</h1>
+  </div>
+
+  <div class="p-4">
+    <div class="flex gap-4 mb-6">
+      <div class="w-24 h-32 bg-gray-200 rounded-xl flex-shrink-0 overflow-hidden">
+        <img id="novel-cover" src="" alt="" class="w-full h-full object-cover hidden">
+      </div>
+      <div class="flex-1">
+        <h2 id="novel-name" class="text-xl font-bold text-gray-800 mb-2"></h2>
+        <p id="novel-author" class="text-sm text-gray-500 mb-1"></p>
+        <p id="novel-chapters" class="text-sm text-gray-500 mb-3"></p>
+        <div class="flex gap-2">
+          <button onclick="showWorldview()" class="px-3 py-1.5 bg-dream-lavender text-dream-blue rounded-lg text-sm font-medium">
+            🌍 世界观
+          </button>
+          <button onclick="showCharacters()" class="px-3 py-1.5 bg-dream-mint text-dream-blue rounded-lg text-sm font-medium">
+            👤 角色
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mb-6">
+      <button onclick="startReading()" class="flex-1 btn-primary py-3 text-center">
+        📖 开始阅读
+      </button>
+      <button onclick="alert('添加章节请使用网页版')" class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl text-center font-medium">
+        + 添加章节
+      </button>
+    </div>
+
+    <div>
+      <h3 class="text-lg font-semibold text-gray-700 mb-3">章节列表</h3>
+      <div id="chapter-list" class="space-y-2">
+        <div class="flex justify-center py-8">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="worldview-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+  <div class="bg-white rounded-t-2xl w-full max-h-[80vh] flex flex-col">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="text-lg font-semibold">世界观</h3>
+      <button onclick="closeModal('worldview-modal')" class="p-2">
+        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div id="worldview-content" class="flex-1 overflow-y-auto p-4 text-gray-700 leading-relaxed">
+      加载中...
+    </div>
+  </div>
+</div>
+
+<div id="characters-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+  <div class="bg-white rounded-t-2xl w-full max-h-[80vh] flex flex-col">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="text-lg font-semibold">角色卡</h3>
+      <button onclick="closeModal('characters-modal')" class="p-2">
+        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div id="characters-content" class="flex-1 overflow-y-auto p-4">
+      加载中...
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { getNovel, getChapters, getWorldview, getCharacterCards } from '../js/api-client.js';
+  import { navigate } from '../js/router.js';
+  
+  window.router = { navigate };
+  
+  const params = window.currentRouteParams || {};
+  const novelId = params.id || window.location.hash.split('/')[2];
+  let chapters = [];
+  
+  async function loadNovelDetail() {
+    try {
+      const [novel, chapterList] = await Promise.all([
+        getNovel(novelId),
+        getChapters(novelId)
+      ]);
+      
+      chapters = chapterList || [];
+      
+      document.getElementById('novel-title').textContent = novel.title;
+      document.getElementById('novel-name').textContent = novel.title;
+      document.getElementById('novel-author').textContent = `作者：${novel.author || '未设置'}`;
+      document.getElementById('novel-chapters').textContent = `${chapters.length} 章`;
+      
+      if (novel.coverUrl) {
+        const img = document.getElementById('novel-cover');
+        img.src = novel.coverUrl;
+        img.classList.remove('hidden');
+      }
+      
+      const container = document.getElementById('chapter-list');
+      if (chapters.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-400">暂无章节</div>';
+      } else {
+        container.innerHTML = chapters.map((chapter, index) => `
+          <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 cursor-pointer active:bg-gray-50"
+               onclick="window.router.navigate('/chapter/${novelId}/${chapter.id}')">
+            <span class="text-sm text-gray-400 w-12 flex-shrink-0">第${index + 1}章</span>
+            <span class="flex-1 text-gray-800 truncate">${chapter.title}</span>
+            <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        `).join('');
+      }
+    } catch (error) {
+      console.error('Failed to load novel detail:', error);
+      document.getElementById('chapter-list').innerHTML = `
+        <div class="text-center py-8 text-red-400">加载失败: ${error.message}</div>
+      `;
+    }
+  }
+  
+  window.showWorldview = async () => {
+    document.getElementById('worldview-modal').classList.remove('hidden');
+    try {
+      const worldview = await getWorldview(novelId);
+      document.getElementById('worldview-content').innerHTML = 
+        worldview.content ? worldview.content.replace(/\n/g, '<br>') : '暂无世界观设定';
+    } catch (error) {
+      document.getElementById('worldview-content').textContent = '加载失败: ' + error.message;
+    }
+  };
+  
+  window.showCharacters = async () => {
+    document.getElementById('characters-modal').classList.remove('hidden');
+    try {
+      const cards = await getCharacterCards(novelId);
+      const container = document.getElementById('characters-content');
+      
+      if (!cards || cards.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-400">暂无角色卡</div>';
+        return;
+      }
+      
+      container.innerHTML = cards.map(card => `
+        <div class="dream-card p-4 mb-3">
+          <div class="flex gap-3">
+            <div class="w-16 h-16 bg-gray-200 rounded-full flex-shrink-0 overflow-hidden">
+              ${card.imageUrl ? `<img src="${card.imageUrl}" alt="" class="w-full h-full object-cover">` : ''}
+            </div>
+            <div class="flex-1">
+              <h4 class="font-medium text-gray-800">${card.name}</h4>
+              <p class="text-sm text-gray-500 mt-1">${card.role || ''}</p>
+              <p class="text-sm text-gray-600 mt-2 line-clamp-2">${card.description || ''}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch (error) {
+      document.getElementById('characters-content').textContent = '加载失败: ' + error.message;
+    }
+  };
+  
+  window.closeModal = (id) => {
+    document.getElementById(id).classList.add('hidden');
+  };
+  
+  window.startReading = () => {
+    if (chapters.length > 0) {
+      window.router.navigate(`/chapter/${novelId}/${chapters[0].id}`);
+    } else {
+      alert('暂无章节');
+    }
+  };
+  
+  document.getElementById('worldview-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal('worldview-modal');
+  });
+  document.getElementById('characters-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal('characters-modal');
+  });
+  
+  loadNovelDetail();
+</script>

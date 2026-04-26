@@ -1,0 +1,178 @@
+.reader-container {
+  max-width: 100%;
+  padding: 20px;
+  line-height: 1.8;
+  font-size: 18px;
+  color: #333;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.reader-container.dark {
+  background-color: #1a1a2e;
+  color: #e0e0e0;
+}
+
+.reader-container.dark .chapter-title {
+  color: #fff;
+}
+
+.chapter-title {
+  font-size: 1.3em;
+  font-weight: bold;
+  margin-bottom: 1.5em;
+  text-align: center;
+  color: #333;
+}
+
+.chapter-content p {
+  margin-bottom: 1em;
+  text-indent: 2em;
+  text-align: justify;
+}
+
+.reader-controls {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.reader-controls.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.controls-panel {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.reader-container.dark .controls-panel {
+  background: #2d2d44;
+  color: #e0e0e0;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.control-row:last-child {
+  margin-bottom: 0;
+}
+
+.font-size-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.reader-container.dark .font-size-btn {
+  background: #3d3d5c;
+}
+
+.theme-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  font-size: 14px;
+}
+
+.theme-btn.active {
+  background: #9c27b0;
+  color: white;
+}
+
+.reader-container.dark .theme-btn {
+  background: #3d3d5c;
+}
+
+.progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #9c27b0, #3f51b5);
+  z-index: 50;
+  transition: width 0.1s;
+}
+
+.chapter-end {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.chapter-end .next-chapter-btn {
+  margin-top: 16px;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #9c27b0, #3f51b5);
+  color: white;
+  border-radius: 24px;
+  display: inline-block;
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.back-to-top.show {
+  opacity: 1;
+}
+
+.line-height-options {
+  display: flex;
+  gap: 8px;
+}
+
+.line-height-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #f5f5f5;
+  font-size: 13px;
+}
+
+.line-height-btn.active {
+  background: #9c27b0;
+  color: white;
+}
+
+.reader-container.dark .line-height-btn {
+  background: #3d3d5c;
+}

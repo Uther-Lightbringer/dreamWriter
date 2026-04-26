@@ -1,0 +1,107 @@
+<div class="page-enter p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">梦境文阁</h1>
+    <button onclick="alert('添加小说功能请使用网页版')" class="px-4 py-2 bg-dream-purple text-white rounded-xl text-sm">
+      + 新增
+    </button>
+  </div>
+
+  <div id="continue-reading" class="hidden mb-6">
+    <h2 class="text-lg font-semibold text-gray-700 mb-3">继续阅读</h2>
+    <div class="dream-card p-4 cursor-pointer" onclick="continueReading()">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-20 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+          <img id="continue-cover" src="" alt="" class="w-full h-full object-cover hidden">
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 id="continue-title" class="font-medium text-gray-800 truncate"></h3>
+          <p id="continue-chapter" class="text-sm text-gray-500 mt-1"></p>
+          <div class="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div id="continue-progress" class="h-full bg-gradient-to-r from-dream-purple to-dream-blue rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-lg font-semibold text-gray-700 mb-3">我的小说</h2>
+    <div id="novel-list" class="space-y-3">
+      <div class="flex justify-center py-8">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { getNovels } from '../js/api-client.js';
+  import { navigate } from '../js/router.js';
+  
+  window.router = { navigate };
+  
+  async function loadNovels() {
+    try {
+      const novels = await getNovels();
+      const container = document.getElementById('novel-list');
+      
+      if (!novels || novels.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-400">
+            <p>还没有小说</p>
+            <p class="text-sm mt-2">请先在网页版创建小说</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = novels.map(novel => `
+        <div class="dream-card p-4 cursor-pointer active:scale-98 transition" 
+             onclick="window.router.navigate('/novel/${novel.id}')">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-18 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+              ${novel.coverUrl ? `<img src="${novel.coverUrl}" alt="" class="w-full h-full object-cover">` : ''}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-gray-800 truncate">${novel.title}</h3>
+              <p class="text-sm text-gray-500 mt-1">${novel.chapterCount || 0} 章</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </div>
+      `).join('');
+      
+      const lastRead = localStorage.getItem('lastRead');
+      if (lastRead) {
+        const { novelId, novelTitle, chapterId, chapterTitle, progress } = JSON.parse(lastRead);
+        const novel = novels.find(n => n.id == novelId);
+        if (novel) {
+          document.getElementById('continue-reading').classList.remove('hidden');
+          document.getElementById('continue-title').textContent = novelTitle;
+          document.getElementById('continue-chapter').textContent = chapterTitle || '继续阅读';
+          document.getElementById('continue-progress').style.width = `${progress || 0}%`;
+          if (novel.coverUrl) {
+            const img = document.getElementById('continue-cover');
+            img.src = novel.coverUrl;
+            img.classList.remove('hidden');
+          }
+          window.continueReading = () => {
+            window.router.navigate(`/chapter/${novelId}/${chapterId}`);
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load novels:', error);
+      document.getElementById('novel-list').innerHTML = `
+        <div class="text-center py-8 text-red-400">
+          <p>加载失败</p>
+          <p class="text-sm mt-2">${error.message}</p>
+        </div>
+      `;
+    }
+  }
+  
+  loadNovels();
+</script>

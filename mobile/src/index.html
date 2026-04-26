@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-capacitor>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#fce4ec">
+  <title>梦境文阁</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/mobile.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dream: {
+              pink: '#fce4ec',
+              lavender: '#e8eaf6',
+              mint: '#e0f7fa',
+              peach: '#fff3e0',
+              purple: '#9c27b0',
+              blue: '#3f51b5',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-dream-pink via-dream-lavender to-dream-mint min-h-screen">
+  
+  <div id="setup-page" class="hidden min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="w-full max-w-sm bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl">
+      <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">连接到梦境文阁</h1>
+      <p class="text-sm text-gray-500 text-center mb-6">请输入服务器地址</p>
+      
+      <div class="mb-4">
+        <input 
+          type="text" 
+          id="server-url-input"
+          value="192.168.1.94:38081"
+          placeholder="例如: 192.168.1.5:38081"
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-dream-purple focus:outline-none text-gray-700 bg-white/90"
+        >
+      </div>
+      
+      <button 
+        id="test-connection-btn"
+        onclick="testConnection()"
+        class="w-full py-3 rounded-xl bg-gradient-to-r from-dream-purple to-dream-blue text-white font-medium mb-3 hover:opacity-90 transition"
+      >
+        测试连接
+      </button>
+      
+      <div id="connection-status" class="text-center text-sm mb-4 h-6"></div>
+      
+      <button 
+        id="save-and-enter-btn"
+        onclick="saveAndEnter()"
+        disabled
+        class="w-full py-3 rounded-xl bg-gray-300 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition"
+      >
+        保存并进入
+      </button>
+      
+      <p class="text-xs text-gray-400 text-center mt-4">
+        提示：请确保手机与电脑连接在同一 WiFi 下
+      </p>
+    </div>
+  </div>
+
+  <div id="app-shell" class="hidden min-h-screen flex flex-col">
+    <div id="app-container" class="flex-1 overflow-y-auto pb-16"></div>
+    
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-6 py-2 z-50">
+      <div class="flex justify-around items-center">
+        <button onclick="window.router.navigate('/')" class="nav-item flex flex-col items-center p-2 text-gray-400 hover:text-dream-purple transition" data-route="/">
+          <span class="text-xl">🏠</span>
+          <span class="text-xs mt-1">首页</span>
+        </button>
+        <button onclick="window.router.navigate('/creative')" class="nav-item flex flex-col items-center p-2 text-gray-400 hover:text-dream-purple transition" data-route="/creative">
+          <span class="text-xl">✍️</span>
+          <span class="text-xs mt-1">创作</span>
+        </button>
+        <button onclick="window.router.navigate('/gallery')" class="nav-item flex flex-col items-center p-2 text-gray-400 hover:text-dream-purple transition" data-route="/gallery">
+          <span class="text-xl">🎨</span>
+          <span class="text-xs mt-1">画廊</span>
+        </button>
+        <button onclick="window.router.navigate('/settings')" class="nav-item flex flex-col items-center p-2 text-gray-400 hover:text-dream-purple transition" data-route="/settings">
+          <span class="text-xl">⚙️</span>
+          <span class="text-xs mt-1">设置</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <div id="offline-banner" class="hidden fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-2 px-4 text-sm z-50">
+    连接已断开，正在重试...
+    <button onclick="window.location.reload()" class="underline ml-2">立即重试</button>
+  </div>
+
+  <script type="module">
+    import { getServerUrl, setServerUrl, testConnection, hasConfiguredServer } from './js/config.js';
+    import { initRouter } from './js/router.js';
+    
+    window.testConnection = async () => {
+      const input = document.getElementById('server-url-input');
+      const url = input.value.trim();
+      const statusEl = document.getElementById('connection-status');
+      const saveBtn = document.getElementById('save-and-enter-btn');
+      
+      if (!url) {
+        statusEl.textContent = '请输入服务器地址';
+        statusEl.className = 'text-center text-sm mb-4 h-6 text-red-500';
+        return;
+      }
+      
+      statusEl.textContent = '正在测试...';
+      statusEl.className = 'text-center text-sm mb-4 h-6 text-gray-500';
+      saveBtn.disabled = true;
+      
+      const fullUrl = url.startsWith('http') ? url : `http://${url}`;
+      const success = await testConnection(fullUrl);
+      
+      if (success) {
+        statusEl.textContent = '✅ 连接成功';
+        statusEl.className = 'text-center text-sm mb-4 h-6 text-green-500';
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('bg-gray-300');
+        saveBtn.classList.add('bg-gradient-to-r', 'from-dream-purple', 'to-dream-blue');
+        window.tempServerUrl = fullUrl;
+      } else {
+        statusEl.textContent = '❌ 连接失败，请检查地址和网络';
+        statusEl.className = 'text-center text-sm mb-4 h-6 text-red-500';
+      }
+    };
+    
+    window.saveAndEnter = async () => {
+      if (window.tempServerUrl) {
+        await setServerUrl(window.tempServerUrl);
+        showApp();
+      }
+    };
+    
+    function showSetup() {
+      document.getElementById('setup-page').classList.remove('hidden');
+      document.getElementById('app-shell').classList.add('hidden');
+    }
+    
+    function showApp() {
+      document.getElementById('setup-page').classList.add('hidden');
+      document.getElementById('app-shell').classList.remove('hidden');
+      document.getElementById('app-shell').classList.add('flex');
+      initRouter();
+    }
+    
+    async function init() {
+      const configured = await hasConfiguredServer();
+      if (configured) {
+        const url = await getServerUrl();
+        const success = await testConnection(url);
+        if (success) {
+          showApp();
+        } else {
+          showSetup();
+          document.getElementById('server-url-input').value = url.replace('http://', '');
+          document.getElementById('connection-status').textContent = '上次保存的地址已无法连接，请重新配置';
+          document.getElementById('connection-status').className = 'text-center text-sm mb-4 h-6 text-red-500';
+        }
+      } else {
+        showSetup();
+      }
+    }
+    
+    init();
+  </script>
+</body>
+</html>

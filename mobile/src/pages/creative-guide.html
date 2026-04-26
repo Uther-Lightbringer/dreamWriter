@@ -1,0 +1,253 @@
+<div class="page-enter h-screen flex flex-col">
+  <div class="px-4 py-3 border-b border-gray-100 bg-white/95 backdrop-blur flex items-center justify-between">
+    <h1 class="text-lg font-semibold text-gray-800">创作引导</h1>
+    <button onclick="alert('菜单功能开发中')" class="p-2">
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="creative-content" class="flex-1 overflow-y-auto hide-scrollbar">
+  </div>
+
+  <div class="border-t border-gray-100 bg-white/95 backdrop-blur px-2 py-1">
+    <div class="flex justify-around">
+      <button onclick="switchTab('chat')" class="creative-tab active flex flex-col items-center py-2 px-4 rounded-lg" data-tab="chat">
+        <span class="text-lg">💬</span>
+        <span class="text-xs mt-0.5">对话</span>
+      </button>
+      <button onclick="switchTab('characters')" class="creative-tab flex flex-col items-center py-2 px-4 rounded-lg" data-tab="characters">
+        <span class="text-lg">👤</span>
+        <span class="text-xs mt-0.5">角色</span>
+      </button>
+      <button onclick="switchTab('tokens')" class="creative-tab flex flex-col items-center py-2 px-4 rounded-lg" data-tab="tokens">
+        <span class="text-lg">📊</span>
+        <span class="text-xs mt-0.5">Token</span>
+      </button>
+      <button onclick="switchTab('novel')" class="creative-tab flex flex-col items-center py-2 px-4 rounded-lg" data-tab="novel">
+        <span class="text-lg">⚙️</span>
+        <span class="text-xs mt-0.5">小说</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { api, getNovels } from '../js/api-client.js';
+  import { VoiceInput } from '../js/voice-input.js';
+  
+  let currentTab = 'chat';
+  let voiceInput = null;
+  let currentNovelId = null;
+  
+  window.switchTab = (tab) => {
+    currentTab = tab;
+    
+    document.querySelectorAll('.creative-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.tab === tab);
+      el.classList.toggle('text-dream-purple', el.dataset.tab === tab);
+      el.classList.toggle('bg-dream-pink/30', el.dataset.tab === tab);
+    });
+    
+    const container = document.getElementById('creative-content');
+    switch(tab) {
+      case 'chat': renderChatTab(container); break;
+      case 'characters': renderCharactersTab(container); break;
+      case 'tokens': renderTokensTab(container); break;
+      case 'novel': renderNovelTab(container); break;
+    }
+  };
+  
+  function renderChatTab(container) {
+    container.innerHTML = `
+      <div class="flex flex-col h-full">
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+          <div class="flex justify-start">
+            <div class="max-w-[85%] bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
+              <p class="text-sm text-gray-700">你好！我是你的 AI 创作助手。有什么可以帮你的吗？</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="border-t border-gray-100 p-3 bg-white">
+          <div class="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-2">
+            <button id="voice-btn" class="p-2 text-gray-400 hover:text-dream-purple transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+              </svg>
+            </button>
+            <input 
+              type="text" 
+              id="chat-input"
+              placeholder="输入消息..."
+              class="flex-1 bg-transparent outline-none text-sm"
+              onkeypress="if(event.key==='Enter') sendMessage()"
+            >
+            <button onclick="sendMessage()" class="p-2 bg-dream-purple text-white rounded-xl">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    const input = document.getElementById('chat-input');
+    const voiceBtn = document.getElementById('voice-btn');
+    voiceInput = new VoiceInput();
+    
+    voiceBtn.addEventListener('click', () => {
+      const supported = voiceInput.init();
+      if (!supported) {
+        alert('您的设备不支持语音输入，请使用系统键盘的语音功能');
+        return;
+      }
+      
+      const isListening = voiceInput.toggle();
+      voiceBtn.classList.toggle('text-red-500', isListening);
+      voiceBtn.classList.toggle('animate-pulse', isListening);
+      
+      if (isListening) {
+        voiceInput.onResult = (final, interim) => {
+          if (final) {
+            input.value += final;
+          }
+        };
+      }
+    });
+  }
+  
+  window.sendMessage = async () => {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    addMessage(message, 'user');
+    input.value = '';
+    
+    const loadingId = addMessage('思考中...', 'ai', true);
+    
+    try {
+      const response = await api.post('/api/ai/chat', { message });
+      removeMessage(loadingId);
+      addMessage(response.reply || '抱歉，我没有理解您的问题。', 'ai');
+    } catch (error) {
+      removeMessage(loadingId);
+      addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
+    }
+  };
+  
+  function addMessage(text, type, isLoading = false) {
+    const container = document.getElementById('chat-messages');
+    const id = Date.now();
+    const div = document.createElement('div');
+    div.id = `msg-${id}`;
+    div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'}`;
+    div.innerHTML = `
+      <div class="max-w-[85%] ${type === 'user' ? 'bg-dream-purple text-white rounded-2xl rounded-tr-sm' : 'bg-gray-100 rounded-2xl rounded-tl-sm'} px-4 py-3">
+        <p class="text-sm ${isLoading ? 'animate-pulse' : ''}">${text}</p>
+      </div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+  }
+  
+  function removeMessage(id) {
+    const msg = document.getElementById(`msg-${id}`);
+    if (msg) msg.remove();
+  }
+  
+  async function renderCharactersTab(container) {
+    container.innerHTML = '<div class="flex justify-center py-8"><div class="loading-spinner"></div></div>';
+    
+    try {
+      const novels = await getNovels();
+      if (novels.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-400">请先创建小说</div>';
+        return;
+      }
+      
+      const novel = novels[0];
+      currentNovelId = novel.id;
+      
+      const cards = await api.get(`/api/novels/${novel.id}/character-cards`);
+      
+      if (!cards || cards.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-400">暂无角色卡</div>';
+        return;
+      }
+      
+      container.innerHTML = `
+        <div class="p-4">
+          <h3 class="text-lg font-semibold mb-4">${novel.title} - 角色卡</h3>
+          <div class="space-y-4">
+            ${cards.map(card => `
+              <div class="dream-card p-4">
+                <div class="flex gap-4">
+                  <div class="w-20 h-20 bg-gray-200 rounded-xl flex-shrink-0 overflow-hidden">
+                    ${card.imageUrl ? `<img src="${card.imageUrl}" class="w-full h-full object-cover">` : ''}
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="font-bold text-gray-800">${card.name}</h4>
+                    <p class="text-sm text-gray-500 mt-1">${card.role || '角色'}</p>
+                    <p class="text-sm text-gray-600 mt-2 line-clamp-3">${card.description || ''}</p>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      container.innerHTML = `<div class="text-center py-8 text-red-400">加载失败: ${error.message}</div>`;
+    }
+  }
+  
+  function renderTokensTab(container) {
+    container.innerHTML = `
+      <div class="p-4">
+        <h3 class="text-lg font-semibold mb-4">Token 用量</h3>
+        <div class="dream-card p-6 text-center mb-4">
+          <div class="text-3xl font-bold text-dream-purple mb-1">--</div>
+          <div class="text-sm text-gray-500">今日消耗</div>
+        </div>
+        <div class="dream-card p-6 text-center mb-4">
+          <div class="text-3xl font-bold text-dream-blue mb-1">--</div>
+          <div class="text-sm text-gray-500">本月消耗</div>
+        </div>
+        <p class="text-xs text-gray-400 text-center">详细统计功能开发中</p>
+      </div>
+    `;
+  }
+  
+  async function renderNovelTab(container) {
+    try {
+      const novels = await getNovels();
+      container.innerHTML = `
+        <div class="p-4">
+          <h3 class="text-lg font-semibold mb-4">当前小说</h3>
+          ${novels.map(novel => `
+            <div class="dream-card p-4 mb-3 cursor-pointer" onclick="window.router.navigate('/novel/${novel.id}')">
+              <h4 class="font-medium text-gray-800">${novel.title}</h4>
+              <p class="text-sm text-gray-500 mt-1">${novel.chapterCount || 0} 章</p>
+            </div>
+          `).join('')}
+          
+          <h3 class="text-lg font-semibold mb-4 mt-6">快捷入口</h3>
+          <div class="space-y-2">
+            <button onclick="window.router.navigate('/settings')" class="w-full dream-card p-4 text-left">
+              ⚙️ 服务器设置
+            </button>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      container.innerHTML = `<div class="text-center py-8 text-red-400">加载失败</div>`;
+    }
+  }
+  
+  switchTab('chat');
+</script>
