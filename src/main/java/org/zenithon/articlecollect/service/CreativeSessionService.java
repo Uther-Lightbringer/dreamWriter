@@ -275,7 +275,8 @@ public class CreativeSessionService {
 
             // 检查是否需要生成摘要
             if (countUserTurns(messages) > SUMMARY_THRESHOLD) {
-                generateAndInsertSummary(messages);
+                int turnsSummarized = countUserTurns(messages) - KEEP_RECENT_TURNS;
+                generateAndInsertSummary(messages, emitter, turnsSummarized);
             }
 
             // 获取运行时配置
@@ -1474,10 +1475,12 @@ public class CreativeSessionService {
     /**
      * 生成并插入摘要（当对话过长时）
      */
-    private void generateAndInsertSummary(List<Map<String, Object>> messages) {
+    private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized) {
         try {
             // 保留第一条（系统提示词）和最近 N 轮对话
             Map<String, Object> systemMessage = messages.get(0);
+
+            int messagesBefore = messages.size();
 
             // 构建需要摘要的内容
             List<Map<String, Object>> toSummarize = messages.subList(1, messages.size() - KEEP_RECENT_TURNS * 2);
@@ -1503,7 +1506,24 @@ public class CreativeSessionService {
             messages.add(systemMessage);
             messages.add(Map.of("role", "system", "content", "[对话摘要] " + summary));
 
-            logger.info("已生成对话摘要");
+            int messagesAfter = messages.size();
+
+            // 详细日志
+            logger.info("========== 对话摘要生成 ==========");
+            logger.info("摘要前消息数: {}", messagesBefore);
+            logger.info("摘要后消息数: {}", messagesAfter);
+            logger.info("压缩对话轮数: {}", turnsSummarized);
+            logger.info("摘要内容:\n{}", summary);
+            logger.info("==================================");
+
+            // 发送 SSE 事件通知前端
+            emitter.send(SseEmitter.event()
+                    .name("summary_generated")
+                    .data(objectMapper.writeValueAsString(Map.of(
+                            "message", "对话过长，已压缩历史记录",
+                            "turnsSummarized", turnsSummarized
+                    ))));
+
         } catch (Exception e) {
             logger.error("生成摘要失败: {}", e.getMessage(), e);
         }
