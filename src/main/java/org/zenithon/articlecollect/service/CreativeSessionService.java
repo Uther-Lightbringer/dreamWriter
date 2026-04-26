@@ -909,6 +909,9 @@ public class CreativeSessionService {
                     case "generate_chapter_images":
                         result = generateChapterImages(argumentsJson, session, emitter);
                         break;
+                    case "get_chapter_summaries":
+                        result = getChapterSummaries(argumentsJson, session);
+                        break;
                     default:
                         result = "{\"error\": \"未知工具: " + functionName + "\"}";
                 }
@@ -1498,6 +1501,38 @@ public class CreativeSessionService {
     }
 
     /**
+     * 获取章节概括列表
+     */
+    private String getChapterSummaries(String argumentsJson, CreativeSession session) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            // 获取小说ID
+            SessionContext context = getContext(session);
+            Long novelId = args.get("novelId") != null
+                ? ((Number) args.get("novelId")).longValue()
+                : context.getCurrentNovelId();
+
+            if (novelId == null) {
+                return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
+            }
+
+            // 获取章节概括
+            List<Map<String, Object>> summaries = novelService.getChapterSummaries(novelId);
+
+            logger.info("获取章节概括: novelId={}, count={}", novelId, summaries.size());
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "chapters", summaries
+            ));
+        } catch (Exception e) {
+            logger.error("获取章节概括失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized) {
@@ -1885,6 +1920,11 @@ public class CreativeSessionService {
         genChapterImgProps.put("chapterId", Map.of("type", "integer", "description", "章节ID"));
         genChapterImgProps.put("mode", Map.of("type", "string", "description", "auto-自动生成/confirm-先确认后生成", "enum", Arrays.asList("auto", "confirm")));
         tools.add(createTool("generate_chapter_images", "为章节生成配图。confirm模式返回推荐位置供用户确认。", genChapterImgProps, Arrays.asList("chapterId")));
+
+        // get_chapter_summaries 工具
+        Map<String, Object> getSummariesProps = new LinkedHashMap<>();
+        getSummariesProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
+        tools.add(createTool("get_chapter_summaries", "获取小说已有章节的概括列表。创建新章节前调用此工具了解剧情进度，避免读取完整内容。", getSummariesProps, Collections.emptyList()));
 
         return tools;
     }
