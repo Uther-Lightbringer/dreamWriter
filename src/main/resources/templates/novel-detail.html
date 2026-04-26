@@ -1496,8 +1496,28 @@
                                     <input type="text" id="appearanceEyes" name="eyes" class="dream-input" placeholder="例如：棕色">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceFace">脸型</label>
+                                    <input type="text" id="appearanceFace" name="face" class="dream-input" placeholder="例如：瓜子脸">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
                                     <label class="form-label" for="appearanceBuild">体型</label>
                                     <input type="text" id="appearanceBuild" name="build" class="dream-input" placeholder="例如：匀称">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceClothing">服装</label>
+                                    <input type="text" id="appearanceClothing" name="clothing" class="dream-input" placeholder="例如：白色连衣裙">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceLegwear">腿部穿着</label>
+                                    <input type="text" id="appearanceLegwear" name="legwear" class="dream-input" placeholder="例如：黑色丝袜（可选）">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceShoes">鞋子</label>
+                                    <input type="text" id="appearanceShoes" name="shoes" class="dream-input" placeholder="例如：黑色高跟鞋（可选）">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="appearanceAccessories">配饰</label>
+                                    <input type="text" id="appearanceAccessories" name="accessories" class="dream-input" placeholder="例如：银色项链（可选）">
                                 </div>
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
@@ -2028,7 +2048,12 @@
                                 ${card.appearance.height ? `<div><strong>身高:</strong> ${escapeHtml(card.appearance.height)}</div>` : ''}
                                 ${card.appearance.hair ? `<div><strong>发色:</strong> ${escapeHtml(card.appearance.hair)}</div>` : ''}
                                 ${card.appearance.eyes ? `<div><strong>瞳色:</strong> ${escapeHtml(card.appearance.eyes)}</div>` : ''}
+                                ${card.appearance.face ? `<div><strong>脸型:</strong> ${escapeHtml(card.appearance.face)}</div>` : ''}
                                 ${card.appearance.build ? `<div><strong>体型:</strong> ${escapeHtml(card.appearance.build)}</div>` : ''}
+                                ${card.appearance.clothing ? `<div><strong>服装:</strong> ${escapeHtml(card.appearance.clothing)}</div>` : ''}
+                                ${card.appearance.legwear ? `<div><strong>腿部穿着:</strong> ${escapeHtml(card.appearance.legwear)}</div>` : ''}
+                                ${card.appearance.shoes ? `<div><strong>鞋子:</strong> ${escapeHtml(card.appearance.shoes)}</div>` : ''}
+                                ${card.appearance.accessories ? `<div><strong>配饰:</strong> ${escapeHtml(card.appearance.accessories)}</div>` : ''}
                                 ${card.appearance.distinguishingFeatures ? `<div><strong>显著特征:</strong> ${escapeHtml(card.appearance.distinguishingFeatures)}</div>` : ''}
                             </div>
                         </div>
@@ -2182,13 +2207,23 @@
                 document.getElementById('appearanceHeight').value = card.appearance.height || '';
                 document.getElementById('appearanceHair').value = card.appearance.hair || '';
                 document.getElementById('appearanceEyes').value = card.appearance.eyes || '';
+                document.getElementById('appearanceFace').value = card.appearance.face || '';
                 document.getElementById('appearanceBuild').value = card.appearance.build || '';
+                document.getElementById('appearanceClothing').value = card.appearance.clothing || '';
+                document.getElementById('appearanceLegwear').value = card.appearance.legwear || '';
+                document.getElementById('appearanceShoes').value = card.appearance.shoes || '';
+                document.getElementById('appearanceAccessories').value = card.appearance.accessories || '';
                 document.getElementById('appearanceFeatures').value = card.appearance.distinguishingFeatures || '';
             } else {
                 document.getElementById('appearanceHeight').value = '';
                 document.getElementById('appearanceHair').value = '';
                 document.getElementById('appearanceEyes').value = '';
+                document.getElementById('appearanceFace').value = '';
                 document.getElementById('appearanceBuild').value = '';
+                document.getElementById('appearanceClothing').value = '';
+                document.getElementById('appearanceLegwear').value = '';
+                document.getElementById('appearanceShoes').value = '';
+                document.getElementById('appearanceAccessories').value = '';
                 document.getElementById('appearanceFeatures').value = '';
             }
 
@@ -2518,7 +2553,12 @@
                     height: document.getElementById('appearanceHeight').value,
                     hair: document.getElementById('appearanceHair').value,
                     eyes: document.getElementById('appearanceEyes').value,
+                    face: document.getElementById('appearanceFace').value,
                     build: document.getElementById('appearanceBuild').value,
+                    clothing: document.getElementById('appearanceClothing').value,
+                    legwear: document.getElementById('appearanceLegwear').value,
+                    shoes: document.getElementById('appearanceShoes').value,
+                    accessories: document.getElementById('appearanceAccessories').value,
                     distinguishingFeatures: document.getElementById('appearanceFeatures').value
                 },
                 appearanceDescription: document.getElementById('appearanceDescription').value,
@@ -2528,8 +2568,10 @@
             };
 
             if (!cardData.appearance.height && !cardData.appearance.hair &&
-                !cardData.appearance.eyes && !cardData.appearance.build &&
-                !cardData.appearance.distinguishingFeatures) {
+                !cardData.appearance.eyes && !cardData.appearance.face &&
+                !cardData.appearance.build && !cardData.appearance.clothing &&
+                !cardData.appearance.legwear && !cardData.appearance.shoes &&
+                !cardData.appearance.accessories && !cardData.appearance.distinguishingFeatures) {
                 cardData.appearance = undefined;
             }
 

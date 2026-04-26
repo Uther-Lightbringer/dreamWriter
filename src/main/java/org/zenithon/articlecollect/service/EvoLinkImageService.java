@@ -65,16 +65,23 @@ public class EvoLinkImageService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + evoLinkConfig.getApiToken());
-            
+
+            // 获取当前配置的模型
+            String model = getCurrentModel();
+
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", evoLinkConfig.getModel());
+            requestBody.put("model", model);
             requestBody.put("prompt", prompt);
             requestBody.put("size", size);
 
-            // 添加seed参数（可选）
-            if (seed != null && seed >= 1 && seed <= 2147483647) {
-                requestBody.put("seed", seed);
-                logger.info("使用seed参数: {}", seed);
+            logger.info("使用模型: {}", model);
+
+            // z-image-turbo 专用参数：seed
+            if ("z-image-turbo".equals(model)) {
+                if (seed != null && seed >= 1 && seed <= 2147483647) {
+                    requestBody.put("seed", seed);
+                    logger.info("使用seed参数: {}", seed);
+                }
             }
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);

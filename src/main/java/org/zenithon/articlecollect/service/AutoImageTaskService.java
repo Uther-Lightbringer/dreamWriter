@@ -50,6 +50,9 @@ public class AutoImageTaskService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private SystemConfigService systemConfigService;
+
     // 创建固定大小的线程池用于并发生成图片
     private final ExecutorService imageGenerationExecutor = Executors.newFixedThreadPool(4);
 
@@ -57,8 +60,16 @@ public class AutoImageTaskService {
      * 创建新的自动配图任务
      */
     public String createTask(Long chapterId, List<Map<String, Object>> positions) {
+        return createTask(chapterId, positions, null);
+    }
+
+    /**
+     * 创建新的自动配图任务（带画风参数）
+     */
+    public String createTask(Long chapterId, List<Map<String, Object>> positions, String style) {
         String taskId = UUID.randomUUID().toString();
         AutoImageTask task = new AutoImageTask(taskId, chapterId);
+        task.setStyle(style != null ? style : AIPromptService.DEFAULT_STYLE);
         task.setTotalCount(positions.size());
 
         // 初始化任务项
@@ -147,9 +158,9 @@ public class AutoImageTaskService {
         item.setProgress(10);
 
         try {
-            // 1. 生成AI绘画提示词（包含角色卡信息）
+            // 1. 生成AI绘画提示词（包含角色卡信息和画风）
             String prompt = chapterImageService.generateImagePromptWithCharacters(
-                item.getDescription(), characterCards);
+                item.getDescription(), characterCards, task.getStyle());
             if (prompt == null || prompt.trim().isEmpty()) {
                 throw new RuntimeException("提示词生成失败");
             }
@@ -159,7 +170,7 @@ public class AutoImageTaskService {
 
             // 2. 使用EvoLink生成图片
             EvoLinkImageService imageService = new EvoLinkImageService(
-                evoLinkConfig, restTemplate, objectMapper);
+                evoLinkConfig, restTemplate, objectMapper, systemConfigService);
             String evoTaskId = imageService.generateImage(prompt, "16:9");
             item.setProgress(50);
 

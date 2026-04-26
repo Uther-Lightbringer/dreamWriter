@@ -132,11 +132,16 @@ public class AIPromptService {
     public static final String NO_TEXT_TAG_EN = ", absolutely no text, no watermark, no fake UI, no fake labels";
 
     private final DeepSeekConfig deepSeekConfig;
+    private final DeepSeekConfigService deepSeekConfigService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    public AIPromptService(DeepSeekConfig deepSeekConfig, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public AIPromptService(DeepSeekConfig deepSeekConfig,
+                           DeepSeekConfigService deepSeekConfigService,
+                           RestTemplate restTemplate,
+                           ObjectMapper objectMapper) {
         this.deepSeekConfig = deepSeekConfig;
+        this.deepSeekConfigService = deepSeekConfigService;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
     }
@@ -219,8 +224,23 @@ public class AIPromptService {
             if (card.getAppearance().getEyes() != null && !card.getAppearance().getEyes().isEmpty()) {
                 sb.append("- 瞳色：").append(card.getAppearance().getEyes()).append("\n");
             }
+            if (card.getAppearance().getFace() != null && !card.getAppearance().getFace().isEmpty()) {
+                sb.append("- 脸型：").append(card.getAppearance().getFace()).append("\n");
+            }
             if (card.getAppearance().getBuild() != null && !card.getAppearance().getBuild().isEmpty()) {
                 sb.append("- 体型：").append(card.getAppearance().getBuild()).append("\n");
+            }
+            if (card.getAppearance().getClothing() != null && !card.getAppearance().getClothing().isEmpty()) {
+                sb.append("- 服装：").append(card.getAppearance().getClothing()).append("\n");
+            }
+            if (card.getAppearance().getLegwear() != null && !card.getAppearance().getLegwear().isEmpty()) {
+                sb.append("- 腿部穿着：").append(card.getAppearance().getLegwear()).append("\n");
+            }
+            if (card.getAppearance().getShoes() != null && !card.getAppearance().getShoes().isEmpty()) {
+                sb.append("- 鞋子：").append(card.getAppearance().getShoes()).append("\n");
+            }
+            if (card.getAppearance().getAccessories() != null && !card.getAppearance().getAccessories().isEmpty()) {
+                sb.append("- 配饰：").append(card.getAppearance().getAccessories()).append("\n");
             }
             if (card.getAppearance().getDistinguishingFeatures() != null && !card.getAppearance().getDistinguishingFeatures().isEmpty()) {
                 sb.append("- 显著特征：").append(card.getAppearance().getDistinguishingFeatures()).append("\n");
@@ -1232,5 +1252,143 @@ public class AIPromptService {
         // 如果没有找到合适的截断点，就直接截断
         logger.warn("提示词过长({}字符)，已截断到{}字符", prompt.length(), maxLength);
         return prompt.substring(0, maxLength);
+    }
+
+    // ==================== 支持运行时配置的方法 ====================
+
+    /**
+     * 使用运行时配置调用 DeepSeek API
+     *
+     * @param prompt 用户提示词
+     * @param config 运行时配置（可为 null，使用默认配置）
+     * @return AI 返回的内容
+     * @throws Exception 调用异常
+     */
+    public String callDeepSeekAPIWithConfig(String prompt, org.zenithon.articlecollect.dto.DeepSeekRuntimeConfig config) throws Exception {
+        // 如果没有传入配置，使用默认配置
+        if (config == null) {
+            config = deepSeekConfigService.getDefaultRuntimeConfig(
+                    org.zenithon.articlecollect.entity.DeepSeekFeatureConfig.FeatureCode.PROMPT_GENERATION);
+        }
+
+        return callDeepSeekAPIWithThinking(
+                null, prompt,
+                config.getThinkingEnabled(),
+                config.getReasoningEffort(),
+                2000, false
+        );
+    }
+
+    /**
+     * 使用运行时配置进行流式 AI 对话
+     *
+     * @param prompt 用户输入的提示词
+     * @param emitter SSE 发射器
+     * @param config 运行时配置（可为 null，使用默认配置）
+     * @throws Exception 可能抛出的异常
+     */
+    public void chatStreamWithConfig(String prompt, SseEmitter emitter,
+                                      org.zenithon.articlecollect.dto.DeepSeekRuntimeConfig config) throws Exception {
+        // 如果没有传入配置，使用默认配置
+        if (config == null) {
+            config = deepSeekConfigService.getDefaultRuntimeConfig(
+                    org.zenithon.articlecollect.entity.DeepSeekFeatureConfig.FeatureCode.AI_CHAT);
+        }
+
+        // 检查 API Key 是否配置
+        if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().trim().isEmpty()) {
+            logger.warn("DeepSeek API Key 未配置");
+            emitter.send(SseEmitter.event()
+                    .name("error")
+                    .data("{\"error\": \"DeepSeek API Key 未配置，请在 application.properties 中配置 deepseek.api.key\"}"));
+            return;
+        }
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("model", config.getModel());
+            requestBody.put("stream", true);
+
+            // 思考模式配置
+            if (config.getThinkingEnabled()) {
+                Map<String, Object> thinking = new HashMap<>();
+                thinking.put("type", "enabled");
+                requestBody.put("thinking", thinking);
+                requestBody.put("reasoning_effort", config.getReasoningEffort());
+            }
+
+            Map<String, String> message = new HashMap<>();
+            message.put("role", "user");
+            message.put("content", prompt);
+            requestBody.put("messages", new Object[]{message});
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+            logger.info("调用 DeepSeek API (流式), model={}, thinking={}", config.getModel(), config.getThinkingEnabled());
+
+            // 使用 RestTemplate 执行流式请求
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    deepSeekConfig.getApiUrl(),
+                    request,
+                    String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String responseBody = response.getBody();
+                String[] lines = responseBody.split("\\n");
+
+                StringBuilder fullContent = new StringBuilder();
+
+                for (String line : lines) {
+                    if (line.trim().isEmpty() || line.startsWith(":")) {
+                        continue;
+                    }
+
+                    if (line.startsWith("data: ")) {
+                        String data = line.substring(6);
+
+                        if ("[DONE]".equals(data.trim())) {
+                            break;
+                        }
+
+                        try {
+                            JsonNode jsonNode = objectMapper.readTree(data);
+                            JsonNode choices = jsonNode.path("choices");
+
+                            if (choices.isArray() && choices.size() > 0) {
+                                JsonNode delta = choices.get(0).path("delta");
+                                String content = delta.path("content").asText();
+
+                                // 处理 reasoning_content
+                                JsonNode reasoningNode = delta.get("reasoning_content");
+                                if ((content == null || content.isEmpty()) && reasoningNode != null && !reasoningNode.isNull()) {
+                                    content = reasoningNode.asText();
+                                }
+
+                                if (content != null && !content.isEmpty()) {
+                                    fullContent.append(content);
+                                    emitter.send(SseEmitter.event()
+                                            .name("message")
+                                            .data(content));
+                                }
+                            }
+                        } catch (Exception e) {
+                            logger.warn("解析 SSE 数据块失败：" + e.getMessage());
+                        }
+                    }
+                }
+
+                logger.info("流式对话完成，总内容长度：{}", fullContent.length());
+            } else {
+                throw new RuntimeException("API 调用失败：" + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("流式对话失败：" + e.getMessage(), e);
+            throw e;
+        }
     }
 }

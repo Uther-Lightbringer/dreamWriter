@@ -238,8 +238,11 @@ public class NovelGeneratorStepService {
             "      \"eyes\": \"眼睛描述\",\n" +
             "      \"face\": \"脸型描述\",\n" +
             "      \"build\": \"体型\",\n" +
-            "      \"distinguishingFeatures\": \"面部特征（眼睛、眉毛、鼻子、嘴巴的综合描述）\",\n" +
-            "      \"clothing\": \"穿着风格\"\n" +
+            "      \"clothing\": \"服装\",\n" +
+            "      \"legwear\": \"腿部穿着（丝袜、袜子等）\",\n" +
+            "      \"shoes\": \"鞋子\",\n" +
+            "      \"accessories\": \"配饰\",\n" +
+            "      \"distinguishingFeatures\": \"显著特征\"\n" +
             "    },\n" +
             "    \"appearanceDescription\": \"完整的外貌文字描述，用于AI生成图片\",\n" +
             "    \"personality\": \"性格描述\",\n" +
@@ -305,8 +308,11 @@ public class NovelGeneratorStepService {
                         appearance.setEyes(appearanceNode.path("eyes").asText());
                         appearance.setFace(appearanceNode.path("face").asText());
                         appearance.setBuild(appearanceNode.path("build").asText());
-                        appearance.setDistinguishingFeatures(appearanceNode.path("distinguishingFeatures").asText());
                         appearance.setClothing(appearanceNode.path("clothing").asText());
+                        appearance.setLegwear(appearanceNode.path("legwear").asText());
+                        appearance.setShoes(appearanceNode.path("shoes").asText());
+                        appearance.setAccessories(appearanceNode.path("accessories").asText());
+                        appearance.setDistinguishingFeatures(appearanceNode.path("distinguishingFeatures").asText());
                         card.setAppearance(appearance);
                     }
 

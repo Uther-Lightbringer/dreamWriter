@@ -17,32 +17,35 @@ public class CharacterCardAppearance {
     private String face;  // 脸型描述
     private String build;
     private String distinguishingFeatures;
-    private String clothing;  // 穿着风格
-    
+    private String clothing;  // 服装
+    private String legwear;   // 腿部穿着（丝袜、袜子等）
+    private String shoes;     // 鞋子
+    private String accessories; // 配饰
+
     public CharacterCardAppearance() {
     }
-    
+
     // Getters and Setters
     public String getHeight() {
         return height;
     }
-    
+
     public void setHeight(String height) {
         this.height = height;
     }
-    
+
     public String getHair() {
         return hair;
     }
-    
+
     public void setHair(String hair) {
         this.hair = hair;
     }
-    
+
     public String getEyes() {
         return eyes;
     }
-    
+
     public void setEyes(String eyes) {
         this.eyes = eyes;
     }
@@ -58,15 +61,15 @@ public class CharacterCardAppearance {
     public String getBuild() {
         return build;
     }
-    
+
     public void setBuild(String build) {
         this.build = build;
     }
-    
+
     public String getDistinguishingFeatures() {
         return distinguishingFeatures;
     }
-    
+
     public void setDistinguishingFeatures(String distinguishingFeatures) {
         this.distinguishingFeatures = distinguishingFeatures;
     }
@@ -79,6 +82,29 @@ public class CharacterCardAppearance {
         this.clothing = clothing;
     }
 
+    public String getLegwear() {
+        return legwear;
+    }
+
+    public void setLegwear(String legwear) {
+        this.legwear = legwear;
+    }
+
+    public String getShoes() {
+        return shoes;
+    }
+
+    public void setShoes(String shoes) {
+        this.shoes = shoes;
+    }
+
+    public String getAccessories() {
+        return accessories;
+    }
+
+    public void setAccessories(String accessories) {
+        this.accessories = accessories;
+    }
 
     @Override
     public String toString() {

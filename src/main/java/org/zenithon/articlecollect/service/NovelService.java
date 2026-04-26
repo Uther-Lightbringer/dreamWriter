@@ -68,6 +68,9 @@ public class NovelService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
     
     /**
      * 创建新小说
@@ -420,7 +423,7 @@ public class NovelService {
     private String generateAndSaveCharacterImage(CharacterCard card) {
         try {
             // 创建 EvoLinkImageService 实例
-            EvoLinkImageService imageService = new EvoLinkImageService(evoLinkConfig, restTemplate, objectMapper);
+            EvoLinkImageService imageService = new EvoLinkImageService(evoLinkConfig, restTemplate, objectMapper, systemConfigService);
             String taskId = imageService.generateImage(card.getAppearanceDescription(), "1:1");
 
             // 等待图片生成完成

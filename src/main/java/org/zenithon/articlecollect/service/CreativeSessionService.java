@@ -23,6 +23,7 @@ import org.zenithon.articlecollect.repository.CreativeMemoryRepository;
 import org.zenithon.articlecollect.repository.CreativeSessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zenithon.articlecollect.dto.CharacterCard;
+import org.zenithon.articlecollect.dto.CharacterCardAppearance;
 import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.Novel;
 
@@ -1479,7 +1480,6 @@ public class CreativeSessionService {
             CharacterCard card = new CharacterCard();
             card.setName(name.trim());
             card.setRole(role);  // 角色类型：protagonist/supporting
-            card.setAppearanceDescription((String) args.get("appearance"));
             card.setPersonality((String) args.get("personality"));
             card.setBackground((String) args.get("description"));
 
@@ -1489,6 +1489,61 @@ public class CreativeSessionService {
             }
             card.setGender((String) args.get("gender"));
             card.setOccupation((String) args.get("occupation"));
+
+            // 解析结构化外貌字段
+            Object appearanceArg = args.get("appearance");
+            if (appearanceArg instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> appearanceMap = (Map<String, Object>) appearanceArg;
+                CharacterCardAppearance appearance = new CharacterCardAppearance();
+                appearance.setHeight((String) appearanceMap.get("height"));
+                appearance.setHair((String) appearanceMap.get("hair"));
+                appearance.setEyes((String) appearanceMap.get("eyes"));
+                appearance.setFace((String) appearanceMap.get("face"));
+                appearance.setBuild((String) appearanceMap.get("build"));
+                appearance.setClothing((String) appearanceMap.get("clothing"));
+                appearance.setLegwear((String) appearanceMap.get("legwear"));
+                appearance.setShoes((String) appearanceMap.get("shoes"));
+                appearance.setAccessories((String) appearanceMap.get("accessories"));
+                appearance.setDistinguishingFeatures((String) appearanceMap.get("distinguishingFeatures"));
+                card.setAppearance(appearance);
+
+                // 生成外貌描述文本（用于AI生成图片）
+                StringBuilder appearanceDesc = new StringBuilder();
+                if (appearance.getHeight() != null && !appearance.getHeight().isEmpty()) {
+                    appearanceDesc.append("身高").append(appearance.getHeight()).append("，");
+                }
+                if (appearance.getHair() != null && !appearance.getHair().isEmpty()) {
+                    appearanceDesc.append(appearance.getHair()).append("，");
+                }
+                if (appearance.getEyes() != null && !appearance.getEyes().isEmpty()) {
+                    appearanceDesc.append(appearance.getEyes()).append("，");
+                }
+                if (appearance.getFace() != null && !appearance.getFace().isEmpty()) {
+                    appearanceDesc.append(appearance.getFace()).append("，");
+                }
+                if (appearance.getBuild() != null && !appearance.getBuild().isEmpty()) {
+                    appearanceDesc.append(appearance.getBuild()).append("，");
+                }
+                if (appearance.getClothing() != null && !appearance.getClothing().isEmpty()) {
+                    appearanceDesc.append("穿着").append(appearance.getClothing()).append("，");
+                }
+                if (appearance.getLegwear() != null && !appearance.getLegwear().isEmpty()) {
+                    appearanceDesc.append(appearance.getLegwear()).append("，");
+                }
+                if (appearance.getShoes() != null && !appearance.getShoes().isEmpty()) {
+                    appearanceDesc.append(appearance.getShoes()).append("，");
+                }
+                if (appearance.getAccessories() != null && !appearance.getAccessories().isEmpty()) {
+                    appearanceDesc.append("配饰：").append(appearance.getAccessories()).append("，");
+                }
+                if (appearance.getDistinguishingFeatures() != null && !appearance.getDistinguishingFeatures().isEmpty()) {
+                    appearanceDesc.append("显著特征：").append(appearance.getDistinguishingFeatures()).append("。");
+                }
+                // 移除末尾的逗号
+                String desc = appearanceDesc.toString().replaceAll("，+$", "。");
+                card.setAppearanceDescription(desc);
+            }
 
             // 存储 seed 在 notes 字段（临时方案）
             card.setNotes("seed:" + seed);
@@ -1566,8 +1621,81 @@ public class CreativeSessionService {
             if (args.get("occupation") != null) {
                 card.setOccupation((String) args.get("occupation"));
             }
-            if (args.get("appearance") != null) {
-                card.setAppearanceDescription((String) args.get("appearance"));
+            // 解析结构化外貌字段
+            Object appearanceArg = args.get("appearance");
+            if (appearanceArg instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> appearanceMap = (Map<String, Object>) appearanceArg;
+                CharacterCardAppearance appearance = card.getAppearance();
+                if (appearance == null) {
+                    appearance = new CharacterCardAppearance();
+                }
+                if (appearanceMap.get("height") != null) {
+                    appearance.setHeight((String) appearanceMap.get("height"));
+                }
+                if (appearanceMap.get("hair") != null) {
+                    appearance.setHair((String) appearanceMap.get("hair"));
+                }
+                if (appearanceMap.get("eyes") != null) {
+                    appearance.setEyes((String) appearanceMap.get("eyes"));
+                }
+                if (appearanceMap.get("face") != null) {
+                    appearance.setFace((String) appearanceMap.get("face"));
+                }
+                if (appearanceMap.get("build") != null) {
+                    appearance.setBuild((String) appearanceMap.get("build"));
+                }
+                if (appearanceMap.get("clothing") != null) {
+                    appearance.setClothing((String) appearanceMap.get("clothing"));
+                }
+                if (appearanceMap.get("legwear") != null) {
+                    appearance.setLegwear((String) appearanceMap.get("legwear"));
+                }
+                if (appearanceMap.get("shoes") != null) {
+                    appearance.setShoes((String) appearanceMap.get("shoes"));
+                }
+                if (appearanceMap.get("accessories") != null) {
+                    appearance.setAccessories((String) appearanceMap.get("accessories"));
+                }
+                if (appearanceMap.get("distinguishingFeatures") != null) {
+                    appearance.setDistinguishingFeatures((String) appearanceMap.get("distinguishingFeatures"));
+                }
+                card.setAppearance(appearance);
+
+                // 更新外貌描述文本
+                StringBuilder appearanceDesc = new StringBuilder();
+                if (appearance.getHeight() != null && !appearance.getHeight().isEmpty()) {
+                    appearanceDesc.append("身高").append(appearance.getHeight()).append("，");
+                }
+                if (appearance.getHair() != null && !appearance.getHair().isEmpty()) {
+                    appearanceDesc.append(appearance.getHair()).append("，");
+                }
+                if (appearance.getEyes() != null && !appearance.getEyes().isEmpty()) {
+                    appearanceDesc.append(appearance.getEyes()).append("，");
+                }
+                if (appearance.getFace() != null && !appearance.getFace().isEmpty()) {
+                    appearanceDesc.append(appearance.getFace()).append("，");
+                }
+                if (appearance.getBuild() != null && !appearance.getBuild().isEmpty()) {
+                    appearanceDesc.append(appearance.getBuild()).append("，");
+                }
+                if (appearance.getClothing() != null && !appearance.getClothing().isEmpty()) {
+                    appearanceDesc.append("穿着").append(appearance.getClothing()).append("，");
+                }
+                if (appearance.getLegwear() != null && !appearance.getLegwear().isEmpty()) {
+                    appearanceDesc.append(appearance.getLegwear()).append("，");
+                }
+                if (appearance.getShoes() != null && !appearance.getShoes().isEmpty()) {
+                    appearanceDesc.append(appearance.getShoes()).append("，");
+                }
+                if (appearance.getAccessories() != null && !appearance.getAccessories().isEmpty()) {
+                    appearanceDesc.append("配饰：").append(appearance.getAccessories()).append("，");
+                }
+                if (appearance.getDistinguishingFeatures() != null && !appearance.getDistinguishingFeatures().isEmpty()) {
+                    appearanceDesc.append("显著特征：").append(appearance.getDistinguishingFeatures()).append("。");
+                }
+                String desc = appearanceDesc.toString().replaceAll("，+$", "。");
+                card.setAppearanceDescription(desc);
             }
             if (args.get("personality") != null) {
                 card.setPersonality((String) args.get("personality"));
@@ -2777,9 +2905,25 @@ public class CreativeSessionService {
         createCharProps.put("gender", Map.of("type", "string", "description", "性别"));
         createCharProps.put("occupation", Map.of("type", "string", "description", "职业/身份"));
         createCharProps.put("description", Map.of("type", "string", "description", "角色背景描述"));
-        createCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征描述（用于生成图片）"));
+        // 结构化外貌字段
+        Map<String, Object> appearanceProps = new LinkedHashMap<>();
+        appearanceProps.put("height", Map.of("type", "string", "description", "身高，如：168cm"));
+        appearanceProps.put("hair", Map.of("type", "string", "description", "发型发色，如：齐腰黑发，微卷"));
+        appearanceProps.put("eyes", Map.of("type", "string", "description", "眼睛描述，如：丹凤眼，深褐色瞳孔"));
+        appearanceProps.put("face", Map.of("type", "string", "description", "脸型描述，如：瓜子脸"));
+        appearanceProps.put("build", Map.of("type", "string", "description", "体型描述，如：身材苗条"));
+        appearanceProps.put("clothing", Map.of("type", "string", "description", "上装，如：白色衬衫配淡蓝色长裙"));
+        appearanceProps.put("legwear", Map.of("type", "string", "description", "腿部穿着，如：黑色丝袜、白色棉袜、光腿等"));
+        appearanceProps.put("shoes", Map.of("type", "string", "description", "鞋子，如：黑色高跟鞋、白色运动鞋"));
+        appearanceProps.put("accessories", Map.of("type", "string", "description", "配饰，如：银色项链、金边眼镜"));
+        appearanceProps.put("distinguishingFeatures", Map.of("type", "string", "description", "显著特征，如：左眉有一道疤痕"));
+        Map<String, Object> appearanceObj = new LinkedHashMap<>();
+        appearanceObj.put("type", "object");
+        appearanceObj.put("description", "外貌特征（必须填写所有字段，用于AI生成角色图片）");
+        appearanceObj.put("properties", appearanceProps);
+        createCharProps.put("appearance", appearanceObj);
         createCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
-        tools.add(createTool("create_character_card", "创建角色卡。调用前必须先调用list_character_cards查看现有角色。同名角色不可重复创建。每部小说只能有一个主角。自动生成seed用于图片一致性。", createCharProps, Arrays.asList("name")));
+        tools.add(createTool("create_character_card", "创建角色卡。调用前必须先调用list_character_cards查看现有角色。同名角色不可重复创建。每部小说只能有一个主角。外貌字段必须全部填写，用于AI生成图片。自动生成seed用于图片一致性。", createCharProps, Arrays.asList("name", "appearance")));
 
         // update_character_card 工具
         Map<String, Object> updateCharProps = new LinkedHashMap<>();
@@ -2790,9 +2934,25 @@ public class CreativeSessionService {
         updateCharProps.put("gender", Map.of("type", "string", "description", "性别"));
         updateCharProps.put("occupation", Map.of("type", "string", "description", "职业/身份"));
         updateCharProps.put("description", Map.of("type", "string", "description", "角色背景描述"));
-        updateCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征描述（用于生成图片）"));
+        // 结构化外貌字段
+        Map<String, Object> updateAppearanceProps = new LinkedHashMap<>();
+        updateAppearanceProps.put("height", Map.of("type", "string", "description", "身高，如：168cm"));
+        updateAppearanceProps.put("hair", Map.of("type", "string", "description", "发型发色，如：齐腰黑发，微卷"));
+        updateAppearanceProps.put("eyes", Map.of("type", "string", "description", "眼睛描述，如：丹凤眼，深褐色瞳孔"));
+        updateAppearanceProps.put("face", Map.of("type", "string", "description", "脸型描述，如：瓜子脸"));
+        updateAppearanceProps.put("build", Map.of("type", "string", "description", "体型描述，如：身材苗条"));
+        updateAppearanceProps.put("clothing", Map.of("type", "string", "description", "上装，如：白色衬衫配淡蓝色长裙"));
+        updateAppearanceProps.put("legwear", Map.of("type", "string", "description", "腿部穿着，如：黑色丝袜、白色棉袜、光腿等"));
+        updateAppearanceProps.put("shoes", Map.of("type", "string", "description", "鞋子，如：黑色高跟鞋、白色运动鞋"));
+        updateAppearanceProps.put("accessories", Map.of("type", "string", "description", "配饰，如：银色项链、金边眼镜"));
+        updateAppearanceProps.put("distinguishingFeatures", Map.of("type", "string", "description", "显著特征，如：左眉有一道疤痕"));
+        Map<String, Object> updateAppearanceObj = new LinkedHashMap<>();
+        updateAppearanceObj.put("type", "object");
+        updateAppearanceObj.put("description", "外貌特征（必须填写所有字段，用于AI生成角色图片）");
+        updateAppearanceObj.put("properties", updateAppearanceProps);
+        updateCharProps.put("appearance", updateAppearanceObj);
         updateCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
-        tools.add(createTool("update_character_card", "更新已存在的角色卡信息。当用户补充或修改角色设定时调用。", updateCharProps, Arrays.asList("characterId")));
+        tools.add(createTool("update_character_card", "更新已存在的角色卡信息。当用户补充或修改角色设定时调用。外貌字段必须全部填写。", updateCharProps, Arrays.asList("characterId")));
 
         // generate_character_image 工具
         Map<String, Object> genCharImgProps = new LinkedHashMap<>();
@@ -2875,8 +3035,16 @@ public class CreativeSessionService {
 
             用户选择"创建角色卡"后：
             1. 引导用户描述主角的外貌特征、性格特点、背景故事等
-            2. 收集完信息后，调用 `create_character_card` 创建角色卡
-            3. 创建成功后告知用户，并继续后续引导
+            2. **外貌特征必须收集完整**，包括以下所有字段：
+               - 身高（如：168cm）
+               - 发型发色（如：齐腰黑发，微卷）
+               - 眼睛描述（如：丹凤眼，深褐色瞳孔）
+               - 脸型（如：瓜子脸）
+               - 体型（如：身材苗条）
+               - 穿着风格（如：白色衬衫配淡蓝色长裙）
+               - 显著特征（如：左眉有一道疤痕）
+            3. 收集完信息后，调用 `create_character_card` 创建角色卡
+            4. 创建成功后告知用户，并继续后续引导
 
             ### 配角引导流程
 
@@ -2895,6 +3063,7 @@ public class CreativeSessionService {
             1. 姓名
             2. 与主角的关系
             3. 基本性格/身份
+            4. **如果创建角色卡，必须收集完整的外貌特征**（身高、发型发色、眼睛、脸型、体型、穿着风格、显著特征）
 
             示例对话：
             ```
@@ -3038,13 +3207,32 @@ public class CreativeSessionService {
             - add_chapter：添加章节（需要小说已创建，**调用前必须向用户确认**）
             - update_chapter：修改章节（**调用前必须向用户确认**）
             - update_novel：修改小说世界观/概述
-            - create_character_card：创建角色卡（需要小说已创建）
-            - update_character_card：更新角色卡信息
+            - create_character_card：创建角色卡（需要小说已创建，**必须填写完整外貌字段**）
+            - update_character_card：更新角色卡信息（**必须填写完整外貌字段**）
             - generate_character_image：生成角色图片（需要角色卡已创建）
             - generate_chapter_images：生成章节配图（需要章节已创建）
             - get_chapter_summaries：获取已有章节概括（创建新章节前调用）
             - generate_outline：生成小说大纲（需要小说已创建）
             - update_outline：更新小说大纲
+
+            **角色卡外貌字段说明**：
+            创建或更新角色卡时，appearance 对象的字段说明：
+
+            **必填字段**：
+            - height：身高（如：168cm）
+            - hair：发型发色（如：齐腰黑发，微卷）
+            - eyes：眼睛描述（如：丹凤眼，深褐色瞳孔）
+            - face：脸型（如：瓜子脸）
+            - build：体型（如：身材苗条）
+            - clothing：服装（如：白色衬衫配淡蓝色长裙）
+
+            **可选字段**：
+            - legwear：腿部穿着（如：黑色丝袜、白色棉袜、光腿）
+            - shoes：鞋子（如：黑色高跟鞋、白色运动鞋）
+            - accessories：配饰（如：银色项链、金边眼镜）
+            - distinguishingFeatures：显著特征（如：左眉有一道疤痕）
+
+            外貌描述用于AI生成角色图片，必须具体、准确，禁止使用比喻。
 
             ## 工具调用确认规则
 

@@ -49,6 +49,9 @@ public class ChapterImageService {
     
     @Autowired
     private CharacterCardRepository characterCardRepository;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
     
     // 每章节最大配图数量
     private static final int MAX_IMAGES_PER_CHAPTER = 4;
@@ -291,60 +294,25 @@ public class ChapterImageService {
     }
     
     /**
-     * 为配图位置生成 AI 绘画提示词（包含角色信息）- 精简版，只描述画面内容
+     * 为配图位置生成 AI 绘画提示词（包含角色信息，使用默认画风）
      */
     public String generateImagePromptWithCharacters(String description, List<CharacterCardEntity> characterCards) {
+        return generateImagePromptWithCharacters(description, characterCards, AIPromptService.DEFAULT_STYLE);
+    }
+
+    /**
+     * 为配图位置生成 AI 绘画提示词（包含角色信息，指定画风）
+     * 自动从场景描述中提取最多2个核心人物
+     * @param description 场景描述
+     * @param characterCards 角色卡列表
+     * @param style 画风选项
+     * @return 生成的提示词
+     */
+    public String generateImagePromptWithCharacters(String description, List<CharacterCardEntity> characterCards, String style) {
         try {
-            StringBuilder promptBuilder = new StringBuilder();
+            // 使用新的核心人物提取方法
+            String prompt = aiPromptService.generatePromptWithCoreCharacters(description, characterCards, style);
 
-            promptBuilder.append("你是AI绘画提示词生成器。根据场景描述，生成简洁的画面描述。\n\n");
-
-            // 如果有角色卡，添加角色信息
-            if (characterCards != null && !characterCards.isEmpty()) {
-                promptBuilder.append("【角色外貌信息】（如果场景中出现这些角色，必须严格遵循其外貌描述）：\n");
-                for (int i = 0; i < characterCards.size(); i++) {
-                    CharacterCardEntity card = characterCards.get(i);
-                    promptBuilder.append("\n角色").append(i + 1).append("：").append(card.getName()).append("\n");
-
-                    if (card.getAge() != null) {
-                        promptBuilder.append("  - 年龄：").append(card.getAge()).append("\n");
-                    }
-                    if (card.getGender() != null && !card.getGender().isEmpty()) {
-                        promptBuilder.append("  - 性别：").append(card.getGender()).append("\n");
-                    }
-                    if (card.getAppearanceDescription() != null && !card.getAppearanceDescription().isEmpty()) {
-                        promptBuilder.append("  - 外貌：").append(card.getAppearanceDescription()).append("\n");
-                    }
-                }
-                promptBuilder.append("\n");
-            }
-
-            promptBuilder.append("【核心原则】\n");
-            promptBuilder.append("- 只描述画面中能看到的东西\n");
-            promptBuilder.append("- 不要解释性文字、不要情感描述、不要背景故事\n");
-            promptBuilder.append("- 不要形容词堆砌，只保留必要的视觉描述\n");
-            promptBuilder.append("- 不要写【画面呈现】【氛围】等抽象词汇\n\n");
-
-            promptBuilder.append("【必须包含的画面元素】\n");
-            promptBuilder.append("1. 人物：性别、年龄感、体型、发型发色、瞳色、肤色\n");
-            promptBuilder.append("2. 服装：颜色、款式、材质\n");
-            promptBuilder.append("3. 姿势：站立/坐着/躺着等具体姿态\n");
-            promptBuilder.append("4. 表情：具体的面部表情\n");
-            promptBuilder.append("5. 场景：背景中实际出现的环境和物体\n");
-            promptBuilder.append("6. 光线：光源方向和强度\n\n");
-
-            promptBuilder.append("【输出格式】\n");
-            promptBuilder.append("- 用逗号分隔的关键词形式\n");
-            promptBuilder.append("- 一行输出，无换行\n");
-            promptBuilder.append("- 100-300字以内\n");
-            promptBuilder.append("- 只用中文\n");
-            promptBuilder.append("- 不输出任何开场白或解释\n");
-            promptBuilder.append("- 如果场景包含上述角色，必须严格遵循其外貌特征\n\n");
-
-            promptBuilder.append("场景描述：\n");
-            promptBuilder.append(description);
-
-            String prompt = promptBuilder.toString();
             String result = aiPromptService.callDeepSeekAPI(prompt);
             // 限制长度在1800字符以下
             return trimPromptToLength(result, 1800);
@@ -356,35 +324,50 @@ public class ChapterImageService {
     }
 
     /**
-     * 为配图位置生成 AI 绘画提示词（不含角色信息）- 精简版，只描述画面内容
+     * 从角色卡实体列表构建角色描述文本（只包含外貌特征，不包含名字）
+     */
+    private String buildCharacterDescriptionFromEntities(List<CharacterCardEntity> characterCards) {
+        if (characterCards == null || characterCards.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < Math.min(characterCards.size(), 2); i++) { // 最多2个人物
+            CharacterCardEntity card = characterCards.get(i);
+            sb.append("人物").append(i + 1).append("外貌：\n");
+
+            if (card.getGender() != null && !card.getGender().isEmpty()) {
+                sb.append("  - 性别：").append(card.getGender()).append("\n");
+            }
+            if (card.getAge() != null) {
+                sb.append("  - 年龄感：").append(card.getAge()).append("岁左右\n");
+            }
+            if (card.getAppearanceDescription() != null && !card.getAppearanceDescription().isEmpty()) {
+                sb.append("  - 外貌特征：").append(card.getAppearanceDescription()).append("\n");
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * 为配图位置生成 AI 绘画提示词（不含角色信息，使用默认画风）
      */
     public String generateImagePrompt(String description) {
+        return generateImagePrompt(description, AIPromptService.DEFAULT_STYLE);
+    }
+
+    /**
+     * 为配图位置生成 AI 绘画提示词（不含角色信息，指定画风）
+     * @param description 场景描述
+     * @param style 画风选项
+     * @return 生成的提示词
+     */
+    public String generateImagePrompt(String description, String style) {
         try {
-            String prompt = "你是AI绘画提示词生成器。根据场景描述，生成简洁的画面描述。\n\n" +
-
-                           "【核心原则】\n" +
-                           "- 只描述画面中能看到的东西\n" +
-                           "- 不要解释性文字、不要情感描述、不要背景故事\n" +
-                           "- 不要形容词堆砌，只保留必要的视觉描述\n" +
-                           "- 不要写【画面呈现】【氛围】等抽象词汇\n\n" +
-
-                           "【必须包含的画面元素】\n" +
-                           "1. 人物：性别、年龄感、体型、发型发色、瞳色、肤色\n" +
-                           "2. 服装：颜色、款式、材质\n" +
-                           "3. 姿势：站立/坐着/躺着等具体姿态\n" +
-                           "4. 表情：具体的面部表情\n" +
-                           "5. 场景：背景中实际出现的环境和物体\n" +
-                           "6. 光线：光源方向和强度\n\n" +
-
-                           "【输出格式】\n" +
-                           "- 用逗号分隔的关键词形式\n" +
-                           "- 一行输出，无换行\n" +
-                           "- 200-500字以内\n" +
-                           "- 只用中文\n" +
-                           "- 不输出任何开场白或解释\n\n" +
-
-                           "场景描述：\n" +
-                           description;
+            // 使用统一的提示词模板（无角色描述）
+            String prompt = aiPromptService.buildImagePromptTemplate(null, description, style, 200, 500);
 
             String result = aiPromptService.callDeepSeekAPI(prompt);
             // 限制长度在1800字符以下
@@ -484,7 +467,7 @@ public class ChapterImageService {
     private String generateAndSaveImage(Long chapterId, String prompt) {
         try {
             // 创建 EvoLinkImageService 实例
-            EvoLinkImageService imageService = new EvoLinkImageService(evoLinkConfig, restTemplate, objectMapper);
+            EvoLinkImageService imageService = new EvoLinkImageService(evoLinkConfig, restTemplate, objectMapper, systemConfigService);
             String taskId = imageService.generateImage(prompt, "16:9");
             
             // 等待图片生成完成
