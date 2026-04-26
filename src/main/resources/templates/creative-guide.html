@@ -916,6 +916,76 @@
         .section-divider span {
             padding: 0 12px;
         }
+
+        /* 参数显示样式 */
+        .params-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .params-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .params-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .params-list li:last-child {
+            border-bottom: none;
+        }
+
+        .params-list .param-field {
+            color: var(--text-light);
+        }
+
+        .params-list .param-value {
+            color: var(--text-dark);
+            font-weight: 500;
+            max-width: 150px;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .params-list .param-value.pending {
+            color: var(--text-light);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .params-progress {
+            margin-bottom: 10px;
+        }
+
+        .params-progress-bar {
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .params-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .params-progress-text {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -991,7 +1061,7 @@
     <!-- 角色卡抽屉面板 -->
     <div class="character-drawer" id="characterDrawer">
         <div class="drawer-header">
-            <h4>👥 角色卡</h4>
+            <h4>📋 信息面板</h4>
             <button class="drawer-close" onclick="closeCharacterDrawer()">×</button>
         </div>
         <div class="drawer-content">
@@ -1004,6 +1074,27 @@
                 <div id="globalMemoriesList" class="memories-list">
                     <!-- 公共记忆列表 -->
                 </div>
+            </div>
+
+            <!-- 小说设计参数区域 -->
+            <div class="params-section">
+                <div class="section-header">
+                    <span>📝 小说参数</span>
+                </div>
+                <div class="params-progress">
+                    <div class="params-progress-bar">
+                        <div class="params-progress-fill" id="paramsProgressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="params-progress-text" id="paramsProgressText">已完成 0%</div>
+                </div>
+                <ul class="params-list" id="paramsList">
+                    <li><span class="param-field">题材</span><span class="param-value pending">待确定</span></li>
+                    <li><span class="param-field">风格</span><span class="param-value pending">待确定</span></li>
+                    <li><span class="param-field">主角</span><span class="param-value pending">待确定</span></li>
+                    <li><span class="param-field">主线</span><span class="param-value pending">待确定</span></li>
+                    <li><span class="param-field">结局</span><span class="param-value pending">待确定</span></li>
+                    <li><span class="param-field">章节数</span><span class="param-value">8 (默认)</span></li>
+                </ul>
             </div>
 
             <!-- 分隔线 -->
@@ -1224,6 +1315,9 @@
                 if (aiContentEl && fullResponse) {
                     renderAIMessage(aiContentEl, fullResponse);
                 }
+
+                // 刷新参数面板
+                loadSessionParams();
 
             } catch (e) {
                 console.error('发送消息失败:', e);
@@ -1492,6 +1586,9 @@
                 currentParams[field] = value;
             });
 
+            // 立即更新参数面板显示
+            renderParamsPanel(currentParams);
+
             // 构建发送内容
             const messages = selections.map(([field, { label, displayName }]) => {
                 let fieldName = displayName;
@@ -1602,12 +1699,85 @@
             document.getElementById('characterDrawer').classList.add('open');
             characterDrawerOpen = true;
             loadGlobalMemories();
+            loadSessionParams();
             loadCharacterCards();
         }
 
         function closeCharacterDrawer() {
             document.getElementById('characterDrawer').classList.remove('open');
             characterDrawerOpen = false;
+        }
+
+        // 加载会话参数
+        async function loadSessionParams() {
+            if (!currentSessionId) {
+                renderParamsPanel({});
+                return;
+            }
+
+            try {
+                const session = await fetch('/api/creative-sessions/' + currentSessionId).then(r => r.json());
+                if (session.extractedParams) {
+                    const params = JSON.parse(session.extractedParams);
+                    currentParams = params;
+                    renderParamsPanel(params);
+                } else {
+                    renderParamsPanel({});
+                }
+            } catch (e) {
+                console.error('加载会话参数失败', e);
+                renderParamsPanel({});
+            }
+        }
+
+        // 渲染参数面板
+        function renderParamsPanel(params) {
+            const fields = [
+                { key: 'theme', label: '题材' },
+                { key: 'style', label: '风格' },
+                { key: 'protagonistName', label: '主角' },
+                { key: 'mainPlot', label: '主线' },
+                { key: 'endingType', label: '结局' },
+                { key: 'chapterCount', label: '章节数' }
+            ];
+
+            // 计算完成度
+            const requiredFields = ['theme', 'style', 'protagonistName', 'mainPlot', 'endingType'];
+            let completed = 0;
+            requiredFields.forEach(field => {
+                if (params[field] != null && params[field] !== '') {
+                    completed++;
+                }
+            });
+            const percent = Math.round((completed / requiredFields.length) * 100);
+
+            // 更新进度条
+            document.getElementById('paramsProgressFill').style.width = percent + '%';
+            document.getElementById('paramsProgressText').textContent = '已完成 ' + percent + '%';
+
+            // 更新参数列表
+            const paramsList = document.getElementById('paramsList');
+            paramsList.innerHTML = fields.map(field => {
+                let value = params[field.key];
+                let isPending = value == null || value === '';
+
+                if (field.key === 'chapterCount') {
+                    value = value || 8;
+                    isPending = false;
+                }
+
+                // 如果是数组，显示为逗号分隔
+                if (Array.isArray(value)) {
+                    value = value.join('、');
+                }
+
+                return `
+                    <li>
+                        <span class="param-field">${field.label}</span>
+                        <span class="param-value ${isPending ? 'pending' : ''}">${isPending ? '待确定' : escapeHtml(String(value))}</span>
+                    </li>
+                `;
+            }).join('');
         }
 
         // 加载公共记忆
@@ -1756,6 +1926,21 @@
                     }
                 } else {
                     currentNovelId = null;
+                }
+
+                // 加载参数
+                if (session.extractedParams) {
+                    try {
+                        const params = JSON.parse(session.extractedParams);
+                        currentParams = params;
+                        renderParamsPanel(params);
+                    } catch (e) {
+                        currentParams = {};
+                        renderParamsPanel({});
+                    }
+                } else {
+                    currentParams = {};
+                    renderParamsPanel({});
                 }
 
                 if (session.messages) {
