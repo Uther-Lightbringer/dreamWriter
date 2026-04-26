@@ -248,12 +248,19 @@ public class NovelService {
     /**
      * 更新章节
      */
-    public Chapter updateChapter(Long chapterId, String title, String content) {
+    public Chapter updateChapter(Long chapterId, String title, String content, String storySummary) {
         Optional<Chapter> chapterOpt = chapterRepository.findById(chapterId);
         if (chapterOpt.isPresent()) {
             Chapter chapter = chapterOpt.get();
-            chapter.setTitle(title);
-            chapter.setContent(content);
+            if (title != null) {
+                chapter.setTitle(title);
+            }
+            if (content != null) {
+                chapter.setContent(content);
+            }
+            if (storySummary != null) {
+                chapter.setStorySummary(storySummary);
+            }
             chapter.setUpdateTime(LocalDateTime.now());
             return chapterRepository.save(chapter);
         }
