@@ -3732,7 +3732,7 @@
 
         // 轮询图片生成任务状态
         async function pollImageTaskStatus(cardId, taskId) {
-            const maxAttempts = 60; // 最多轮询60次（约2分钟）
+            const maxAttempts = 150; // 最多轮询150次（5分钟，与后端超时一致）
             let attempts = 0;
 
             const poll = async () => {
