@@ -27,7 +27,10 @@ public class Novel {
     
     @Column(name = "world_view", length = 50000, columnDefinition = "TEXT")
     private String worldView;
-    
+
+    @Column(name = "outline", length = 50000, columnDefinition = "TEXT")
+    private String outline;  // 小说大纲
+
     @Column(name = "create_time")
     private LocalDateTime createTime;
     
@@ -135,6 +138,16 @@ public class Novel {
         this.formattedCreateTime = formatTime(this.updateTime);
     }
 
+    public String getOutline() {
+        return outline;
+    }
+
+    public void setOutline(String outline) {
+        this.outline = outline;
+        this.updateTime = LocalDateTime.now();
+        this.formattedCreateTime = formatTime(this.updateTime);
+    }
+
     public LocalDateTime getCreateTime() {
         return createTime;
     }
@@ -206,6 +219,7 @@ public class Novel {
                 ", author='" + author + '\'' +
                 ", description='" + description + '\'' +
                 ", worldView='" + (worldView != null ? worldView.substring(0, Math.min(50, worldView.length())) + "..." : "null") + '\'' +
+                ", outline='" + (outline != null ? outline.substring(0, Math.min(50, outline.length())) + "..." : "null") + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", coverImage='" + getCoverImage() + '\'' +
