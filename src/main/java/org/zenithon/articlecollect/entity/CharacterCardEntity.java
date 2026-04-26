@@ -76,7 +76,10 @@ public class CharacterCardEntity {
     
     @Column(name = "sort_order")
     private Integer sortOrder; // 排序顺序
-    
+
+    @Column(length = 20)
+    private String role;  // 角色类型：protagonist(主角)、supporting(配角)
+
     public CharacterCardEntity() {
         this.createTime = LocalDateTime.now();
         this.updateTime = LocalDateTime.now();
@@ -243,7 +246,15 @@ public class CharacterCardEntity {
     public void setSortOrder(Integer sortOrder) {
         this.sortOrder = sortOrder;
     }
-    
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     @Override
     public String toString() {
         return "CharacterCardEntity{" +
