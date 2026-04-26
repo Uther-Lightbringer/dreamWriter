@@ -49,6 +49,8 @@ public class CreativeSessionService {
     private static final int SUMMARY_THRESHOLD = 20;
     // 保留最近对话轮数
     private static final int KEEP_RECENT_TURNS = 10;
+    // 工具调用最大递归深度，防止无限递归
+    private static final int MAX_TOOL_RECURSION_DEPTH = 5;
 
     // 系统提示词（固定部分）
     private static final String SYSTEM_PROMPT_BASE = buildSystemPromptBase();
@@ -274,27 +276,39 @@ public class CreativeSessionService {
     }
 
     /**
+     * 构建聊天请求体（公共逻辑提取）
+     *
+     * @param messages 消息历史
+     * @param config 运行时配置
+     * @return 请求体 Map
+     */
+    private Map<String, Object> buildChatRequestBody(List<Map<String, Object>> messages, DeepSeekRuntimeConfig config) {
+        Map<String, Object> requestBody = new LinkedHashMap<>();
+        requestBody.put("model", config.getModel());
+        requestBody.put("messages", messages);
+        requestBody.put("stream", true);
+        requestBody.put("stream_options", Map.of("include_usage", true));
+        requestBody.put("max_tokens", deepSeekConfig.getMaxTokens());
+        requestBody.put("tools", getGuidanceTools());
+
+        // 思考模式配置
+        if (config.getThinkingEnabled()) {
+            Map<String, Object> thinking = new LinkedHashMap<>();
+            thinking.put("type", "enabled");
+            requestBody.put("thinking", thinking);
+            requestBody.put("reasoning_effort", config.getReasoningEffort());
+        }
+
+        return requestBody;
+    }
+
+    /**
      * 流式调用 DeepSeek API（真正的流式处理）
      */
     private void chatStream(List<Map<String, Object>> messages, SseEmitter emitter, CreativeSession session, DeepSeekRuntimeConfig config) {
         try {
-            // 构建请求体，使用运行时配置
-            Map<String, Object> requestBody = new LinkedHashMap<>();
-            requestBody.put("model", config.getModel());
-            requestBody.put("messages", messages);
-            requestBody.put("stream", true);
-            requestBody.put("stream_options", Map.of("include_usage", true));
-            requestBody.put("max_tokens", deepSeekConfig.getMaxTokens());
-            requestBody.put("tools", getGuidanceTools());
-
-            // 思考模式配置
-            if (config.getThinkingEnabled()) {
-                Map<String, Object> thinking = new LinkedHashMap<>();
-                thinking.put("type", "enabled");
-                requestBody.put("thinking", thinking);
-                requestBody.put("reasoning_effort", config.getReasoningEffort());
-            }
-
+            // 构建请求体
+            Map<String, Object> requestBody = buildChatRequestBody(messages, config);
             String requestBodyStr = objectMapper.writeValueAsString(requestBody);
 
             logger.info("调用 DeepSeek API (流式), model={}, thinking={}, messages={}",
@@ -532,7 +546,7 @@ public class CreativeSessionService {
 
                                 // 再次调用 API，让 AI 基于工具结果继续生成响应
                                 logger.info("工具调用完成，再次调用 API 让 AI 继续生成响应");
-                                continueAfterToolCalls(messages, emitter, session, config);
+                                continueAfterToolCalls(messages, emitter, session, config, 0);
                             } else {
                                 // 没有工具调用，正常结束
                                 session.setMessages(toJson(messages));
@@ -571,26 +585,24 @@ public class CreativeSessionService {
 
     /**
      * 工具调用完成后继续生成响应（支持递归工具调用）
+     *
+     * @param messages 消息历史
+     * @param emitter SSE 发射器
+     * @param session 会话对象
+     * @param config 运行时配置
+     * @param recursionDepth 当前递归深度，用于防止无限递归
      */
-    private void continueAfterToolCalls(List<Map<String, Object>> messages, SseEmitter emitter, CreativeSession session, DeepSeekRuntimeConfig config) {
+    private void continueAfterToolCalls(List<Map<String, Object>> messages, SseEmitter emitter, CreativeSession session, DeepSeekRuntimeConfig config, int recursionDepth) {
+        // 检查递归深度，防止栈溢出
+        if (recursionDepth > MAX_TOOL_RECURSION_DEPTH) {
+            logger.warn("工具调用递归深度超过限制: {}, 终止递归", recursionDepth);
+            sendError(emitter, "工具调用次数过多，请简化操作");
+            return;
+        }
+
         try {
-            // 构建请求体，使用运行时配置
-            Map<String, Object> requestBody = new LinkedHashMap<>();
-            requestBody.put("model", config.getModel());
-            requestBody.put("messages", messages);
-            requestBody.put("stream", true);
-            requestBody.put("stream_options", Map.of("include_usage", true));
-            requestBody.put("max_tokens", deepSeekConfig.getMaxTokens());
-            requestBody.put("tools", getGuidanceTools());
-
-            // 思考模式配置
-            if (config.getThinkingEnabled()) {
-                Map<String, Object> thinking = new LinkedHashMap<>();
-                thinking.put("type", "enabled");
-                requestBody.put("thinking", thinking);
-                requestBody.put("reasoning_effort", config.getReasoningEffort());
-            }
-
+            // 构建请求体
+            Map<String, Object> requestBody = buildChatRequestBody(messages, config);
             String requestBodyStr = objectMapper.writeValueAsString(requestBody);
 
             restTemplate.execute(
@@ -753,8 +765,8 @@ public class CreativeSessionService {
                                         .data("{}"));
 
                                 // 递归调用，支持连续工具调用
-                                logger.info("递归工具调用检测到 {} 个工具，继续生成响应", toolCalls.size());
-                                continueAfterToolCalls(messages, emitter, session, config);
+                                logger.info("递归工具调用检测到 {} 个工具，继续生成响应，当前深度: {}", toolCalls.size(), recursionDepth + 1);
+                                continueAfterToolCalls(messages, emitter, session, config, recursionDepth + 1);
                             } else {
                                 // 没有工具调用，正常结束
                                 session.setMessages(toJson(messages));
@@ -1178,6 +1190,10 @@ public class CreativeSessionService {
                 "success", true,
                 "characterId", savedCard.getId(),
                 "name", name,
+                "appearance", card.getAppearanceDescription(),
+                "personality", card.getPersonality(),
+                "description", card.getBackground(),
+                "role", args.get("role"),
                 "seed", seed
             ));
         } catch (Exception e) {
@@ -1236,7 +1252,11 @@ public class CreativeSessionService {
             return objectMapper.writeValueAsString(Map.of(
                 "success", true,
                 "characterId", characterId,
-                "name", card.getName()
+                "name", card.getName(),
+                "appearance", card.getAppearanceDescription(),
+                "personality", card.getPersonality(),
+                "description", card.getBackground(),
+                "role", args.get("role")
             ));
         } catch (Exception e) {
             logger.error("更新角色卡失败: {}", e.getMessage(), e);
