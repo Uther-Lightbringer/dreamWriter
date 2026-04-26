@@ -24,6 +24,16 @@
         }
       }
     }
+    
+    // 浏览器调试环境检测
+    window.isBrowserDebug = !window.Capacitor;
+    if (window.isBrowserDebug) {
+      console.log('🌐 Browser debug mode enabled');
+      // 模拟 Capacitor 对象
+      window.Capacitor = {
+        isNativePlatform: () => false
+      };
+    }
   </script>
 </head>
 <body class="bg-gradient-to-br from-dream-pink via-dream-lavender to-dream-mint min-h-screen">

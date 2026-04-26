@@ -36,7 +36,7 @@
       }
       
       const uniqueImages = [...new Map(history.map(h => [h.imageUrl, h])).values()]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        .sort((a, b) => new Date(b.createTime || b.createdAt) - new Date(a.createTime || a.createdAt));
       
       container.innerHTML = uniqueImages.map(item => `
         <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden cursor-pointer active:opacity-80"

@@ -114,7 +114,10 @@
   
   async function loadChapter(novelId, chId) {
     try {
-      const chapter = await getChapter(novelId, chId);
+      const chapterDetail = await getChapter(novelId, chId);
+      
+      // 后端返回的是 ChapterDetailView，章节数据在 chapter.chapter 中
+      const chapter = chapterDetail.chapter || chapterDetail;
       
       document.getElementById('chapter-title').textContent = chapter.title || '无标题';
       document.getElementById('header-title').textContent = chapter.title || '阅读中';

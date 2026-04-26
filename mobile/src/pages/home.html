@@ -60,11 +60,11 @@
              onclick="window.router.navigate('/novel/${novel.id}')">
           <div class="flex items-center gap-4">
             <div class="w-14 h-18 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
-              ${novel.coverUrl ? `<img src="${novel.coverUrl}" alt="" class="w-full h-full object-cover">` : ''}
+              ${novel.coverImage ? `<img src="${novel.coverImage}" alt="" class="w-full h-full object-cover">` : ''}
             </div>
             <div class="flex-1 min-w-0">
               <h3 class="font-medium text-gray-800 truncate">${novel.title}</h3>
-              <p class="text-sm text-gray-500 mt-1">${novel.chapterCount || 0} 章</p>
+              <p class="text-sm text-gray-500 mt-1">${novel.chaptersCount || 0} 章</p>
             </div>
             <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -82,9 +82,9 @@
           document.getElementById('continue-title').textContent = novelTitle;
           document.getElementById('continue-chapter').textContent = chapterTitle || '继续阅读';
           document.getElementById('continue-progress').style.width = `${progress || 0}%`;
-          if (novel.coverUrl) {
+          if (novel.coverImage) {
             const img = document.getElementById('continue-cover');
-            img.src = novel.coverUrl;
+            img.src = novel.coverImage;
             img.classList.remove('hidden');
           }
           window.continueReading = () => {

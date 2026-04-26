@@ -188,12 +188,12 @@
               <div class="dream-card p-4">
                 <div class="flex gap-4">
                   <div class="w-20 h-20 bg-gray-200 rounded-xl flex-shrink-0 overflow-hidden">
-                    ${card.imageUrl ? `<img src="${card.imageUrl}" class="w-full h-full object-cover">` : ''}
+                    ${card.generatedImageUrl ? `<img src="${card.generatedImageUrl}" class="w-full h-full object-cover">` : ''}
                   </div>
                   <div class="flex-1">
                     <h4 class="font-bold text-gray-800">${card.name}</h4>
                     <p class="text-sm text-gray-500 mt-1">${card.role || '角色'}</p>
-                    <p class="text-sm text-gray-600 mt-2 line-clamp-3">${card.description || ''}</p>
+                    <p class="text-sm text-gray-600 mt-2 line-clamp-3">${card.appearanceDescription || card.personality || ''}</p>
                   </div>
                 </div>
               </div>
@@ -232,7 +232,7 @@
           ${novels.map(novel => `
             <div class="dream-card p-4 mb-3 cursor-pointer" onclick="window.router.navigate('/novel/${novel.id}')">
               <h4 class="font-medium text-gray-800">${novel.title}</h4>
-              <p class="text-sm text-gray-500 mt-1">${novel.chapterCount || 0} 章</p>
+              <p class="text-sm text-gray-500 mt-1">${novel.chaptersCount || 0} 章</p>
             </div>
           `).join('')}
           
