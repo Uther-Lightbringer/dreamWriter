@@ -24,7 +24,8 @@ public class CharacterCard {
     private String background;
     private List<CharacterCardRelationship> relationships;
     private String notes;
-    
+    private String role; // 角色类型：protagonist(主角), supporting(配角), etc.
+
     public CharacterCard() {
     }
     
@@ -144,8 +145,16 @@ public class CharacterCard {
     public String getNotes() {
         return notes;
     }
-    
+
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

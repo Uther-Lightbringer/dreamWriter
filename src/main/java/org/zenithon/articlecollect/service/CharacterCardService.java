@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.zenithon.articlecollect.dto.CharacterCard;
 import org.zenithon.articlecollect.dto.CharacterCardAppearance;
 import org.zenithon.articlecollect.dto.CharacterCardRelationship;
@@ -61,7 +60,6 @@ public class CharacterCardService {
     /**
      * 保存角色卡列表
      */
-    @Transactional
     public List<CharacterCard> saveCharacterCards(Long novelId, List<CharacterCard> characterCards) {
 
         List<CharacterCard> entities = new ArrayList<>();
@@ -81,7 +79,6 @@ public class CharacterCardService {
      * 保存单个角色卡（新增或更新）
      * 如果提供了 ID 则更新，否则创建新角色卡
      */
-    @Transactional
     public CharacterCard saveSingleCharacterCard(Long novelId, CharacterCard characterCard) {
         logger.info("保存单个角色卡到小说 ID: {}, 角色名：{}", novelId, characterCard.getName());
         
@@ -115,7 +112,6 @@ public class CharacterCardService {
     /**
      * 添加单个角色卡
      */
-    @Transactional
     public CharacterCard addCharacterCard(Long novelId, CharacterCard characterCard, int sortOrder) {
         CharacterCardEntity entity = convertToEntity(characterCard, novelId, sortOrder);
         CharacterCardEntity savedEntity = characterCardRepository.save(entity);
@@ -128,7 +124,6 @@ public class CharacterCardService {
     /**
      * 更新单个角色卡
      */
-    @Transactional
     public CharacterCard updateCharacterCard(Long characterId, CharacterCard updatedCard) {
         Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
         
@@ -150,7 +145,6 @@ public class CharacterCardService {
     /**
      * 删除单个角色卡
      */
-    @Transactional
     public void deleteCharacterCard(Long characterId) {
         Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
         
@@ -165,7 +159,6 @@ public class CharacterCardService {
     /**
      * 批量删除角色卡
      */
-    @Transactional
     public void deleteAllCharacterCards(Long novelId) {
         characterCardRepository.deleteByNovelId(novelId);
         logger.info("删除小说 ID: {} 的所有角色卡", novelId);
@@ -175,7 +168,6 @@ public class CharacterCardService {
      * 更新角色卡的 AI 绘画提示词（带版本号）
      * 注意：此方法假设 appearanceDescription 已经被设置好
      */
-    @Transactional
     public CharacterCard regenerateAIPrompt(Long characterId) {
         Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
         
@@ -199,7 +191,6 @@ public class CharacterCardService {
     /**
      * 更新角色卡的 AI 绘画提示词和图片 URL（带版本号）
      */
-    @Transactional
     public CharacterCard regenerateAIImage(Long characterId, String appearanceDescription, String generatedImageUrl) {
         Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
         
@@ -231,7 +222,6 @@ public class CharacterCardService {
     /**
      * 更新角色卡的 AI 绘画提示词和图片 URL
      */
-    @Transactional
     public void updateCharacterCardAIGeneratedFields(Long characterId, String appearanceDescription, String generatedImageUrl) {
         Optional<CharacterCardEntity> entityOpt = characterCardRepository.findById(characterId);
         
@@ -294,7 +284,8 @@ public class CharacterCardService {
         entity.setGeneratedImageUrl(card.getGeneratedImageUrl());
         entity.setPromptVersion(card.getPromptVersion());
         entity.setImageVersion(card.getImageVersion());
-        
+        entity.setRole(card.getRole());
+
         return entity;
     }
     
@@ -315,7 +306,8 @@ public class CharacterCardService {
         card.setGeneratedImageUrl(entity.getGeneratedImageUrl());
         card.setPromptVersion(entity.getPromptVersion());
         card.setImageVersion(entity.getImageVersion());
-        
+        card.setRole(entity.getRole());
+
         // 解析别名字符串
         if (entity.getAlternativeNames() != null && !entity.getAlternativeNames().isEmpty()) {
             try {
@@ -369,6 +361,7 @@ public class CharacterCardService {
         entity.setPersonality(updatedCard.getPersonality());
         entity.setBackground(updatedCard.getBackground());
         entity.setNotes(updatedCard.getNotes());
+        entity.setRole(updatedCard.getRole());
         
         // 如果有新的 AI 绘画提示词或图片 URL，也更新
         if (updatedCard.getAppearanceDescription() != null) {
@@ -413,5 +406,24 @@ public class CharacterCardService {
      */
     public CharacterCard getCharacterCardById(Long characterId) {
         return convertToDTO(Objects.requireNonNull(characterCardRepository.findById(characterId).orElse(null)));
+    }
+
+    /**
+     * 检查小说是否有主角角色卡
+     */
+    public boolean hasProtagonistCard(Long novelId) {
+        return characterCardRepository.existsByNovelIdAndRole(novelId, "protagonist");
+    }
+
+    /**
+     * 获取小说的主角角色卡列表
+     */
+    public List<CharacterCard> getProtagonistCards(Long novelId) {
+        List<CharacterCardEntity> entities = characterCardRepository.findByNovelIdAndRole(novelId, "protagonist");
+        List<CharacterCard> cards = new ArrayList<>();
+        for (CharacterCardEntity entity : entities) {
+            cards.add(convertToDTO(entity));
+        }
+        return cards;
     }
 }
