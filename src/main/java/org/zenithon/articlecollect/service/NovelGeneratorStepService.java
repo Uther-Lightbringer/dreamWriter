@@ -70,8 +70,9 @@ public class NovelGeneratorStepService {
             return aiPromptService.callDeepSeekAPIWithModel(systemPrompt, userPrompt,
                 enableThinking, reasoningEffort, maxTokens, false, model);
         } else {
-            return callAPI(systemPrompt, userPrompt,
-                enableThinking, reasoningEffort, maxTokens);
+            // 当未设置模型时，使用默认模型调用
+            return aiPromptService.callDeepSeekAPIWithThinking(systemPrompt, userPrompt,
+                enableThinking, reasoningEffort, maxTokens, false);
         }
     }
 
@@ -207,22 +208,40 @@ public class NovelGeneratorStepService {
             "可以附带的玩法:" + gameplay + "\n" +
             "主角:" + protagonist + "\n" +
             "生成的角色卡的顺序，要把主角放在第一。\n" +
-            "生成的角色名称，要以中国人的命名的风格来。人种要以中国人为主。可以加入该人物喜欢的衣服和穿戴特色。生成的内容里面出现的所有标点符号，都要使用英文输入法的。她/他的眼睛、眉毛、鼻子、嘴巴、脸型、身高、衣服、发型和整体风格都要描述出来，尽量不用比喻，而是要准确的白描。这是为了能把文字提供给AI生成图片的时候，生成同一个人物的时候脸保持一致。\n" +
+            "生成的角色名称，要以中国人的命名的风格来。人种要以中国人为主。\n\n" +
+            "【外貌描写要求 - 重要】\n" +
+            "外貌描写用于AI生成角色图片，必须准确、具体，禁止使用比喻：\n" +
+            "- 眼睛：描述眼型（丹凤眼、桃花眼、杏眼等）、瞳色、眼尾特点\n" +
+            "- 眉毛：描述眉形（柳叶眉、剑眉、平眉等）、粗细、颜色\n" +
+            "- 鼻子：描述鼻梁高度、鼻头大小\n" +
+            "- 嘴巴：描述唇形、唇色、厚薄\n" +
+            "- 脸型：描述脸型（瓜子脸、圆脸、方脸等）、下颌线条\n" +
+            "- 发型：描述长度、颜色、卷直、造型\n" +
+            "- 身高：给出具体数字\n" +
+            "- 体型：描述身材特点\n" +
+            "- 穿着：描述日常服装风格、配饰\n\n" +
+            "【错误示例】\"美若天仙\"\"眼睛像星星\"（太抽象或比喻）\n" +
+            "【正确示例】\"丹凤眼，深褐色瞳孔，眼尾微微上挑。柳叶眉。瓜子脸。齐腰黑发，微卷。身高168cm。穿着白色衬衫配淡蓝色长裙。\"\n\n" +
+            "生成的内容里面出现的所有标点符号，都要使用英文输入法的。\n" +
             "要求输出的格式严格按照以下的JSON来：\n\n" +
             "[\n" +
             "  {\n" +
             "    \"name\": \"角色姓名\",\n" +
+            "    \"role\": \"protagonist\",\n" +
             "    \"alternativeNames\": [\"别名1\", \"别名2\"],\n" +
             "    \"age\": 0,\n" +
             "    \"gender\": \"性别\",\n" +
             "    \"occupation\": \"职业\",\n" +
             "    \"appearance\": {\n" +
             "      \"height\": \"身高\",\n" +
-            "      \"hair\": \"发色\",\n" +
-            "      \"eyes\": \"瞳色\",\n" +
+            "      \"hair\": \"发色和发型\",\n" +
+            "      \"eyes\": \"眼睛描述\",\n" +
+            "      \"face\": \"脸型描述\",\n" +
             "      \"build\": \"体型\",\n" +
-            "      \"distinguishingFeatures\": \"特征\"\n" +
+            "      \"distinguishingFeatures\": \"面部特征（眼睛、眉毛、鼻子、嘴巴的综合描述）\",\n" +
+            "      \"clothing\": \"穿着风格\"\n" +
             "    },\n" +
+            "    \"appearanceDescription\": \"完整的外貌文字描述，用于AI生成图片\",\n" +
             "    \"personality\": \"性格描述\",\n" +
             "    \"background\": \"背景故事\",\n" +
             "    \"relationships\": [\n" +
@@ -266,6 +285,7 @@ public class NovelGeneratorStepService {
                 for (JsonNode node : arrayNode) {
                     CharacterCard card = new CharacterCard();
                     card.setName(node.path("name").asText());
+                    card.setRole(node.path("role").asText());  // 角色类型
                     card.setAge(node.path("age").asInt(0));
                     card.setGender(node.path("gender").asText());
                     card.setOccupation(node.path("occupation").asText());
@@ -273,15 +293,20 @@ public class NovelGeneratorStepService {
                     card.setBackground(node.path("background").asText());
                     card.setNotes(node.path("notes").asText());
 
-                    // 解析外貌
+                    // 外貌文字描述（用于AI生成图片）
+                    card.setAppearanceDescription(node.path("appearanceDescription").asText());
+
+                    // 解析外貌结构
                     JsonNode appearanceNode = node.path("appearance");
                     if (!appearanceNode.isMissingNode()) {
                         CharacterCardAppearance appearance = new CharacterCardAppearance();
                         appearance.setHeight(appearanceNode.path("height").asText());
                         appearance.setHair(appearanceNode.path("hair").asText());
                         appearance.setEyes(appearanceNode.path("eyes").asText());
+                        appearance.setFace(appearanceNode.path("face").asText());
                         appearance.setBuild(appearanceNode.path("build").asText());
                         appearance.setDistinguishingFeatures(appearanceNode.path("distinguishingFeatures").asText());
+                        appearance.setClothing(appearanceNode.path("clothing").asText());
                         card.setAppearance(appearance);
                     }
 

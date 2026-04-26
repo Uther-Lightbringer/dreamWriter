@@ -14,8 +14,10 @@ public class CharacterCardAppearance {
     private String height;
     private String hair;
     private String eyes;
+    private String face;  // 脸型描述
     private String build;
     private String distinguishingFeatures;
+    private String clothing;  // 穿着风格
     
     public CharacterCardAppearance() {
     }
@@ -44,7 +46,15 @@ public class CharacterCardAppearance {
     public void setEyes(String eyes) {
         this.eyes = eyes;
     }
-    
+
+    public String getFace() {
+        return face;
+    }
+
+    public void setFace(String face) {
+        this.face = face;
+    }
+
     public String getBuild() {
         return build;
     }
@@ -59,6 +69,14 @@ public class CharacterCardAppearance {
     
     public void setDistinguishingFeatures(String distinguishingFeatures) {
         this.distinguishingFeatures = distinguishingFeatures;
+    }
+
+    public String getClothing() {
+        return clothing;
+    }
+
+    public void setClothing(String clothing) {
+        this.clothing = clothing;
     }
 
 

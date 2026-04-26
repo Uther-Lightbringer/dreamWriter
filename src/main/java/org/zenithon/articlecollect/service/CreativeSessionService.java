@@ -1338,6 +1338,18 @@ public class CreativeSessionService {
             if (args.get("name") != null) {
                 card.setName((String) args.get("name"));
             }
+            if (args.get("role") != null) {
+                card.setRole((String) args.get("role"));
+            }
+            if (args.get("age") != null) {
+                card.setAge(((Number) args.get("age")).intValue());
+            }
+            if (args.get("gender") != null) {
+                card.setGender((String) args.get("gender"));
+            }
+            if (args.get("occupation") != null) {
+                card.setOccupation((String) args.get("occupation"));
+            }
             if (args.get("appearance") != null) {
                 card.setAppearanceDescription((String) args.get("appearance"));
             }
@@ -2539,9 +2551,12 @@ public class CreativeSessionService {
         Map<String, Object> createCharProps = new LinkedHashMap<>();
         createCharProps.put("novelId", Map.of("type", "integer", "description", "小说ID"));
         createCharProps.put("name", Map.of("type", "string", "description", "角色姓名"));
-        createCharProps.put("role", Map.of("type", "string", "description", "角色定位：主角/配角/反派/路人"));
-        createCharProps.put("description", Map.of("type", "string", "description", "角色描述"));
-        createCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征（用于生成图片）"));
+        createCharProps.put("role", Map.of("type", "string", "description", "角色定位：protagonist(主角)/supporting(配角)/antagonist(反派)"));
+        createCharProps.put("age", Map.of("type", "integer", "description", "年龄"));
+        createCharProps.put("gender", Map.of("type", "string", "description", "性别"));
+        createCharProps.put("occupation", Map.of("type", "string", "description", "职业/身份"));
+        createCharProps.put("description", Map.of("type", "string", "description", "角色背景描述"));
+        createCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征描述（用于生成图片）"));
         createCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
         tools.add(createTool("create_character_card", "创建角色卡。自动生成seed用于图片一致性。当讨论角色细节时主动创建。", createCharProps, Arrays.asList("name")));
 
@@ -2549,9 +2564,12 @@ public class CreativeSessionService {
         Map<String, Object> updateCharProps = new LinkedHashMap<>();
         updateCharProps.put("characterId", Map.of("type", "integer", "description", "角色卡ID"));
         updateCharProps.put("name", Map.of("type", "string", "description", "角色姓名"));
-        updateCharProps.put("role", Map.of("type", "string", "description", "角色定位：主角/配角/反派/路人"));
-        updateCharProps.put("description", Map.of("type", "string", "description", "角色描述"));
-        updateCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征（用于生成图片）"));
+        updateCharProps.put("role", Map.of("type", "string", "description", "角色定位：protagonist(主角)/supporting(配角)/antagonist(反派)"));
+        updateCharProps.put("age", Map.of("type", "integer", "description", "年龄"));
+        updateCharProps.put("gender", Map.of("type", "string", "description", "性别"));
+        updateCharProps.put("occupation", Map.of("type", "string", "description", "职业/身份"));
+        updateCharProps.put("description", Map.of("type", "string", "description", "角色背景描述"));
+        updateCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征描述（用于生成图片）"));
         updateCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
         tools.add(createTool("update_character_card", "更新已存在的角色卡信息。当用户补充或修改角色设定时调用。", updateCharProps, Arrays.asList("characterId")));
 
@@ -2970,8 +2988,61 @@ public class CreativeSessionService {
             1. 当用户首次完整描述一个角色时 → 调用 create_character_card
             2. 当用户补充或修改已有角色信息时 → 调用 update_character_card
 
+            ### 角色卡必填信息
+
+            创建角色卡时，应尽量收集以下信息：
+
+            | 字段 | 说明 | 示例 |
+            |------|------|------|
+            | name | 角色姓名 | 林清雅 |
+            | role | 角色定位 | protagonist(主角)/supporting(配角)/antagonist(反派) |
+            | age | 年龄 | 18 |
+            | gender | 性别 | 女 |
+            | occupation | 职业/身份 | 大学生、总裁、剑修 |
+            | appearance | 外貌特征 | 详细描述，见下方要求 |
+            | personality | 性格特点 | 清冷、傲娇、温柔 |
+            | description | 背景故事 | 角色的背景经历 |
+
+            ### 外貌描写要求（重要）
+
+            外貌描写用于AI生成角色图片，必须准确、具体，避免比喻：
+
+            **✅ 正确的外貌描写：**
+            - 眼睛：丹凤眼，深褐色瞳孔，眼尾微微上挑
+            - 眉毛：细长柳叶眉，颜色略浅于发色
+            - 鼻子：鼻梁挺直，鼻头小巧
+            - 嘴巴：唇形饱满，唇色偏淡
+            - 脸型：瓜子脸，下颌线条清晰
+            - 发型：齐腰长发，黑色，微卷，右侧别着一枚珍珠发夹
+            - 身高：168cm
+            - 体型：纤细苗条
+            - 穿着：白色衬衫配淡蓝色长裙，脚踩白色平底鞋
+
+            **❌ 错误的外貌描写：**
+            - "美若天仙"（太抽象）
+            - "眼睛像星星一样闪亮"（比喻，AI无法理解）
+            - "气质清冷"（不是外貌特征）
+
+            ### 引导用户完善角色卡
+
+            当用户描述角色时，主动询问缺失的关键信息：
+
+            ```
+            好的，让我记录一下这个角色：
+
+            已确认：姓名=林清雅，角色=主角
+
+            还需要了解：
+            - 她的年龄大概是多少？
+            - 外貌上有什么特点？（发型、眼睛、身高、穿衣风格等）
+            - 性格是怎样的？
+
+            [OPTIONS:age:年龄]十六七岁|十八九岁|二十出头|二十五左右[/OPTIONS]
+            [OPTIONS:gender:性别]女|男[/OPTIONS]
+            ```
+
             ### 示例场景
-            - 用户说"主角叫林清雅，是个清冷型的美少女" → 创建角色卡
+            - 用户说"主角叫林清雅，是个清冷型的美少女" → 询问年龄、外貌细节，然后创建角色卡
             - 用户说"她有一头银色长发" → 更新角色卡（添加外貌描述）
             - 用户说"性格有点傲娇" → 更新角色卡（添加性格）
 
@@ -2979,6 +3050,7 @@ public class CreativeSessionService {
             - 创建角色卡前，小说必须已存在
             - 每个角色创建后返回 characterId，后续更新时使用该ID
             - 如果用户没有明确说小说标题，先创建小说或询问
+            - **外貌描述要详细具体**，方便后续生成角色图片
             """;
     }
 
