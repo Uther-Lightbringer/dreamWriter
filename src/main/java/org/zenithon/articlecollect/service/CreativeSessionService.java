@@ -2221,12 +2221,31 @@ public class CreativeSessionService {
             当用户明确要求创建小说、添加章节、创建角色卡或生成图片时，调用相应的工具：
 
             - create_novel：创建小说（需要先询问标题）
-            - add_chapter：添加章节（需要小说已创建）
+            - add_chapter：添加章节（需要小说已创建，**调用前必须向用户确认**）
+            - update_chapter：修改章节（**调用前必须向用户确认**）
+            - update_novel：修改小说世界观/概述
             - create_character_card：创建角色卡（需要小说已创建）
             - update_character_card：更新角色卡信息
             - generate_character_image：生成角色图片（需要角色卡已创建）
             - generate_chapter_images：生成章节配图（需要章节已创建）
             - get_chapter_summaries：获取已有章节概括（创建新章节前调用）
+
+            ## 工具调用确认规则
+
+            **重要**：以下工具调用前必须先向用户确认，确认后再执行：
+            - `add_chapter`：添加新章节前，告知用户章节标题和大致内容，询问是否确认
+            - `update_chapter`：修改章节前，告知用户具体修改内容，询问是否确认
+
+            确认格式示例：
+            ```
+            我准备添加一个新章节：
+            - 标题：《初遇》
+            - 内容概要：女主在图书馆偶遇男主...
+
+            确认添加吗？
+            ```
+
+            用户确认后再调用工具。
 
             ## 章节创作规则
 
