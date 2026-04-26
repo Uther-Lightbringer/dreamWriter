@@ -2471,7 +2471,15 @@
                 }
 
                 list.innerHTML = sessions.map(session => {
-                    const time = new Date(session.updateTime).toLocaleString('zh-CN');
+                    // 使用 updatedAt 或 createdAt，兼容两种字段名
+                    const timestamp = session.updatedAt || session.updateTime || session.createdAt || session.createTime;
+                    let time = '未知时间';
+                    if (timestamp) {
+                        const date = new Date(timestamp);
+                        if (!isNaN(date.getTime())) {
+                            time = date.toLocaleString('zh-CN');
+                        }
+                    }
                     return `
                         <div class="history-item" onclick="loadSession('${session.sessionId}')">
                             <div class="history-item-title">📚 ${escapeHtml(session.title || '新会话')}</div>
