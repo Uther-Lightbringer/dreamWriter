@@ -58,6 +58,7 @@ public class CreativeSessionService {
         Map.entry("add_chapter", "添加章节"),
         Map.entry("update_chapter", "修改章节"),
         Map.entry("update_novel", "修改小说"),
+        Map.entry("list_character_cards", "查询角色卡"),
         Map.entry("create_character_card", "创建角色卡"),
         Map.entry("update_character_card", "更新角色卡"),
         Map.entry("generate_character_image", "生成角色图片"),
@@ -934,6 +935,9 @@ public class CreativeSessionService {
                     case "update_outline":
                         result = updateOutline(argumentsJson, session, messages);
                         break;
+                    case "list_character_cards":
+                        result = listCharacterCards(argumentsJson, session);
+                        break;
                     default:
                         result = "{\"error\": \"未知工具: " + functionName + "\"}";
                 }
@@ -1238,6 +1242,64 @@ public class CreativeSessionService {
     }
 
     /**
+     * 查询角色卡列表工具实现
+     */
+    private String listCharacterCards(String argumentsJson, CreativeSession session) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            // 获取小说ID
+            SessionContext context = getContext(session);
+            Long novelId = args.get("novelId") != null
+                ? ((Number) args.get("novelId")).longValue()
+                : context.getCurrentNovelId();
+
+            if (novelId == null) {
+                return "{\"error\": \"请先创建小说\", \"errorCode\": \"NO_NOVEL\"}";
+            }
+
+            // 获取所有角色卡
+            List<CharacterCard> cards = characterCardService.getCharacterCardsByNovelId(novelId);
+
+            // 构建简化的返回列表
+            List<Map<String, Object>> characterList = cards.stream()
+                .map(c -> {
+                    Map<String, Object> cardInfo = new LinkedHashMap<>();
+                    cardInfo.put("id", c.getId());
+                    cardInfo.put("name", c.getName());
+                    cardInfo.put("role", c.getRole() != null ? c.getRole() : "");
+                    cardInfo.put("gender", c.getGender());
+                    cardInfo.put("age", c.getAge());
+                    cardInfo.put("occupation", c.getOccupation());
+                    cardInfo.put("personality", c.getPersonality());
+                    cardInfo.put("hasImage", c.getGeneratedImageUrl() != null && !c.getGeneratedImageUrl().isEmpty());
+                    return cardInfo;
+                })
+                .toList();
+
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("success", true);
+            result.put("novelId", novelId);
+            result.put("count", characterList.size());
+            result.put("characters", characterList);
+
+            // 统计主角和配角数量
+            long protagonistCount = cards.stream().filter(c -> "protagonist".equals(c.getRole())).count();
+            long supportingCount = cards.stream().filter(c -> "supporting".equals(c.getRole())).count();
+            result.put("protagonistCount", protagonistCount);
+            result.put("supportingCount", supportingCount);
+            result.put("hasProtagonist", protagonistCount > 0);
+
+            logger.info("查询角色卡列表: novelId={}, count={}", novelId, characterList.size());
+
+            return objectMapper.writeValueAsString(result);
+        } catch (Exception e) {
+            logger.error("查询角色卡列表失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
      * 创建角色卡工具实现
      */
     private String createCharacterCard(String argumentsJson, CreativeSession session, List<Map<String, Object>> messages) {
@@ -1259,13 +1321,69 @@ public class CreativeSessionService {
                 return "{\"error\": \"角色姓名不能为空\"}";
             }
 
+            String role = (String) args.get("role");
+
+            // ===== 获取现有角色卡 =====
+            List<CharacterCard> existingCards = characterCardService.getCharacterCardsByNovelId(novelId);
+
+            // 构建现有角色摘要列表（用于返回给AI）
+            List<Map<String, Object>> existingCharactersSummary = existingCards.stream()
+                .map(c -> Map.<String, Object>of(
+                    "id", c.getId(),
+                    "name", c.getName() != null ? c.getName() : "",
+                    "role", c.getRole() != null ? c.getRole() : ""
+                ))
+                .toList();
+
+            // ===== 检查同名角色 =====
+            for (CharacterCard existing : existingCards) {
+                if (name.trim().equals(existing.getName())) {
+                    logger.warn("创建角色卡失败：同名角色已存在, novelId={}, name={}", novelId, name);
+                    Map<String, Object> errorResult = new LinkedHashMap<>();
+                    errorResult.put("success", false);
+                    errorResult.put("error", "角色'" + name + "'已存在");
+                    errorResult.put("errorCode", "DUPLICATE_NAME");
+                    errorResult.put("existingCharacterId", existing.getId());
+                    errorResult.put("suggestion", "如需修改现有角色，请使用 update_character_card 工具");
+                    errorResult.put("existingCharacters", existingCharactersSummary);
+                    return objectMapper.writeValueAsString(errorResult);
+                }
+            }
+
+            // ===== 检查主角唯一性 =====
+            if ("protagonist".equals(role)) {
+                boolean hasProtagonist = existingCards.stream()
+                    .anyMatch(c -> "protagonist".equals(c.getRole()));
+                if (hasProtagonist) {
+                    // 找到现有主角
+                    CharacterCard existingProtagonist = existingCards.stream()
+                        .filter(c -> "protagonist".equals(c.getRole()))
+                        .findFirst()
+                        .orElse(null);
+
+                    logger.warn("创建角色卡失败：主角已存在, novelId={}", novelId);
+                    Map<String, Object> errorResult = new LinkedHashMap<>();
+                    errorResult.put("success", false);
+                    errorResult.put("error", "每部小说只能有一个主角，当前小说已有主角");
+                    errorResult.put("errorCode", "PROTAGONIST_EXISTS");
+                    if (existingProtagonist != null) {
+                        errorResult.put("existingProtagonistId", existingProtagonist.getId());
+                        errorResult.put("existingProtagonistName", existingProtagonist.getName());
+                        errorResult.put("suggestion", "如需更换主角，请将现有主角改为配角(supporting)后再创建新主角");
+                    }
+                    errorResult.put("existingCharacters", existingCharactersSummary);
+                    return objectMapper.writeValueAsString(errorResult);
+                }
+            }
+            // ===== 检查结束 =====
+
             // 生成随机 seed（1-2147483647）
             int seed = new Random().nextInt(2147483646) + 1;
 
             // 构建角色卡 DTO
             CharacterCard card = new CharacterCard();
             card.setName(name.trim());
-            card.setRole((String) args.get("role"));  // 角色类型：protagonist/supporting
+            card.setRole(role);  // 角色类型：protagonist/supporting
             card.setAppearanceDescription((String) args.get("appearance"));
             card.setPersonality((String) args.get("personality"));
             card.setBackground((String) args.get("description"));
@@ -1297,8 +1415,11 @@ public class CreativeSessionService {
             result.put("appearance", card.getAppearanceDescription());
             result.put("personality", card.getPersonality());
             result.put("description", card.getBackground());
-            result.put("role", args.get("role"));
+            result.put("role", role);
             result.put("seed", seed);
+            // 成功时也返回现有角色列表（方便AI了解全局）
+            existingCharactersSummary.add(Map.of("id", savedCard.getId(), "name", name.trim(), "role", role != null ? role : ""));
+            result.put("allCharacters", existingCharactersSummary);
             return objectMapper.writeValueAsString(result);
         } catch (Exception e) {
             logger.error("创建角色卡失败: {}", e.getMessage(), e);
@@ -2547,18 +2668,23 @@ public class CreativeSessionService {
         updateOutlineProps.put("outline", Map.of("type", "string", "description", "新的大纲内容"));
         tools.add(createTool("update_outline", "更新小说大纲。用户要求修改大纲时调用。", updateOutlineProps, Arrays.asList("outline")));
 
+        // list_character_cards 工具
+        Map<String, Object> listCharProps = new LinkedHashMap<>();
+        listCharProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
+        tools.add(createTool("list_character_cards", "查询小说的已有角色卡列表。创建角色前必须先调用此工具查看现有角色，避免重复创建。返回角色ID、姓名、类型等信息。", listCharProps, Collections.emptyList()));
+
         // create_character_card 工具
         Map<String, Object> createCharProps = new LinkedHashMap<>();
         createCharProps.put("novelId", Map.of("type", "integer", "description", "小说ID"));
         createCharProps.put("name", Map.of("type", "string", "description", "角色姓名"));
-        createCharProps.put("role", Map.of("type", "string", "description", "角色定位：protagonist(主角)/supporting(配角)/antagonist(反派)"));
+        createCharProps.put("role", Map.of("type", "string", "description", "角色定位：protagonist(主角)/supporting(配角)/antagonist(反派)。注意：每部小说只能有一个主角"));
         createCharProps.put("age", Map.of("type", "integer", "description", "年龄"));
         createCharProps.put("gender", Map.of("type", "string", "description", "性别"));
         createCharProps.put("occupation", Map.of("type", "string", "description", "职业/身份"));
         createCharProps.put("description", Map.of("type", "string", "description", "角色背景描述"));
         createCharProps.put("appearance", Map.of("type", "string", "description", "外貌特征描述（用于生成图片）"));
         createCharProps.put("personality", Map.of("type", "string", "description", "性格特点"));
-        tools.add(createTool("create_character_card", "创建角色卡。自动生成seed用于图片一致性。当讨论角色细节时主动创建。", createCharProps, Arrays.asList("name")));
+        tools.add(createTool("create_character_card", "创建角色卡。调用前必须先调用list_character_cards查看现有角色。同名角色不可重复创建。每部小说只能有一个主角。自动生成seed用于图片一致性。", createCharProps, Arrays.asList("name")));
 
         // update_character_card 工具
         Map<String, Object> updateCharProps = new LinkedHashMap<>();
