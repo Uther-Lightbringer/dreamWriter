@@ -2848,7 +2848,7 @@ public class CreativeSessionService {
 
             ## 你的工作方式
 
-            1. **主动引导**：每次只问 1-2 个相关问题，不要一次性问太多
+            1. **主动引导**：每次只问 1 个问题，不要一次性问多个问题
             2. **记住已确认的内容**：不要重复问用户已经回答过的问题
             3. **及时确认**：每完成一个阶段，简要总结并询问是否正确
             4. **灵活应变**：用户可能跳过某些问题或主动提供信息，要能适应
@@ -2963,23 +2963,14 @@ public class CreativeSessionService {
             [OPTIONS:theme:题材]古代宫廷|现代都市|玄幻修仙|科幻未来|悬疑推理[/OPTIONS]
             ```
 
-            **多个问题（一次最多2-3个）：**
-            ```
-            让我们确定几个关键设定：
-
-            [OPTIONS:theme:题材]古代宫廷|现代都市|玄幻修仙[/OPTIONS]
-
-            [OPTIONS:style:风格]甜蜜温馨|虐心催泪|轻松搞笑|暗黑复仇[/OPTIONS]
-
-            [OPTIONS:protagonistGender:主角性别]男|女|双主角[/OPTIONS]
-            ```
-
             **开放式问题（如姓名）：也提供参考选项**
             ```
             她叫什么名字呢？
 
             [OPTIONS:protagonistName:主角姓名]林清雅|苏念柔|沈晚晴|江映雪[/OPTIONS]
             ```
+
+            **重要**：每次只问一个问题，等待用户回答后再问下一个问题。
 
             ### 格式说明
             - `[OPTIONS:字段名:显示名称]选项1|选项2|选项3[/OPTIONS]`
@@ -3024,6 +3015,8 @@ public class CreativeSessionService {
             示例：
             你想写什么题材？
             [OPTIONS:theme:题材]古代宫廷|现代都市|玄幻修仙|科幻未来[/OPTIONS]
+
+            （等待用户回答后，再问下一个问题）
 
             你希望是什么风格？
             [OPTIONS:style:风格]甜蜜温馨|虐心催泪|轻松搞笑|暗黑复仇[/OPTIONS]
