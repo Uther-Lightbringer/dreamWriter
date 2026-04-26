@@ -290,7 +290,7 @@ public class CreativeSessionService {
             // 检查是否需要生成摘要
             if (countUserTurns(messages) > SUMMARY_THRESHOLD) {
                 int turnsSummarized = countUserTurns(messages) - KEEP_RECENT_TURNS;
-                generateAndInsertSummary(messages, emitter, turnsSummarized);
+                generateAndInsertSummary(messages, emitter, turnsSummarized, session);
             }
 
             // 获取运行时配置
@@ -2141,47 +2141,47 @@ public class CreativeSessionService {
     }
 
     /**
-     * 生成并插入摘要（当对话过长时）
+     * 生成状态摘要并压缩对话（当对话过长时）
+     * 使用结构化数据替代AI生成摘要
      */
-    private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized) {
+    private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized, CreativeSession session) {
         try {
-            // 保留第一条（系统提示词）和最近 N 轮对话
-            Map<String, Object> systemMessage = messages.get(0);
-
             int messagesBefore = messages.size();
 
-            // 构建需要摘要的内容
-            List<Map<String, Object>> toSummarize = messages.subList(1, messages.size() - KEEP_RECENT_TURNS * 2);
+            // 保留第一条（系统提示词）
+            Map<String, Object> systemMessage = messages.get(0);
 
-            // 生成摘要提示
-            StringBuilder summaryPrompt = new StringBuilder();
-            summaryPrompt.append("请将以下对话内容生成简洁的摘要，保留关键信息：\n\n");
+            // 计算需要保留的最近消息数量（5轮对话 = 10条消息）
+            int keepMessageCount = KEEP_RECENT_TURNS * 2;
 
-            for (Map<String, Object> msg : toSummarize) {
-                String role = (String) msg.get("role");
-                String content = (String) msg.get("content");
-                if (content != null && content.length() > 200) {
-                    content = content.substring(0, 200) + "...";
-                }
-                summaryPrompt.append(role).append(": ").append(content).append("\n");
+            // 获取最近的消息（不压缩）
+            List<Map<String, Object>> recentMessages = new ArrayList<>();
+            if (messages.size() > keepMessageCount) {
+                recentMessages = new ArrayList<>(messages.subList(messages.size() - keepMessageCount, messages.size()));
+            } else {
+                // 消息数量不足，不进行压缩
+                logger.info("消息数量不足，跳过压缩: {} <= {}", messages.size(), keepMessageCount);
+                return;
             }
 
-            // 调用 AI 生成摘要
-            String summary = callDeepSeekForSummary(summaryPrompt.toString());
+            // 构建状态摘要
+            Map<String, Object> stateSummary = buildStateSummaryMessage(session, messages, recentMessages);
 
             // 替换消息历史
             messages.clear();
             messages.add(systemMessage);
-            messages.add(Map.of("role", "system", "content", "[对话摘要] " + summary));
+            messages.add(stateSummary);
+            messages.addAll(recentMessages);
 
             int messagesAfter = messages.size();
 
             // 详细日志
-            logger.info("========== 对话摘要生成 ==========");
-            logger.info("摘要前消息数: {}", messagesBefore);
-            logger.info("摘要后消息数: {}", messagesAfter);
+            logger.info("========== 对话压缩完成 ==========");
+            logger.info("压缩前消息数: {}", messagesBefore);
+            logger.info("压缩后消息数: {}", messagesAfter);
+            logger.info("保留最近轮数: {}", KEEP_RECENT_TURNS);
             logger.info("压缩对话轮数: {}", turnsSummarized);
-            logger.info("摘要内容:\n{}", summary);
+            logger.info("状态摘要内容:\n{}", stateSummary.get("content"));
             logger.info("==================================");
 
             // 发送 SSE 事件通知前端
@@ -2189,55 +2189,12 @@ public class CreativeSessionService {
                     .name("summary_generated")
                     .data(objectMapper.writeValueAsString(Map.of(
                             "message", "对话过长，已压缩历史记录",
-                            "turnsSummarized", turnsSummarized
+                            "turnsSummarized", turnsSummarized,
+                            "compressionType", "state_injection"
                     ))));
 
         } catch (Exception e) {
-            logger.error("生成摘要失败: {}", e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 调用 DeepSeek 生成摘要
-     */
-    private String callDeepSeekForSummary(String prompt) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", deepSeekConfig.getModel());
-            requestBody.put("max_tokens", 500);
-            requestBody.put("messages", new Object[]{
-                    Map.of("role", "user", "content", prompt)
-            });
-
-            String requestBodyStr = objectMapper.writeValueAsString(requestBody);
-
-            String response = restTemplate.execute(
-                    deepSeekConfig.getApiUrl(),
-                    org.springframework.http.HttpMethod.POST,
-                    request -> {
-                        request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-                        request.getHeaders().set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
-                        request.getBody().write(requestBodyStr.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                    },
-                    responseEntity -> {
-                        String body = new String(responseEntity.getBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-                        JsonNode jsonNode = objectMapper.readTree(body);
-                        JsonNode choices = jsonNode.path("choices");
-                        if (choices.isArray() && choices.size() > 0) {
-                            return choices.get(0).path("message").path("content").asText();
-                        }
-                        return "摘要生成失败";
-                    }
-            );
-
-            return response != null ? response : "摘要生成失败";
-        } catch (Exception e) {
-            logger.error("调用 DeepSeek 生成摘要失败: {}", e.getMessage());
-            return "摘要生成失败";
+            logger.error("生成状态摘要失败: {}", e.getMessage(), e);
         }
     }
 
