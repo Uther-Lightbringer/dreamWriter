@@ -1296,7 +1296,9 @@
             }
 
             // 4. 决定选择模式
-            const isBatchMode = taggedOptions.length > 1;
+            // 始终使用批量模式（显示确认按钮），让用户明确提交选择
+            // 这对单选和多选都有更好的用户体验
+            const isBatchMode = taggedOptions.length > 0;
 
             // 5. 渲染选项
             if (taggedOptions.length > 0) {
@@ -1397,84 +1399,55 @@
         function handleOptionClick(btn, field, value, label, isBatchMode) {
             const fieldContainer = btn.closest('.option-field');
 
-            // 检查是否支持多选的字段
-            const multiSelectFields = ['theme', 'style', 'conflictType'];
-            const baseField = field.replace(/\d+$/, '');
-            const isMultiSelect = multiSelectFields.includes(baseField);
-
-            // 清除自定义输入框（多选模式不清除）
+            // 清除自定义输入框
             const customInput = fieldContainer.querySelector('.custom-option-input');
-            if (customInput && !isMultiSelect) {
+            if (customInput) {
                 customInput.value = '';
                 customInput.classList.remove('confirmed');
             }
 
             if (isBatchMode) {
-                if (isMultiSelect) {
-                    // 多选模式：切换选中状态
-                    btn.classList.toggle('selected');
+                // 切换选中状态（所有字段都支持多选）
+                btn.classList.toggle('selected');
 
-                    // 收集所有选中的值
-                    const selectedValues = [];
-                    const selectedLabels = [];
-                    fieldContainer.querySelectorAll('.option-btn.selected').forEach(b => {
-                        selectedValues.push(b.dataset.value);
-                        selectedLabels.push(b.dataset.label);
-                    });
+                // 收集所有选中的值
+                const selectedValues = [];
+                const selectedLabels = [];
+                fieldContainer.querySelectorAll('.option-btn.selected').forEach(b => {
+                    selectedValues.push(b.dataset.value);
+                    selectedLabels.push(b.dataset.label);
+                });
 
-                    // 更新 pendingSelections
-                    if (selectedValues.length > 0) {
-                        const displayName = fieldContainer.dataset.displayName || null;
-                        pendingSelections[field] = {
-                            value: selectedValues,
-                            label: selectedLabels.join('、'),
-                            displayName,
-                            isMulti: true
-                        };
-
-                        // 更新状态显示
-                        let statusEl = fieldContainer.querySelector('.selection-status');
-                        if (!statusEl) {
-                            statusEl = document.createElement('div');
-                            statusEl.className = 'selection-status';
-                            fieldContainer.appendChild(statusEl);
-                        }
-                        statusEl.textContent = '✓ 已选 ' + selectedValues.length + ' 个';
-                    } else {
-                        delete pendingSelections[field];
-                        const statusEl = fieldContainer.querySelector('.selection-status');
-                        if (statusEl) statusEl.remove();
-                    }
-                } else {
-                    // 单选模式
+                // 更新 pendingSelections
+                if (selectedValues.length > 0) {
                     const displayName = fieldContainer.dataset.displayName || null;
-                    pendingSelections[field] = { value, label, displayName };
+                    pendingSelections[field] = {
+                        value: selectedValues.length === 1 ? selectedValues[0] : selectedValues,
+                        label: selectedLabels.join('、'),
+                        displayName,
+                        isMulti: selectedValues.length > 1
+                    };
 
-                    // 更新按钮状态
-                    fieldContainer.querySelectorAll('.option-btn').forEach(b => {
-                        b.classList.remove('selected');
-                    });
-                    btn.classList.add('selected');
-
-                    // 显示已选状态
+                    // 更新状态显示
                     let statusEl = fieldContainer.querySelector('.selection-status');
                     if (!statusEl) {
                         statusEl = document.createElement('div');
                         statusEl.className = 'selection-status';
                         fieldContainer.appendChild(statusEl);
                     }
-                    statusEl.textContent = '✓ 已选：' + label;
+                    statusEl.textContent = selectedValues.length === 1
+                        ? '✓ 已选：' + selectedLabels[0]
+                        : '✓ 已选 ' + selectedValues.length + ' 个';
+                } else {
+                    delete pendingSelections[field];
+                    const statusEl = fieldContainer.querySelector('.selection-status');
+                    if (statusEl) statusEl.remove();
                 }
             } else {
-                // 非批量模式
-                if (!isMultiSelect) {
-                    currentParams[field] = value;
-                    document.getElementById('chatInput').value = label;
-                    sendMessage();
-                } else {
-                    // 多选字段在非批量模式下也切换状态
-                    btn.classList.toggle('selected');
-                }
+                // 非批量模式：直接发送
+                currentParams[field] = value;
+                document.getElementById('chatInput').value = label;
+                sendMessage();
             }
         }
 
