@@ -52,6 +52,18 @@ public class CreativeSessionService {
     // 工具调用最大递归深度，防止无限递归
     private static final int MAX_TOOL_RECURSION_DEPTH = 5;
 
+    // 工具名称中文映射
+    private static final Map<String, String> TOOL_NAME_MAP = Map.of(
+        "create_novel", "创建小说",
+        "add_chapter", "添加章节",
+        "create_character_card", "创建角色卡",
+        "update_character_card", "更新角色卡",
+        "generate_character_image", "生成角色图片",
+        "generate_chapter_images", "生成章节配图",
+        "fill_params", "更新参数",
+        "add_memory", "保存偏好"
+    );
+
     // 系统提示词（固定部分）
     private static final String SYSTEM_PROMPT_BASE = buildSystemPromptBase();
 
@@ -804,6 +816,24 @@ public class CreativeSessionService {
     private void processToolCalls(List<Map<String, Object>> toolCalls, SseEmitter emitter,
                                   CreativeSession session, List<Map<String, Object>> messages) {
         try {
+            // 发送工具调用开始事件
+            for (Map<String, Object> toolCall : toolCalls) {
+                Map<String, Object> function = (Map<String, Object>) toolCall.get("function");
+                String functionName = function != null ? (String) function.get("name") : "";
+                String displayName = TOOL_NAME_MAP.getOrDefault(functionName, functionName);
+
+                try {
+                    emitter.send(SseEmitter.event()
+                            .name("tool_call_start")
+                            .data(objectMapper.writeValueAsString(Map.of(
+                                    "tool", functionName,
+                                    "displayName", displayName
+                            ))));
+                } catch (Exception e) {
+                    logger.warn("发送工具调用开始事件失败: {}", e.getMessage());
+                }
+            }
+
             // 检查重复的 tool_call_id
             Set<String> seenIds = new HashSet<>();
             for (Map<String, Object> toolCall : toolCalls) {
