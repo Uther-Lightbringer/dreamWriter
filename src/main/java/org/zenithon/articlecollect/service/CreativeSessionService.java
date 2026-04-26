@@ -1186,16 +1186,16 @@ public class CreativeSessionService {
 
             logger.info("创建角色卡成功: novelId={}, characterId={}, name={}, seed={}", novelId, savedCard.getId(), name, seed);
 
-            return objectMapper.writeValueAsString(Map.of(
-                "success", true,
-                "characterId", savedCard.getId(),
-                "name", name,
-                "appearance", card.getAppearanceDescription(),
-                "personality", card.getPersonality(),
-                "description", card.getBackground(),
-                "role", args.get("role"),
-                "seed", seed
-            ));
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("success", true);
+            result.put("characterId", savedCard.getId());
+            result.put("name", name);
+            result.put("appearance", card.getAppearanceDescription());
+            result.put("personality", card.getPersonality());
+            result.put("description", card.getBackground());
+            result.put("role", args.get("role"));
+            result.put("seed", seed);
+            return objectMapper.writeValueAsString(result);
         } catch (Exception e) {
             logger.error("创建角色卡失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
@@ -1249,15 +1249,15 @@ public class CreativeSessionService {
 
             logger.info("更新角色卡成功: characterId={}, name={}", characterId, card.getName());
 
-            return objectMapper.writeValueAsString(Map.of(
-                "success", true,
-                "characterId", characterId,
-                "name", card.getName(),
-                "appearance", card.getAppearanceDescription(),
-                "personality", card.getPersonality(),
-                "description", card.getBackground(),
-                "role", args.get("role")
-            ));
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("success", true);
+            result.put("characterId", characterId);
+            result.put("name", card.getName());
+            result.put("appearance", card.getAppearanceDescription());
+            result.put("personality", card.getPersonality());
+            result.put("description", card.getBackground());
+            result.put("role", args.get("role"));
+            return objectMapper.writeValueAsString(result);
         } catch (Exception e) {
             logger.error("更新角色卡失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
