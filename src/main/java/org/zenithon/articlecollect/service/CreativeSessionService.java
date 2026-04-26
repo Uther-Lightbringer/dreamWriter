@@ -53,15 +53,18 @@ public class CreativeSessionService {
     private static final int MAX_TOOL_RECURSION_DEPTH = 5;
 
     // 工具名称中文映射
-    private static final Map<String, String> TOOL_NAME_MAP = Map.of(
-        "create_novel", "创建小说",
-        "add_chapter", "添加章节",
-        "create_character_card", "创建角色卡",
-        "update_character_card", "更新角色卡",
-        "generate_character_image", "生成角色图片",
-        "generate_chapter_images", "生成章节配图",
-        "fill_params", "更新参数",
-        "add_memory", "保存偏好"
+    private static final Map<String, String> TOOL_NAME_MAP = Map.ofEntries(
+        Map.entry("create_novel", "创建小说"),
+        Map.entry("add_chapter", "添加章节"),
+        Map.entry("create_character_card", "创建角色卡"),
+        Map.entry("update_character_card", "更新角色卡"),
+        Map.entry("generate_character_image", "生成角色图片"),
+        Map.entry("generate_chapter_images", "生成章节配图"),
+        Map.entry("fill_params", "更新参数"),
+        Map.entry("add_memory", "保存偏好"),
+        Map.entry("preview_params", "预览参数"),
+        Map.entry("remove_memory", "删除记忆"),
+        Map.entry("show_examples", "展示示例")
     );
 
     // 系统提示词（固定部分）
