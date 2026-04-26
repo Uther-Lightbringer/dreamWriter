@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>创作历史 · 梦境创作</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -220,11 +220,12 @@
             display: flex;
             gap: 10px;
             margin-left: 20px;
+            flex-wrap: wrap;
         }
 
         .btn-small {
-            padding: 8px 20px;
-            font-size: 0.85rem;
+            padding: 8px 16px;
+            font-size: 0.8rem;
             border: none;
             border-radius: 50px;
             cursor: pointer;
@@ -236,11 +237,33 @@
         .btn-view {
             background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue));
             color: white;
+            font-weight: 500;
         }
 
         .btn-view:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0, 150, 136, 0.3);
+        }
+
+        .btn-novel {
+            background: linear-gradient(135deg, var(--accent-purple), #e91e63);
+            color: white;
+            font-weight: 500;
+        }
+
+        .btn-novel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+        }
+
+        .btn-params {
+            background: rgba(156, 39, 176, 0.1);
+            color: var(--accent-purple);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+
+        .btn-params:hover {
+            background: rgba(156, 39, 176, 0.2);
         }
 
         .btn-delete {
@@ -251,6 +274,18 @@
 
         .btn-delete:hover {
             background: rgba(244, 67, 54, 0.2);
+        }
+
+        .novel-title-link {
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .novel-title-link:hover {
+            color: var(--accent-blue);
+            text-decoration: underline;
         }
 
         .empty-state {
@@ -279,6 +314,156 @@
             border-radius: 3px;
             transition: width 0.3s ease;
         }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            padding: 35px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(93, 64, 55, 0.1);
+        }
+
+        .modal-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .param-item {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .param-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .param-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+
+        .param-value {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            word-break: break-word;
+        }
+
+        .param-value.keyword {
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .param-value.requires {
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(93, 64, 55, 0.1);
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.35);
+        }
+
+        .btn-secondary {
+            background: rgba(93, 64, 55, 0.1);
+            color: var(--text-dark);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(93, 64, 55, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -304,7 +489,26 @@
         </div>
     </div>
 
+    <!-- 参数查看模态框 -->
+    <div class="modal-overlay" id="paramsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">生成参数</h2>
+                <button class="modal-close" onclick="closeParamsModal()">&times;</button>
+            </div>
+            <div class="param-grid" id="paramsContent">
+                <!-- 动态填充 -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-secondary" onclick="closeParamsModal()">关闭</button>
+                <button class="btn-modal btn-primary" onclick="useParamsToGenerate()">使用此参数重新生成</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let currentTaskParams = null;
+
         // 加载任务列表
         async function loadTasks() {
             try {
@@ -330,7 +534,10 @@
                     <div class="task-item" data-task-id="${task.taskId}">
                         <div class="task-info">
                             <div class="task-title">
-                                ${task.resultNovelTitle || task.taskId}
+                                ${task.status === 'COMPLETED' && task.resultNovelId && task.resultNovelTitle
+                                    ? `<a href="/novel/${task.resultNovelId}" class="novel-title-link">${task.resultNovelTitle}</a>`
+                                    : (task.resultNovelTitle || task.taskId)
+                                }
                             </div>
                             <div class="task-meta">
                                 创建时间: ${task.createTime || '未知'}
@@ -345,11 +552,12 @@
                         </div>
                         <span class="task-status status-${task.status}">${getStatusText(task.status)}</span>
                         <div class="task-actions">
-                            ${task.status === 'COMPLETED' && task.resultNovelId ? `
-                                <a href="/novel/${task.resultNovelId}" class="btn-small btn-view">查看小说</a>
+                            <button class="btn-small btn-params" onclick='showParams(${JSON.stringify(task).replace(/'/g, "&#39;")})'>📋 参数</button>
+                            ${task.resultNovelId ? `
+                                <a href="/novel/${task.resultNovelId}" class="btn-small btn-novel">📖 查看</a>
                             ` : ''}
                             ${task.status === 'RUNNING' ? `
-                                <a href="/novel-generator" class="btn-small btn-view">查看进度</a>
+                                <a href="/novel-generator" class="btn-small btn-view">进度</a>
                             ` : ''}
                             ${task.status !== 'RUNNING' ? `
                                 <button class="btn-small btn-delete" onclick="deleteTask('${task.taskId}')">删除</button>
@@ -366,6 +574,105 @@
             } catch (error) {
                 console.error('加载任务列表失败:', error);
             }
+        }
+
+        // 显示参数模态框
+        function showParams(task) {
+            currentTaskParams = task;
+
+            const content = document.getElementById('paramsContent');
+            content.innerHTML = `
+                <div class="param-item full-width">
+                    <div class="param-label">故事大纲 / 关键词</div>
+                    <div class="param-value keyword">${escapeHtml(task.keyword || '无')}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">章节数量</div>
+                    <div class="param-value">${task.chapterCount || 8} 章</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">文学体裁</div>
+                    <div class="param-value">${task.genre || '记叙文'}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">角色数量</div>
+                    <div class="param-value">${task.roleCount || 3} 个</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">叙述视角</div>
+                    <div class="param-value">${task.pointOfView || '第三人称全知视角'}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">主角名称</div>
+                    <div class="param-value">${task.protagonist || '未指定'}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">玩法类型</div>
+                    <div class="param-value">${task.gameplay || 'BDSM'}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">工具类型</div>
+                    <div class="param-value">${task.tools || 'BDSM'}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">生成新世界观</div>
+                    <div class="param-value">${task.newWorld ? '是' : '否'}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">语言风格</div>
+                    <div class="param-value">${task.languageStyle || '直白、露骨'}</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-label">每章字数</div>
+                    <div class="param-value">${task.wordsPerChapter || 3000} 字</div>
+                </div>
+                <div class="param-item full-width">
+                    <div class="param-label">扩写需求</div>
+                    <div class="param-value requires">${escapeHtml(task.requires || '无')}</div>
+                </div>
+            `;
+
+            document.getElementById('paramsModal').classList.add('active');
+        }
+
+        // 关闭参数模态框
+        function closeParamsModal() {
+            document.getElementById('paramsModal').classList.remove('active');
+            currentTaskParams = null;
+        }
+
+        // 使用参数重新生成
+        function useParamsToGenerate() {
+            if (!currentTaskParams) return;
+
+            // 将参数存储到 localStorage
+            const params = {
+                chapterCount: currentTaskParams.chapterCount || 8,
+                keyword: currentTaskParams.keyword || '',
+                genre: currentTaskParams.genre || '记叙文',
+                requires: currentTaskParams.requires || '',
+                newWorld: currentTaskParams.newWorld || false,
+                roleCount: currentTaskParams.roleCount || 3,
+                gameplay: currentTaskParams.gameplay || 'BDSM',
+                tools: currentTaskParams.tools || 'BDSM',
+                pointOfView: currentTaskParams.pointOfView || '第三人称全知视角',
+                protagonist: currentTaskParams.protagonist || '',
+                languageStyle: currentTaskParams.languageStyle || '直白、露骨',
+                wordsPerChapter: currentTaskParams.wordsPerChapter || 3000
+            };
+
+            localStorage.setItem('novelGeneratorParams', JSON.stringify(params));
+
+            // 跳转到生成页面
+            window.location.href = '/novel-generator?useParams=true';
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // 删除任务
@@ -404,6 +711,20 @@
             };
             return statusMap[status] || status;
         }
+
+        // 点击模态框外部关闭
+        document.getElementById('paramsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeParamsModal();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeParamsModal();
+            }
+        });
 
         // 初始化
         document.addEventListener('DOMContentLoaded', loadTasks);
