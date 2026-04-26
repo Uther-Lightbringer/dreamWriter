@@ -1887,6 +1887,260 @@ public class CreativeSessionService {
     }
 
     /**
+     * 构建状态摘要消息（从数据库获取真实数据）
+     */
+    private Map<String, Object> buildStateSummaryMessage(CreativeSession session, List<Map<String, Object>> allMessages, List<Map<String, Object>> recentMessages) {
+        StringBuilder content = new StringBuilder();
+        content.append("[创作状态摘要]\n\n");
+
+        // 1. 已确认参数
+        Map<String, Object> params = parseParams(session.getExtractedParams());
+        content.append(buildParamsSection(params));
+
+        // 2. 角色卡和世界观（需要小说ID）
+        SessionContext context = getContext(session);
+        Long novelId = context.getCurrentNovelId();
+
+        if (novelId != null) {
+            // 角色卡
+            content.append(buildCharacterCardsSection(novelId));
+
+            // 世界观
+            content.append(buildWorldViewSection(novelId));
+
+            // 小说标题
+            content.append(buildNovelTitleSection(novelId));
+        }
+
+        // 3. 创作进度
+        content.append(buildProgressSection(allMessages, recentMessages));
+
+        // 4. 用户偏好
+        content.append(buildUserPreferencesSection());
+
+        return Map.of("role", "system", "content", content.toString());
+    }
+
+    /**
+     * 构建已确认参数部分
+     */
+    private String buildParamsSection(Map<String, Object> params) {
+        if (params.isEmpty()) {
+            return "## 已确认参数\n暂无已确认参数\n\n";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("## 已确认参数\n");
+
+        // 参数显示名称映射
+        Map<String, String> paramNameMap = new LinkedHashMap<>();
+        paramNameMap.put("theme", "题材");
+        paramNameMap.put("style", "风格");
+        paramNameMap.put("protagonistName", "主角姓名");
+        paramNameMap.put("protagonistGender", "主角性别");
+        paramNameMap.put("protagonistIdentity", "主角身份");
+        paramNameMap.put("mainPlot", "故事主线");
+        paramNameMap.put("conflictType", "核心冲突");
+        paramNameMap.put("endingType", "结局类型");
+        paramNameMap.put("chapterCount", "章节数量");
+        paramNameMap.put("wordsPerChapter", "每章字数");
+        paramNameMap.put("pointOfView", "叙述视角");
+        paramNameMap.put("languageStyle", "语言风格");
+
+        boolean hasParams = false;
+        for (Map.Entry<String, String> entry : paramNameMap.entrySet()) {
+            Object value = params.get(entry.getKey());
+            if (value != null && !value.toString().isEmpty()) {
+                sb.append("- ").append(entry.getValue()).append("：");
+                if (value instanceof List) {
+                    sb.append(String.join("、", (List<?>) value));
+                } else {
+                    sb.append(value);
+                }
+                sb.append("\n");
+                hasParams = true;
+            }
+        }
+
+        if (!hasParams) {
+            sb.append("暂无已确认参数\n");
+        }
+
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * 构建角色卡部分
+     */
+    private String buildCharacterCardsSection(Long novelId) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("## 已创建角色卡\n");
+
+        try {
+            List<CharacterCard> cards = characterCardService.getCharacterCardsByNovelId(novelId);
+            if (cards == null || cards.isEmpty()) {
+                sb.append("暂无角色卡\n\n");
+                return sb.toString();
+            }
+
+            for (CharacterCard card : cards) {
+                String roleType = "protagonist".equals(card.getRole()) ? "主角" : "配角";
+                sb.append("- ").append(card.getName()).append("（").append(roleType).append("）");
+
+                // 添加简要信息
+                List<String> details = new ArrayList<>();
+                if (card.getAge() != null) {
+                    details.add(card.getAge() + "岁");
+                }
+                if (card.getGender() != null && !card.getGender().isEmpty()) {
+                    details.add(card.getGender());
+                }
+                if (card.getOccupation() != null && !card.getOccupation().isEmpty()) {
+                    details.add(card.getOccupation());
+                }
+
+                if (!details.isEmpty()) {
+                    sb.append("：").append(String.join("，", details));
+                }
+
+                // 性格简介
+                if (card.getPersonality() != null && !card.getPersonality().isEmpty()) {
+                    String personality = card.getPersonality();
+                    if (personality.length() > 50) {
+                        personality = personality.substring(0, 50) + "...";
+                    }
+                    sb.append("，").append(personality);
+                }
+
+                sb.append("\n");
+            }
+        } catch (Exception e) {
+            logger.warn("获取角色卡失败: {}", e.getMessage());
+            sb.append("暂无角色卡\n");
+        }
+
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * 构建世界观部分
+     */
+    private String buildWorldViewSection(Long novelId) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("## 世界观\n");
+
+        try {
+            Novel novel = novelService.getNovelById(novelId);
+            if (novel != null && novel.getWorldView() != null && !novel.getWorldView().isEmpty()) {
+                String worldView = novel.getWorldView();
+                if (worldView.length() > 300) {
+                    worldView = worldView.substring(0, 300) + "...";
+                }
+                sb.append(worldView).append("\n");
+            } else {
+                sb.append("暂无世界观设定\n");
+            }
+        } catch (Exception e) {
+            logger.warn("获取世界观失败: {}", e.getMessage());
+            sb.append("暂无世界观设定\n");
+        }
+
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * 构建小说标题部分
+     */
+    private String buildNovelTitleSection(Long novelId) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("## 当前小说\n");
+
+        try {
+            Novel novel = novelService.getNovelById(novelId);
+            if (novel != null) {
+                sb.append("《").append(novel.getTitle()).append("》\n");
+            }
+        } catch (Exception e) {
+            logger.warn("获取小说标题失败: {}", e.getMessage());
+        }
+
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * 构建创作进度部分
+     */
+    private String buildProgressSection(List<Map<String, Object>> allMessages, List<Map<String, Object>> recentMessages) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("## 创作进度\n");
+
+        List<Map<String, Object>> toolHistory = extractToolCallHistory(allMessages);
+
+        if (toolHistory.isEmpty()) {
+            sb.append("创作尚未开始\n\n");
+            return sb.toString();
+        }
+
+        // 统计各类操作
+        int novelCount = 0;
+        int chapterCount = 0;
+        int characterCount = 0;
+
+        Set<String> uniqueTools = new LinkedHashSet<>();
+        for (Map<String, Object> tool : toolHistory) {
+            String name = (String) tool.get("name");
+            uniqueTools.add((String) tool.get("displayName"));
+
+            if ("create_novel".equals(name)) novelCount++;
+            if ("add_chapter".equals(name)) chapterCount++;
+            if ("create_character_card".equals(name)) characterCount++;
+        }
+
+        if (novelCount > 0) {
+            sb.append("- 已创建小说\n");
+        }
+        if (characterCount > 0) {
+            sb.append("- 已创建 ").append(characterCount).append(" 个角色卡\n");
+        }
+        if (chapterCount > 0) {
+            sb.append("- 已添加 ").append(chapterCount).append(" 个章节\n");
+        }
+
+        // 当前讨论焦点
+        String currentFocus = extractCurrentFocus(recentMessages);
+        sb.append("- 当前讨论焦点：").append(currentFocus).append("\n");
+
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * 构建用户偏好部分
+     */
+    private String buildUserPreferencesSection() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            List<CreativeMemory> memories = memoryRepository.findBySessionIdIsNullOrderByUpdateTimeDesc();
+            if (memories != null && !memories.isEmpty()) {
+                sb.append("## 用户偏好\n");
+                for (CreativeMemory memory : memories) {
+                    sb.append("- ").append(memory.getValue()).append("\n");
+                }
+                sb.append("\n");
+            }
+        } catch (Exception e) {
+            logger.warn("获取用户偏好失败: {}", e.getMessage());
+        }
+
+        return sb.toString();
+    }
+
+    /**
      * 生成并插入摘要（当对话过长时）
      */
     private void generateAndInsertSummary(List<Map<String, Object>> messages, SseEmitter emitter, int turnsSummarized) {
