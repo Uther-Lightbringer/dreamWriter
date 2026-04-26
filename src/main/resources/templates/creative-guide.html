@@ -1328,6 +1328,75 @@
             font-size: 0.8rem;
             color: var(--text-light);
         }
+
+        /* Token 用量标识 */
+        .token-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            margin-top: 10px;
+            padding: 4px 8px;
+            background: rgba(156, 39, 176, 0.08);
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            float: right;
+        }
+
+        .token-indicator:hover {
+            background: rgba(156, 39, 176, 0.15);
+            color: var(--accent-purple);
+        }
+
+        .token-indicator .token-count {
+            font-weight: 600;
+            color: var(--accent-purple);
+        }
+
+        /* Token 用量详情弹窗 */
+        .usage-detail-popup {
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 12px 16px;
+            min-width: 180px;
+            z-index: 1000;
+            font-size: 0.85rem;
+            animation: fadeInUp 0.2s ease;
+        }
+
+        .usage-header {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(93, 64, 55, 0.1);
+        }
+
+        .usage-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: var(--text-light);
+        }
+
+        .usage-row.total {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .usage-row.cached {
+            color: #4caf50;
+        }
+
+        .usage-divider {
+            height: 1px;
+            background: rgba(93, 64, 55, 0.1);
+            margin: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -1623,6 +1692,7 @@
                 let buffer = '';
                 let currentEventType = 'content';
                 let fullResponse = '';
+                let currentUsage = null;  // 存储 usage 信息
                 let aiMessageEl = null;
                 let aiContentEl = null;
 
@@ -1654,6 +1724,9 @@
                                     handleImageResult(json);
                                 } else if (currentEventType === 'error') {
                                     showNotification(json.message || '发生错误', 'error');
+                                } else if (currentEventType === 'usage') {
+                                    // 存储 usage 信息
+                                    currentUsage = json;
                                 } else if (currentEventType === 'content') {
                                     if (json.text && json.text !== 'null') {
                                         fullResponse += json.text;
@@ -1692,6 +1765,11 @@
                     renderAIMessage(aiContentEl, fullResponse);
                 }
 
+                // 添加 token 用量标识
+                if (aiMessageEl && currentUsage) {
+                    addUsageIndicator(aiMessageEl, currentUsage);
+                }
+
                 // 刷新参数面板
                 loadSessionParams();
 
@@ -1712,6 +1790,97 @@
             `;
             messagesEl.appendChild(msgEl);
             scrollToBottom();
+        }
+
+        // 添加 token 用量标识
+        function addUsageIndicator(messageEl, usage) {
+            const totalTokens = usage.total_tokens || 0;
+            if (totalTokens === 0) return;
+
+            // 创建标识容器
+            const indicator = document.createElement('div');
+            indicator.className = 'token-indicator';
+            indicator.innerHTML = `<span class="token-count">${totalTokens}</span> tokens`;
+
+            // 点击显示详情
+            indicator.onclick = (e) => {
+                e.stopPropagation();
+                showUsageDetail(usage, indicator);
+            };
+
+            // 添加到消息内容区域
+            const contentEl = messageEl.querySelector('.message-content');
+            if (contentEl) {
+                contentEl.appendChild(indicator);
+            }
+        }
+
+        // 显示 token 用量详情
+        function showUsageDetail(usage, anchorEl) {
+            // 移除已存在的详情框
+            const existing = document.querySelector('.usage-detail-popup');
+            if (existing) existing.remove();
+
+            // 创建详情框
+            const popup = document.createElement('div');
+            popup.className = 'usage-detail-popup';
+
+            const promptTokens = usage.prompt_tokens || 0;
+            const completionTokens = usage.completion_tokens || 0;
+            const totalTokens = usage.total_tokens || 0;
+            const cacheHit = usage.prompt_cache_hit_tokens || 0;
+            const cacheMiss = usage.prompt_cache_miss_tokens || 0;
+            const reasoningTokens = usage.completion_tokens_details?.reasoning_tokens || 0;
+
+            popup.innerHTML = `
+                <div class="usage-header">Token 用量详情</div>
+                <div class="usage-row">
+                    <span>输入 tokens</span>
+                    <span>${promptTokens.toLocaleString()}</span>
+                </div>
+                <div class="usage-row">
+                    <span>输出 tokens</span>
+                    <span>${completionTokens.toLocaleString()}</span>
+                </div>
+                <div class="usage-row total">
+                    <span>总计</span>
+                    <span>${totalTokens.toLocaleString()}</span>
+                </div>
+                ${cacheHit > 0 ? `
+                <div class="usage-divider"></div>
+                <div class="usage-row cached">
+                    <span>缓存命中</span>
+                    <span>${cacheHit.toLocaleString()}</span>
+                </div>
+                <div class="usage-row">
+                    <span>缓存未命中</span>
+                    <span>${cacheMiss.toLocaleString()}</span>
+                </div>
+                ` : ''}
+                ${reasoningTokens > 0 ? `
+                <div class="usage-divider"></div>
+                <div class="usage-row">
+                    <span>推理 tokens</span>
+                    <span>${reasoningTokens.toLocaleString()}</span>
+                </div>
+                ` : ''}
+            `;
+
+            // 定位到锚点元素附近
+            const rect = anchorEl.getBoundingClientRect();
+            popup.style.right = (window.innerWidth - rect.right) + 'px';
+            popup.style.bottom = (window.innerHeight - rect.top + 5) + 'px';
+
+            document.body.appendChild(popup);
+
+            // 点击其他地方关闭
+            const closePopup = (e) => {
+                if (!popup.contains(e.target) && e.target !== anchorEl) {
+                    popup.remove();
+                    document.removeEventListener('click', closePopup);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closePopup), 10);
         }
 
         function addThinkingMessage() {
