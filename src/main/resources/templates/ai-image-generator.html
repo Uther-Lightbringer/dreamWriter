@@ -1144,10 +1144,16 @@
         <header class="header">
             <h1>梦境画坊</h1>
             <p class="subtitle">将文字化为艺术，让梦境触手可及</p>
-            <a href="/" class="back-link">
-                <span>←</span>
-                <span>返回首页</span>
-            </a>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+                <a href="/" class="back-link">
+                    <span>←</span>
+                    <span>返回首页</span>
+                </a>
+                <a href="/settings/image" class="back-link" style="background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(63, 81, 181, 0.1));">
+                    <span>⚙</span>
+                    <span>模型设置</span>
+                </a>
+            </div>
         </header>
 
         <!-- 两栏主内容 -->
@@ -1355,6 +1361,15 @@
                     <div class="char-count" id="imagePromptCount">0/2000</div>
                 </div>
 
+                <!-- 模型选择器 -->
+                <div class="form-group">
+                    <label class="form-label">绘画模型</label>
+                    <select id="modelSelect" class="dream-select" onchange="onModelChange()">
+                        <option value="z-image-turbo">Z Image Turbo（快速生成）</option>
+                        <option value="gpt-image-2">GPT Image 2（高质量，支持图生图）</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">画幅比例</label>
                     <div class="size-selector">
@@ -1383,6 +1398,62 @@
                             <div class="size-name">人像特写</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- 分辨率选择（仅 gpt-image-2） -->
+                <div class="form-group" id="resolutionGroup" style="display: none;">
+                    <label class="form-label">分辨率</label>
+                    <div class="size-selector">
+                        <div class="size-option selected" data-resolution="1K" onclick="selectResolution(this)">
+                            <div class="size-ratio">1K</div>
+                            <div class="size-name">标准</div>
+                        </div>
+                        <div class="size-option" data-resolution="2K" onclick="selectResolution(this)">
+                            <div class="size-ratio">2K</div>
+                            <div class="size-name">高清</div>
+                        </div>
+                        <div class="size-option" data-resolution="4K" onclick="selectResolution(this)">
+                            <div class="size-ratio">4K</div>
+                            <div class="size-name">超高清</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 质量选择（仅 gpt-image-2） -->
+                <div class="form-group" id="qualityGroup" style="display: none;">
+                    <label class="form-label">渲染质量</label>
+                    <div class="size-selector">
+                        <div class="size-option" data-quality="low" onclick="selectQuality(this)">
+                            <div class="size-ratio">低</div>
+                            <div class="size-name">快速</div>
+                        </div>
+                        <div class="size-option selected" data-quality="medium" onclick="selectQuality(this)">
+                            <div class="size-ratio">中</div>
+                            <div class="size-name">平衡</div>
+                        </div>
+                        <div class="size-option" data-quality="high" onclick="selectQuality(this)">
+                            <div class="size-ratio">高</div>
+                            <div class="size-name">精细</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 种子输入（仅 z-image-turbo） -->
+                <div class="form-group" id="seedGroup" style="display: none;">
+                    <label class="form-label">随机种子（可选，保证一致性）</label>
+                    <input type="number" id="seedInput" class="dream-input" placeholder="1-2147483647" min="1" max="2147483647">
+                    <div class="param-hint">相同种子 + 相同提示词 = 相似结果</div>
+                </div>
+
+                <!-- 批量数量（仅 gpt-image-2） -->
+                <div class="form-group" id="batchGroup" style="display: none;">
+                    <label class="form-label">批量生成数量</label>
+                    <select id="batchSelect" class="dream-select">
+                        <option value="1">1 张</option>
+                        <option value="2">2 张</option>
+                        <option value="3">3 张</option>
+                        <option value="4">4 张</option>
+                    </select>
                 </div>
 
                 <button class="dream-btn dream-btn-secondary" onclick="generateImage()" id="generateImageBtn">
@@ -1461,12 +1532,17 @@
         let allNovelsData = [];
         let selectedCharacterCards = new Map(); // key: characterId, value: characterCard
         let currentSelectedNovel = null; // 当前选中的小说数据
+        let selectedModel = 'z-image-turbo';
+        let selectedResolution = '1K';
+        let selectedQuality = 'medium';
+        let modelCapabilities = null;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadHistory();
             updateCharacterCount('imagePrompt', 'imagePromptCount');
             loadAllNovelsWithCharacterCards();
+            loadModelConfig();
         });
 
         // 加载所有小说及其角色卡
@@ -1672,6 +1748,102 @@
             document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
             element.classList.add('selected');
             selectedStyle = element.getAttribute('data-style');
+        }
+
+        // 加载模型配置
+        async function loadModelConfig() {
+            try {
+                const response = await fetch('/api/config/image-model');
+                if (!response.ok) throw new Error('加载配置失败');
+
+                const data = await response.json();
+                selectedModel = data.currentModel;
+                document.getElementById('modelSelect').value = selectedModel;
+
+                await loadModelCapability();
+                updateDynamicUI();
+            } catch (error) {
+                console.error('加载模型配置失败:', error);
+                // 使用默认配置显示种子输入（z-image-turbo 默认）
+                document.getElementById('seedGroup').style.display = 'block';
+            }
+        }
+
+        // 加载模型能力
+        async function loadModelCapability() {
+            try {
+                const response = await fetch('/api/config/image-model/capability');
+                if (!response.ok) throw new Error('加载能力失败');
+
+                modelCapabilities = await response.json();
+            } catch (error) {
+                console.error('加载模型能力失败:', error);
+                // 默认能力配置
+                modelCapabilities = {
+                    supportsResolution: false,
+                    supportsQuality: false,
+                    supportsSeed: true,
+                    supportsBatch: false
+                };
+            }
+        }
+
+        // 模型切换处理
+        async function onModelChange() {
+            selectedModel = document.getElementById('modelSelect').value;
+
+            // 保存到后端
+            try {
+                await fetch('/api/config/image-model', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: selectedModel })
+                });
+            } catch (error) {
+                console.error('保存模型配置失败:', error);
+            }
+
+            await loadModelCapability();
+            updateDynamicUI();
+        }
+
+        // 更新动态 UI
+        function updateDynamicUI() {
+            if (!modelCapabilities) return;
+
+            const cap = modelCapabilities;
+
+            // 显示/隐藏分辨率选择
+            document.getElementById('resolutionGroup').style.display =
+                cap.supportsResolution ? 'block' : 'none';
+
+            // 显示/隐藏质量选择
+            document.getElementById('qualityGroup').style.display =
+                cap.supportsQuality ? 'block' : 'none';
+
+            // 显示/隐藏种子输入
+            document.getElementById('seedGroup').style.display =
+                cap.supportsSeed ? 'block' : 'none';
+
+            // 显示/隐藏批量选择
+            document.getElementById('batchGroup').style.display =
+                cap.supportsBatch ? 'block' : 'none';
+        }
+
+        // 选择分辨率
+        function selectResolution(element) {
+            document.querySelectorAll('#resolutionGroup .size-option').forEach(opt =>
+                opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedResolution = element.getAttribute('data-resolution');
+        }
+
+        // 选择质量
+        function selectQuality(element) {
+            document.querySelectorAll('#qualityGroup .size-option').forEach(opt =>
+                opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedQuality = element.getAttribute('data-quality');
         }
 
         // 调用AI聊天API的辅助函数
@@ -2016,13 +2188,27 @@ ${finalPromptInput}
             document.getElementById('progressText').textContent = '进度：0%';
 
             try {
+                // 构建请求参数
+                const requestBody = {
+                    prompt: prompt,
+                    size: selectedSize
+                };
+
+                // 根据模型添加特定参数
+                if (selectedModel === 'z-image-turbo') {
+                    const seed = document.getElementById('seedInput')?.value;
+                    if (seed) requestBody.seed = parseInt(seed);
+                } else if (selectedModel === 'gpt-image-2') {
+                    requestBody.resolution = selectedResolution;
+                    requestBody.quality = selectedQuality;
+                    const batch = document.getElementById('batchSelect')?.value;
+                    if (batch) requestBody.n = parseInt(batch);
+                }
+
                 const response = await fetch('/api/image/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        size: selectedSize
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) throw new Error('创建任务失败');

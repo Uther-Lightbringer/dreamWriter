@@ -155,6 +155,14 @@ public class PageController {
     }
 
     /**
+     * 图片模型设置页面
+     */
+    @GetMapping("/settings/image")
+    public String imageSettings() {
+        return "settings-image";
+    }
+
+    /**
      * 创作引导独立页面
      */
     @GetMapping("/creative-guide")

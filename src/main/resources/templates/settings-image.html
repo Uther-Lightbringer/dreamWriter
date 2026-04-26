@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梦境画坊 · 模型设置</title>
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
+    <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --accent-teal: #009688;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            font-family: 'Noto Serif SC', serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 25%, var(--dream-mint) 50%, var(--dream-peach) 75%, var(--dream-pink) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .header .subtitle {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            color: var(--text-light);
+            text-decoration: none;
+            padding: 10px 20px;
+            background: var(--glass-bg);
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(-5px);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .model-card {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .model-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(156, 39, 176, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .model-card.selected {
+            border-color: var(--accent-purple);
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(63, 81, 181, 0.1));
+        }
+
+        .model-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .model-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .model-features {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .feature-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(156, 39, 176, 0.1);
+            border-radius: 12px;
+            margin: 3px;
+            font-size: 0.8rem;
+        }
+
+        .feature-tag.disabled {
+            background: rgba(158, 158, 158, 0.1);
+            color: #9e9e9e;
+            text-decoration: line-through;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .dream-btn {
+            padding: 14px 36px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dream-btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4);
+        }
+
+        .dream-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(156, 39, 176, 0.5);
+        }
+
+        .dream-btn-secondary {
+            background: transparent;
+            border: 2px solid var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .dream-btn-secondary:hover {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #2e7d32;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #c62828;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>模型设置</h1>
+            <p class="subtitle">选择适合您的 AI 绘画模型</p>
+            <a href="/ai-image-generator" class="back-link">
+                <span>←</span>
+                <span>返回画坊</span>
+            </a>
+        </header>
+
+        <div class="glass-card">
+            <h2 class="section-title">选择绘画模型</h2>
+
+            <div class="model-grid" id="modelGrid">
+                <!-- 模型卡片将由 JavaScript 动态生成 -->
+            </div>
+
+            <div class="btn-group">
+                <button class="dream-btn dream-btn-primary" onclick="saveModel()" id="saveBtn">
+                    保存设置
+                </button>
+                <a href="/ai-image-generator" class="dream-btn dream-btn-secondary">
+                    返回画坊
+                </a>
+            </div>
+
+            <div class="alert alert-success" id="successAlert"></div>
+            <div class="alert alert-error" id="errorAlert"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentModel = 'z-image-turbo';
+        let selectedModel = 'z-image-turbo';
+
+        // 模型配置
+        const modelConfigs = {
+            'z-image-turbo': {
+                name: 'Z Image Turbo',
+                description: '快速生成，适合快速迭代和实验',
+                features: ['快速生成', '种子一致性', '自定义尺寸', '支持比例: 9种']
+            },
+            'gpt-image-2': {
+                name: 'GPT Image 2',
+                description: '高质量生成，支持图生图和 4K 分辨率',
+                features: ['高质量输出', '分辨率: 1K/2K/4K', '质量级别', '批量生成', '图生图', '支持比例: 15种']
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', loadConfig);
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config/image-model');
+                if (!response.ok) throw new Error('加载配置失败');
+
+                const data = await response.json();
+                currentModel = data.currentModel;
+                selectedModel = currentModel;
+
+                renderModelCards();
+            } catch (error) {
+                showError('加载配置失败: ' + error.message);
+            }
+        }
+
+        function renderModelCards() {
+            const grid = document.getElementById('modelGrid');
+            grid.innerHTML = '';
+
+            Object.entries(modelConfigs).forEach(([id, config]) => {
+                const card = document.createElement('div');
+                card.className = 'model-card' + (id === selectedModel ? ' selected' : '');
+                card.onclick = () => selectModel(id);
+
+                let featuresHtml = config.features.map(f =>
+                    `<span class="feature-tag">${f}</span>`
+                ).join('');
+
+                card.innerHTML = `
+                    <div class="model-name">${config.name}</div>
+                    <div class="model-desc">${config.description}</div>
+                    <div class="model-features">${featuresHtml}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function selectModel(modelId) {
+            selectedModel = modelId;
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+        }
+
+        async function saveModel() {
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '保存中...';
+
+            try {
+                const response = await fetch('/api/config/image-model', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: selectedModel })
+                });
+
+                if (!response.ok) throw new Error('保存失败');
+
+                const data = await response.json();
+                if (data.success) {
+                    currentModel = selectedModel;
+                    showSuccess('模型设置已保存：' + modelConfigs[selectedModel].name);
+                } else {
+                    throw new Error(data.error || '保存失败');
+                }
+            } catch (error) {
+                showError('保存失败: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '保存设置';
+            }
+        }
+
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            document.getElementById('errorAlert').style.display = 'none';
+            setTimeout(() => { alert.style.display = 'none'; }, 3000);
+        }
+
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            document.getElementById('successAlert').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

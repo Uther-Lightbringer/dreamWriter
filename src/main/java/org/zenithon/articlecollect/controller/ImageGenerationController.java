@@ -3,14 +3,16 @@ package org.zenithon.articlecollect.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.zenithon.articlecollect.dto.ImageHistoryRequest;
+import org.zenithon.articlecollect.dto.ModelCapability;
 import org.zenithon.articlecollect.entity.AiImageHistory;
 import org.zenithon.articlecollect.service.AiImageHistoryService;
 import org.zenithon.articlecollect.service.EvoLinkImageService;
+import org.zenithon.articlecollect.service.ImageModelCapabilityService;
+import org.zenithon.articlecollect.service.SystemConfigService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 图片生成控制器
@@ -18,52 +20,91 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/image")
 public class ImageGenerationController {
-    
+
     private final EvoLinkImageService imageService;
     private final AiImageHistoryService historyService;
-    
-    public ImageGenerationController(EvoLinkImageService imageService, AiImageHistoryService historyService) {
+    private final SystemConfigService configService;
+    private final ImageModelCapabilityService capabilityService;
+
+    public ImageGenerationController(EvoLinkImageService imageService,
+                                      AiImageHistoryService historyService,
+                                      SystemConfigService configService,
+                                      ImageModelCapabilityService capabilityService) {
         this.imageService = imageService;
         this.historyService = historyService;
+        this.configService = configService;
+        this.capabilityService = capabilityService;
     }
     
     /**
      * 创建图片生成任务
      */
     @PostMapping("/generate")
-    public ResponseEntity<Map<String, Object>> generateImage(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> generateImage(@RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
-            String prompt = request.get("prompt");
-            String size = request.get("size");
-            
+            String prompt = (String) request.get("prompt");
+            String size = (String) request.get("size");
+            Integer seed = request.get("seed") != null ? ((Number) request.get("seed")).intValue() : null;
+            String resolution = (String) request.get("resolution");
+            String quality = (String) request.get("quality");
+            Integer n = request.get("n") != null ? ((Number) request.get("n")).intValue() : null;
+            @SuppressWarnings("unchecked")
+            List<String> imageUrls = (List<String>) request.get("imageUrls");
+
             if (prompt == null || prompt.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("error", "提示词不能为空");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             // 默认尺寸 16:9
             if (size == null || size.trim().isEmpty()) {
                 size = "16:9";
             }
-            
+
             // 验证尺寸格式
             if (!validateSize(size)) {
                 response.put("success", false);
                 response.put("error", "无效的尺寸格式。支持比例：1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 1:2, 2:1 或自定义尺寸如 1024x768");
                 return ResponseEntity.badRequest().body(response);
             }
-            
-            String taskId = imageService.generateImage(prompt, size);
-            
+
+            // 获取当前模型和能力
+            String currentModel = configService.getConfigValue("image.model", "z-image-turbo");
+            ModelCapability capability = capabilityService.getCapability(currentModel);
+
+            // 根据模型能力过滤参数
+            Integer effectiveSeed = capability.isSupportsSeed() ? seed : null;
+
+            // 调用图片生成服务
+            String taskId = imageService.generateImage(prompt, size, effectiveSeed);
+
             response.put("success", true);
             response.put("taskId", taskId);
+            response.put("model", currentModel);
             response.put("message", "图片生成任务已创建");
-            
+
+            // 如果有参数被忽略，添加提示
+            if (!capability.isSupportsSeed() && seed != null) {
+                response.put("warning", "当前模型不支持 seed 参数，已忽略");
+            }
+            if (!capability.isSupportsResolution() && resolution != null) {
+                response.put("warning", "当前模型不支持 resolution 参数，已忽略");
+            }
+            if (!capability.isSupportsQuality() && quality != null) {
+                response.put("warning", "当前模型不支持 quality 参数，已忽略");
+            }
+            if (!capability.isSupportsBatch() && n != null && n > 1) {
+                response.put("warning", "当前模型不支持批量生成，已忽略 n 参数");
+            }
+            if (!capability.isSupportsImageToImage() && imageUrls != null && !imageUrls.isEmpty()) {
+                response.put("warning", "当前模型不支持图生图，已忽略 imageUrls 参数");
+            }
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             response.put("success", false);
             response.put("error", e.getMessage());
@@ -93,14 +134,29 @@ public class ImageGenerationController {
             }
             
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             response.put("success", false);
             response.put("error", e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    
+
+    /**
+     * 获取当前图片模型信息
+     */
+    @GetMapping("/model-info")
+    public ResponseEntity<Map<String, Object>> getModelInfo() {
+        String currentModel = configService.getConfigValue("image.model", "z-image-turbo");
+        ModelCapability capability = capabilityService.getCapability(currentModel);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("model", currentModel);
+        response.put("capabilities", capability);
+
+        return ResponseEntity.ok(response);
+    }
+
     /**
      * 验证尺寸格式
      */
