@@ -1151,6 +1151,183 @@
         .status-item.ok { color: #4caf50; }
         .status-item.warn { color: #f44336; }
         .status-item.info { color: #ff9800; }
+
+        /* 角色详情模态框 */
+        .character-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .character-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .character-modal {
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 50%, var(--dream-mint) 100%);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .character-modal-overlay.show .character-modal {
+            transform: scale(1);
+        }
+
+        .character-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .character-modal-header h3 {
+            font-family: var(--font-title);
+            color: var(--text-dark);
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .character-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .character-modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .character-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(80vh - 80px);
+        }
+
+        .character-modal-image {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .character-modal-section {
+            margin-bottom: 16px;
+        }
+
+        .character-modal-section-title {
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .character-modal-section-content {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .character-modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .character-modal-tag {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+
+        .character-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .character-modal-grid-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .character-modal-grid-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .character-modal-grid-value {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .character-card-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .character-card-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .character-role-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 6px;
+        }
+
+        .character-role-tag.protagonist {
+            background: rgba(156, 39, 176, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .character-role-tag.supporting {
+            background: rgba(63, 81, 181, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .character-meta-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
     </style>
 </head>
 <body>
@@ -2243,15 +2420,30 @@
                     return;
                 }
 
+                // 保存角色卡数据供详情查看使用
+                currentCharacterCards = cards;
+
                 // 渲染角色卡列表
                 content.innerHTML = cards.map(card => `
-                    <div class="character-card-item" data-id="${card.id}">
+                    <div class="character-card-item" data-id="${card.id}" onclick="showCharacterDetail(${card.id})">
                         ${card.generatedImageUrl
-                            ? `<img src="${card.generatedImageUrl}" class="character-image" onclick="viewImageFullscreen('${card.generatedImageUrl}')" alt="${card.name}"/>`
+                            ? `<img src="${card.generatedImageUrl}" class="character-image" alt="${escapeHtml(card.name)}"/>`
                             : `<div class="character-placeholder">👤</div>`
                         }
                         <div class="character-info">
-                            <div class="character-name">${escapeHtml(card.name)}</div>
+                            <div class="character-name">
+                                ${escapeHtml(card.name)}
+                                ${card.role === 'protagonist'
+                                    ? '<span class="character-role-tag protagonist">主角</span>'
+                                    : card.role === 'supporting'
+                                        ? '<span class="character-role-tag supporting">配角</span>'
+                                        : ''}
+                            </div>
+                            <div class="character-meta-row">
+                                ${card.age !== undefined && card.age !== null ? `<span>${card.age}岁</span>` : ''}
+                                ${card.gender ? `<span>${escapeHtml(card.gender)}</span>` : ''}
+                                ${card.occupation ? `<span>${escapeHtml(card.occupation)}</span>` : ''}
+                            </div>
                             ${card.background ? `<div class="character-desc">${escapeHtml(card.background)}</div>` : ''}
                         </div>
                     </div>
@@ -2543,6 +2735,156 @@
                 })
                 .catch(err => console.error('更新角色卡状态失败:', err));
         }
+
+        // ==================== 角色详情模态框 ====================
+
+        // 存储当前加载的角色卡数据
+        let currentCharacterCards = [];
+
+        // 显示角色详情模态框
+        function showCharacterDetail(cardId) {
+            const card = currentCharacterCards.find(c => c.id === cardId);
+            if (!card) {
+                console.error('找不到角色卡:', cardId);
+                return;
+            }
+
+            const modal = document.getElementById('characterModal');
+            const title = document.getElementById('characterModalTitle');
+            const body = document.getElementById('characterModalBody');
+
+            // 设置标题为角色名字
+            title.textContent = card.name || '角色详情';
+
+            let html = '';
+
+            // 角色图片
+            if (card.generatedImageUrl) {
+                html += `<img src="${escapeHtml(card.generatedImageUrl)}" class="character-modal-image" alt="${escapeHtml(card.name)}" onerror="this.style.display='none'"/>`;
+            }
+
+            // 角色标签
+            html += '<div class="character-modal-tags">';
+            if (card.role === 'protagonist') {
+                html += '<span class="character-modal-tag" style="background: rgba(156, 39, 176, 0.2); color: var(--accent-purple);">主角</span>';
+            } else if (card.role === 'supporting') {
+                html += '<span class="character-modal-tag" style="background: rgba(63, 81, 181, 0.2); color: var(--accent-blue);">配角</span>';
+            }
+            if (card.gender) {
+                html += `<span class="character-modal-tag">${escapeHtml(card.gender)}</span>`;
+            }
+            if (card.age !== undefined && card.age !== null) {
+                html += `<span class="character-modal-tag">${card.age}岁</span>`;
+            }
+            html += '</div>';
+
+            // 基础信息网格
+            html += '<div class="character-modal-grid">';
+            html += `<div class="character-modal-grid-item">
+                <div class="character-modal-grid-label">年龄</div>
+                <div class="character-modal-grid-value">${card.age !== undefined && card.age !== null ? card.age + '岁' : '未知'}</div>
+            </div>`;
+            html += `<div class="character-modal-grid-item">
+                <div class="character-modal-grid-label">性别</div>
+                <div class="character-modal-grid-value">${escapeHtml(card.gender || '未知')}</div>
+            </div>`;
+            html += `<div class="character-modal-grid-item">
+                <div class="character-modal-grid-label">职业</div>
+                <div class="character-modal-grid-value">${escapeHtml(card.occupation || '无')}</div>
+            </div>`;
+            html += '</div>';
+
+            // 外貌特征
+            if (card.appearance) {
+                const appearance = card.appearance;
+                let appearanceText = '';
+                if (appearance.height) appearanceText += `身高：${escapeHtml(appearance.height)}\n`;
+                if (appearance.hair) appearanceText += `发色：${escapeHtml(appearance.hair)}\n`;
+                if (appearance.eyes) appearanceText += `瞳色：${escapeHtml(appearance.eyes)}\n`;
+                if (appearance.face) appearanceText += `脸型：${escapeHtml(appearance.face)}\n`;
+                if (appearance.build) appearanceText += `体型：${escapeHtml(appearance.build)}\n`;
+                if (appearance.clothing) appearanceText += `穿着：${escapeHtml(appearance.clothing)}\n`;
+                if (appearance.distinguishingFeatures) appearanceText += `显著特征：${escapeHtml(appearance.distinguishingFeatures)}`;
+
+                if (appearanceText) {
+                    html += `<div class="character-modal-section">
+                        <div class="character-modal-section-title">🎨 外貌特征</div>
+                        <div class="character-modal-section-content">${appearanceText}</div>
+                    </div>`;
+                }
+            }
+
+            // 性格描述
+            if (card.personality) {
+                html += `<div class="character-modal-section">
+                    <div class="character-modal-section-title">💖 性格描述</div>
+                    <div class="character-modal-section-content">${escapeHtml(card.personality)}</div>
+                </div>`;
+            }
+
+            // 背景故事
+            if (card.background) {
+                html += `<div class="character-modal-section">
+                    <div class="character-modal-section-title">📜 背景故事</div>
+                    <div class="character-modal-section-content">${escapeHtml(card.background)}</div>
+                </div>`;
+            }
+
+            // 角色关系
+            if (card.relationships && card.relationships.length > 0) {
+                html += `<div class="character-modal-section">
+                    <div class="character-modal-section-title">🔗 角色关系</div>
+                    <div class="character-modal-section-content">`;
+                card.relationships.forEach(rel => {
+                    html += `• ${escapeHtml(rel.targetName || '未知')}：${escapeHtml(rel.relationship || '无')}<br>`;
+                });
+                html += '</div></div>';
+            }
+
+            // 备注
+            if (card.notes) {
+                html += `<div class="character-modal-section">
+                    <div class="character-modal-section-title">📝 备注</div>
+                    <div class="character-modal-section-content">${escapeHtml(card.notes)}</div>
+                </div>`;
+            }
+
+            body.innerHTML = html;
+            modal.classList.add('show');
+        }
+
+        // 关闭角色详情模态框
+        function closeCharacterModal() {
+            document.getElementById('characterModal').classList.remove('show');
+        }
+
+        // 点击模态框外部关闭
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('characterModal');
+            if (e.target === modal) {
+                closeCharacterModal();
+            }
+        });
+
+        // ESC 键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeCharacterModal();
+            }
+        });
     </script>
+
+    <!-- 角色详情模态框 -->
+    <div class="character-modal-overlay" id="characterModal" onclick="if(event.target===this)closeCharacterModal()">
+        <div class="character-modal">
+            <div class="character-modal-header">
+                <h3 id="characterModalTitle">角色详情</h3>
+                <button class="character-modal-close" onclick="closeCharacterModal()">×</button>
+            </div>
+            <div class="character-modal-body" id="characterModalBody">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
 </body>
 </html>
