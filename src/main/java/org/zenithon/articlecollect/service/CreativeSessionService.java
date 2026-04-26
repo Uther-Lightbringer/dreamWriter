@@ -1265,9 +1265,18 @@ public class CreativeSessionService {
             // 构建角色卡 DTO
             CharacterCard card = new CharacterCard();
             card.setName(name.trim());
+            card.setRole((String) args.get("role"));  // 角色类型：protagonist/supporting
             card.setAppearanceDescription((String) args.get("appearance"));
             card.setPersonality((String) args.get("personality"));
             card.setBackground((String) args.get("description"));
+
+            // 新增字段
+            if (args.get("age") != null) {
+                card.setAge(((Number) args.get("age")).intValue());
+            }
+            card.setGender((String) args.get("gender"));
+            card.setOccupation((String) args.get("occupation"));
+
             // 存储 seed 在 notes 字段（临时方案）
             card.setNotes("seed:" + seed);
 
@@ -1953,7 +1962,9 @@ public class CreativeSessionService {
             if (value != null && !value.toString().isEmpty()) {
                 sb.append("- ").append(entry.getValue()).append("：");
                 if (value instanceof List) {
-                    sb.append(String.join("、", (List<?>) value));
+                    @SuppressWarnings("unchecked")
+                    List<?> list = (List<?>) value;
+                    sb.append(list.stream().map(Object::toString).collect(java.util.stream.Collectors.joining("、")));
                 } else {
                     sb.append(value);
                 }
