@@ -1337,7 +1337,11 @@
                             try {
                                 const json = JSON.parse(data);
 
-                                if (currentEventType === 'image_result') {
+                                if (currentEventType === 'tool_call_start') {
+                                    handleToolCallStart(json);
+                                } else if (currentEventType === 'tool_result') {
+                                    handleToolResult(json);
+                                } else if (currentEventType === 'image_result') {
                                     handleImageResult(json);
                                 } else if (currentEventType === 'error') {
                                     showNotification(json.message || '发生错误', 'error');
@@ -1744,6 +1748,85 @@
 
         function closeHistory() {
             document.getElementById('historyPanel').classList.remove('open');
+        }
+
+        // ==================== 工具调用提示条 ====================
+        const toolOperationMap = {
+            'create_novel': { pending: '正在创建小说...', success: '小说创建成功' },
+            'add_chapter': { pending: '正在添加章节...', success: '章节添加成功' },
+            'create_character_card': { pending: '正在创建角色卡...', success: '角色卡创建成功' },
+            'update_character_card': { pending: '正在更新角色卡...', success: '角色卡已更新' },
+            'generate_character_image': { pending: '正在生成角色图片...', success: '角色图片生成成功' },
+            'generate_chapter_images': { pending: '正在生成章节配图...', success: '章节配图生成成功' },
+            'fill_params': { pending: '正在更新参数...', success: '参数已更新' },
+            'add_memory': { pending: '正在保存偏好...', success: '偏好已保存' }
+        };
+
+        let activeToolToasts = new Map(); // toolName -> toastElement
+
+        function showToolToast(toolName, status) {
+            const container = document.getElementById('toolToastContainer');
+            const operation = toolOperationMap[toolName] || { pending: toolName + '...', success: toolName + ' 完成' };
+            const message = status === 'pending' ? operation.pending : operation.success;
+
+            const toast = document.createElement('div');
+            toast.className = `tool-toast ${status}`;
+            toast.innerHTML = status === 'pending'
+                ? `🔄 ${message}`
+                : `✅ ${message}`;
+
+            container.appendChild(toast);
+
+            // 成功提示2秒后淡出
+            if (status === 'success') {
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 500);
+                }, 2000);
+            }
+
+            return toast;
+        }
+
+        function handleToolCallStart(data) {
+            const toast = showToolToast(data.tool, 'pending');
+            activeToolToasts.set(data.tool, toast);
+        }
+
+        function handleToolResult(data) {
+            try {
+                const result = JSON.parse(data.result);
+                if (result.success) {
+                    // 更新或显示成功提示
+                    const existingToast = activeToolToasts.get(data.tool);
+                    if (existingToast) {
+                        existingToast.className = 'tool-toast success';
+                        const operation = toolOperationMap[data.tool] || { success: data.tool + ' 完成' };
+                        existingToast.innerHTML = `✅ ${operation.success}`;
+
+                        // 2秒后淡出
+                        setTimeout(() => {
+                            existingToast.classList.add('fade-out');
+                            setTimeout(() => existingToast.remove(), 500);
+                        }, 2000);
+
+                        activeToolToasts.delete(data.tool);
+                    } else {
+                        showToolToast(data.tool, 'success');
+                    }
+
+                    // 刷新角色卡列表（如果是角色卡相关操作）
+                    if (data.tool === 'create_character_card' ||
+                        data.tool === 'update_character_card' ||
+                        data.tool === 'generate_character_image') {
+                        if (typeof loadCharacterCards === 'function' && characterDrawerOpen) {
+                            setTimeout(() => loadCharacterCards(), 500);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('解析工具结果失败', e);
+            }
         }
 
         // ==================== 角色卡面板功能 ====================
