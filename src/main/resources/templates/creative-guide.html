@@ -886,6 +886,85 @@
             position: relative;
         }
 
+        /* 会话统计样式 */
+        .session-stats-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .session-stats-content {
+            font-size: 0.85rem;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: var(--text-dark);
+        }
+
+        .stats-label {
+            color: var(--text-light);
+        }
+
+        .stats-value {
+            font-weight: 600;
+        }
+
+        .stats-progress {
+            margin-top: 10px;
+        }
+
+        .stats-progress-bar {
+            height: 4px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stats-progress-fill {
+            height: 100%;
+            background: var(--accent-purple);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .stats-progress-fill.warning {
+            background: #ff9800;
+        }
+
+        .stats-progress-fill.danger {
+            background: #f44336;
+        }
+
+        .compress-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            border-radius: 8px;
+            color: var(--accent-purple);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .compress-btn:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .compress-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
         /* 公共记忆管理样式 */
         .memory-section {
             background: rgba(255, 255, 255, 0.5);
@@ -1479,6 +1558,35 @@
             <button class="drawer-close" onclick="closeCharacterDrawer()">×</button>
         </div>
         <div class="drawer-content">
+            <!-- 对话统计区域 -->
+            <div class="session-stats-section">
+                <div class="section-header">
+                    <span>💬 对话</span>
+                </div>
+                <div class="session-stats-content" id="sessionStatsContent">
+                    <div class="stats-row">
+                        <span class="stats-label">对话轮数</span>
+                        <span class="stats-value" id="statsUserTurns">0</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">消息数量</span>
+                        <span class="stats-value" id="statsMessageCount">0</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">预估 tokens</span>
+                        <span class="stats-value" id="statsTokens">~0</span>
+                    </div>
+                    <div class="stats-progress">
+                        <div class="stats-progress-bar">
+                            <div class="stats-progress-fill" id="statsProgressFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <button class="compress-btn" id="compressBtn" onclick="compressSession()" style="display: none;">
+                        <span>🗜️</span> 压缩历史
+                    </button>
+                </div>
+            </div>
+
             <!-- 公共记忆管理区域 -->
             <div class="memory-section">
                 <div class="section-header">
@@ -2405,6 +2513,7 @@
         async function loadSessionParams() {
             if (!currentSessionId) {
                 renderParamsPanel({});
+                updateSessionStats(null);
                 return;
             }
 
@@ -2417,9 +2526,89 @@
                 } else {
                     renderParamsPanel({});
                 }
+                // 加载会话统计
+                loadSessionStats();
             } catch (e) {
                 console.error('加载会话参数失败', e);
                 renderParamsPanel({});
+            }
+        }
+
+        // 加载会话统计
+        async function loadSessionStats() {
+            if (!currentSessionId) return;
+
+            try {
+                const stats = await fetch('/api/creative-sessions/' + currentSessionId + '/stats').then(r => r.json());
+                updateSessionStats(stats);
+            } catch (e) {
+                console.error('加载会话统计失败', e);
+            }
+        }
+
+        // 更新会话统计显示
+        function updateSessionStats(stats) {
+            const userTurnsEl = document.getElementById('statsUserTurns');
+            const messageCountEl = document.getElementById('statsMessageCount');
+            const tokensEl = document.getElementById('statsTokens');
+            const progressFill = document.getElementById('statsProgressFill');
+            const compressBtn = document.getElementById('compressBtn');
+
+            if (!stats) {
+                userTurnsEl.textContent = '0';
+                messageCountEl.textContent = '0';
+                tokensEl.textContent = '~0';
+                progressFill.style.width = '0%';
+                compressBtn.style.display = 'none';
+                return;
+            }
+
+            userTurnsEl.textContent = stats.userTurns || 0;
+            messageCountEl.textContent = stats.messageCount || 0;
+            tokensEl.textContent = '~' + (stats.estimatedTokens || 0).toLocaleString();
+
+            // 更新进度条
+            const percentage = Math.min(stats.thresholdPercentage || 0, 100);
+            progressFill.style.width = percentage + '%';
+
+            // 根据进度改变颜色
+            progressFill.classList.remove('warning', 'danger');
+            if (percentage >= 100) {
+                progressFill.classList.add('danger');
+            } else if (percentage >= 70) {
+                progressFill.classList.add('warning');
+            }
+
+            // 显示/隐藏压缩按钮
+            compressBtn.style.display = stats.needsCompression ? 'flex' : 'none';
+        }
+
+        // 压缩会话历史
+        async function compressSession() {
+            if (!currentSessionId) return;
+
+            const compressBtn = document.getElementById('compressBtn');
+            compressBtn.classList.add('loading');
+            compressBtn.innerHTML = '<span>⏳</span> 压缩中...';
+
+            try {
+                const result = await fetch('/api/creative-sessions/' + currentSessionId + '/compress', {
+                    method: 'POST'
+                }).then(r => r.json());
+
+                if (result.success) {
+                    showNotification(`压缩完成：${result.turnsCompressed} 轮对话已压缩`, 'success');
+                    // 刷新统计
+                    loadSessionStats();
+                } else {
+                    showNotification(result.message || '压缩失败', 'info');
+                }
+            } catch (e) {
+                console.error('压缩失败', e);
+                showNotification('压缩失败: ' + e.message, 'error');
+            } finally {
+                compressBtn.classList.remove('loading');
+                compressBtn.innerHTML = '<span>🗜️</span> 压缩历史';
             }
         }
 

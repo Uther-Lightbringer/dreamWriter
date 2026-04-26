@@ -246,6 +246,104 @@ public class CreativeSessionService {
         sessionRepository.deleteBySessionId(sessionId);
     }
 
+    /**
+     * 手动压缩会话历史
+     * 用户主动触发或异常时自动调用
+     *
+     * @param sessionId 会话ID
+     * @return 压缩结果信息
+     */
+    @Transactional
+    public Map<String, Object> compressSession(String sessionId) {
+        CreativeSession session = getSession(sessionId);
+        List<Map<String, Object>> messages = parseMessages(session.getMessages());
+
+        int messagesBefore = messages.size();
+        int userTurnsBefore = countUserTurns(messages);
+
+        // 检查是否有足够的消息需要压缩
+        if (messages.size() <= (KEEP_RECENT_TURNS * 2 + 2)) {
+            return Map.of(
+                "success", false,
+                "message", "对话较短，无需压缩",
+                "messageCount", messages.size(),
+                "userTurns", userTurnsBefore
+            );
+        }
+
+        // 保留第一条（系统提示词）
+        Map<String, Object> systemMessage = messages.get(0);
+
+        // 计算需要保留的最近消息数量
+        int keepMessageCount = KEEP_RECENT_TURNS * 2;
+
+        // 获取最近的消息（不压缩）
+        List<Map<String, Object>> recentMessages = new ArrayList<>(
+            messages.subList(messages.size() - keepMessageCount, messages.size())
+        );
+
+        // 构建状态摘要
+        Map<String, Object> stateSummary = buildStateSummaryMessage(session, messages, recentMessages);
+
+        // 替换消息历史
+        messages.clear();
+        messages.add(systemMessage);
+        messages.add(stateSummary);
+        messages.addAll(recentMessages);
+
+        // 保存更新后的会话
+        session.setMessages(toJson(messages));
+        sessionRepository.save(session);
+
+        int messagesAfter = messages.size();
+        int userTurnsAfter = countUserTurns(messages);
+        int turnsCompressed = userTurnsBefore - userTurnsAfter;
+
+        logger.info("手动压缩完成: sessionId={}, 压缩前={}, 压缩后={}, 压缩轮数={}",
+            sessionId, messagesBefore, messagesAfter, turnsCompressed);
+
+        return Map.of(
+            "success", true,
+            "message", "压缩完成",
+            "messagesBefore", messagesBefore,
+            "messagesAfter", messagesAfter,
+            "userTurnsBefore", userTurnsBefore,
+            "userTurnsAfter", userTurnsAfter,
+            "turnsCompressed", turnsCompressed
+        );
+    }
+
+    /**
+     * 获取会话统计信息
+     */
+    public Map<String, Object> getSessionStats(String sessionId) {
+        CreativeSession session = getSession(sessionId);
+        List<Map<String, Object>> messages = parseMessages(session.getMessages());
+
+        int messageCount = messages.size();
+        int userTurns = countUserTurns(messages);
+
+        // 估算 token 数（粗略：每 4 个字符约 1 token）
+        int estimatedTokens = 0;
+        for (Map<String, Object> msg : messages) {
+            String content = (String) msg.get("content");
+            if (content != null) {
+                estimatedTokens += content.length() / 4;
+            }
+        }
+
+        // 计算压缩阈值百分比
+        int thresholdPercentage = (userTurns * 100) / SUMMARY_THRESHOLD;
+
+        return Map.of(
+            "messageCount", messageCount,
+            "userTurns", userTurns,
+            "estimatedTokens", estimatedTokens,
+            "thresholdPercentage", Math.min(thresholdPercentage, 100),
+            "needsCompression", userTurns > SUMMARY_THRESHOLD
+        );
+    }
+
     // ==================== 对话功能 ====================
 
     /**
@@ -288,11 +386,8 @@ public class CreativeSessionService {
                 logger.info("设置临时会话标题: {}", tempTitle);
             }
 
-            // 检查是否需要生成摘要
-            if (countUserTurns(messages) > SUMMARY_THRESHOLD) {
-                int turnsSummarized = countUserTurns(messages) - KEEP_RECENT_TURNS;
-                generateAndInsertSummary(messages, emitter, turnsSummarized, session);
-            }
+            // 移除自动压缩 - 改为由异常处理或用户手动触发
+            // 原因：避免破坏 DeepSeek 的 context caching
 
             // 获取运行时配置
             DeepSeekRuntimeConfig config = deepSeekConfigService.getRuntimeConfig(FeatureCode.CREATIVE_GUIDANCE, runtimeConfig);

@@ -154,6 +154,41 @@ public class CreativeSessionController {
         }
     }
 
+    /**
+     * 压缩会话历史
+     */
+    @PostMapping("/{sessionId}/compress")
+    public ResponseEntity<Map<String, Object>> compressSession(@PathVariable String sessionId) {
+        logger.info("手动压缩会话: sessionId={}", sessionId);
+        try {
+            Map<String, Object> result = sessionService.compressSession(sessionId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            logger.error("压缩会话失败: {}", e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
+     * 获取会话统计信息
+     */
+    @GetMapping("/{sessionId}/stats")
+    public ResponseEntity<Map<String, Object>> getSessionStats(@PathVariable String sessionId) {
+        try {
+            Map<String, Object> stats = sessionService.getSessionStats(sessionId);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            logger.error("获取会话统计失败: {}", e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
     // ==================== 对话功能 ====================
 
     /**
