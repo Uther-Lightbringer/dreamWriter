@@ -3326,6 +3326,7 @@ public class CreativeSessionService {
             - update_character_card：更新角色卡信息（**必须填写完整外貌字段**）
             - generate_character_image：生成角色图片（需要角色卡已创建）
             - generate_chapter_images：生成章节配图（需要章节已创建）
+            - generate_reference_image：生成参考图片（用于角色/场景/服装道具的视觉参考）
             - get_chapter_summaries：获取已有章节概括（创建新章节前调用）
             - generate_outline：生成小说大纲（需要小说已创建）
             - update_outline：更新小说大纲
