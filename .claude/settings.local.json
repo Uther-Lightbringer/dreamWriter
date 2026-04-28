@@ -50,7 +50,9 @@
       "Bash(mvn.cmd compile:*)",
       "Bash(cmd.exe:*)",
       "Bash(cmd /c \"where mvn\")",
-      "Bash(mvn.cmd clean:*)"
+      "Bash(mvn.cmd clean:*)",
+      "Bash(rm -f secrets-to-replace.txt)",
+      "Bash(rm -rf .git/filter-repo)"
     ]
   }
 }

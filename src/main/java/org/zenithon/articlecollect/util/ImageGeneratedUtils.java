@@ -31,8 +31,14 @@ public class ImageGeneratedUtils {
      */
     public static AiImageGenerationResponse genearateAiImage(String prompt, String outputPath) throws Exception {
         IVisualService visualService = VisualServiceImpl.getInstance();
-        visualService.setAccessKey("YOUR_VOLCENGINE_ACCESS_KEY");
-        visualService.setSecretKey("YOUR_VOLCENGINE_SECRET_KEY=");
+        // Use environment variables: VOLCENGINE_ACCESS_KEY and VOLCENGINE_SECRET_KEY
+        String accessKey = System.getenv("VOLCENGINE_ACCESS_KEY");
+        String secretKey = System.getenv("VOLCENGINE_SECRET_KEY");
+        if (accessKey == null || secretKey == null) {
+            return new AiImageGenerationResponse(false, "VolcEngine API keys not configured. Please set VOLCENGINE_ACCESS_KEY and VOLCENGINE_SECRET_KEY environment variables.");
+        }
+        visualService.setAccessKey(accessKey);
+        visualService.setSecretKey(secretKey);
     
         JSONObject req=new JSONObject();
         //请求 Body(查看接口文档请求参数 - 请求示例，将请求参数内容复制到此)

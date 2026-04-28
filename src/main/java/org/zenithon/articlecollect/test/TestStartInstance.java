@@ -28,8 +28,15 @@ public class TestStartInstance {
     public static void main(String[] args) throws Exception {
         IVisualService visualService = VisualServiceImpl.getInstance();
         // call below method if you dont set ak and sk in ～/.vcloud/config
-        visualService.setAccessKey("YOUR_VOLCENGINE_ACCESS_KEY");
-        visualService.setSecretKey("YOUR_VOLCENGINE_SECRET_KEY=");
+        // Use environment variables: VOLCENGINE_ACCESS_KEY and VOLCENGINE_SECRET_KEY
+        String accessKey = System.getenv("VOLCENGINE_ACCESS_KEY");
+        String secretKey = System.getenv("VOLCENGINE_SECRET_KEY");
+        if (accessKey == null || secretKey == null) {
+            log.error("Please set VOLCENGINE_ACCESS_KEY and VOLCENGINE_SECRET_KEY environment variables");
+            return;
+        }
+        visualService.setAccessKey(accessKey);
+        visualService.setSecretKey(secretKey);
 
         JSONObject req=new JSONObject();
 
