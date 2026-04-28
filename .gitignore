@@ -100,6 +100,11 @@ curl_test_*.txt
 # SQL migration scripts (optional - uncomment if not needed)
 # *.sql
 
+# Environment variables (DO NOT COMMIT)
+.env
+.env.local
+.env.*.local
+
 # OS generated files
 .DS_Store
 .DS_Store?
