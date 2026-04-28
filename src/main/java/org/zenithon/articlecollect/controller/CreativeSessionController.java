@@ -2,14 +2,18 @@ package org.zenithon.articlecollect.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.zenithon.articlecollect.dto.DeepSeekConfigDTO;
 import org.zenithon.articlecollect.dto.NovelGeneratorRequest;
+import org.zenithon.articlecollect.entity.AiImageHistory;
 import org.zenithon.articlecollect.entity.CreativeSession;
+import org.zenithon.articlecollect.service.AiImageHistoryService;
 import org.zenithon.articlecollect.service.CreativeSessionService;
+import org.zenithon.articlecollect.service.EvoLinkImageService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,9 +30,17 @@ public class CreativeSessionController {
     private static final Logger logger = LoggerFactory.getLogger(CreativeSessionController.class);
 
     private final CreativeSessionService sessionService;
+    private final EvoLinkImageService evoLinkImageService;
+    private final AiImageHistoryService aiImageHistoryService;
 
-    public CreativeSessionController(CreativeSessionService sessionService) {
+    @Autowired
+    public CreativeSessionController(
+            CreativeSessionService sessionService,
+            EvoLinkImageService evoLinkImageService,
+            AiImageHistoryService aiImageHistoryService) {
         this.sessionService = sessionService;
+        this.evoLinkImageService = evoLinkImageService;
+        this.aiImageHistoryService = aiImageHistoryService;
     }
 
     // ==================== 会话管理 ====================
@@ -376,6 +388,76 @@ public class CreativeSessionController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("error", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    // ==================== 参考图片生成 ====================
+
+    /**
+     * 生成参考图片
+     * POST /api/creative-sessions/{sessionId}/generate-reference-image
+     */
+    @PostMapping("/{sessionId}/generate-reference-image")
+    public ResponseEntity<Map<String, Object>> generateReferenceImage(
+            @PathVariable String sessionId,
+            @RequestBody Map<String, String> request) {
+
+        String prompt = request.get("prompt");
+        String size = request.getOrDefault("size", "1:1");
+
+        if (prompt == null || prompt.trim().isEmpty()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "提示词不能为空");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        try {
+            logger.info("生成参考图片: sessionId={}, size={}", sessionId, size);
+
+            // 调用 EvoLink 生成图片
+            String taskId = evoLinkImageService.generateImage(prompt, size);
+
+            // 轮询获取结果（最多等待60秒）
+            String imageUrl = null;
+            int maxAttempts = 30;
+            for (int i = 0; i < maxAttempts; i++) {
+                Thread.sleep(2000);
+                EvoLinkImageService.TaskStatus status = evoLinkImageService.getTaskStatus(taskId);
+                if ("completed".equals(status.getStatus())) {
+                    imageUrl = status.getImageUrl();
+                    break;
+                } else if ("failed".equals(status.getStatus())) {
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("success", false);
+                    errorResponse.put("error", "图片生成失败: " + status.getError());
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
+            }
+
+            if (imageUrl == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("error", "图片生成超时，请重试");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            // 保存到历史记录
+            AiImageHistory history = aiImageHistoryService.saveHistory(prompt, imageUrl);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("imageUrl", imageUrl);
+            response.put("imageId", history != null ? history.getId() : null);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("生成参考图片失败: {}", e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "生成失败：" + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
