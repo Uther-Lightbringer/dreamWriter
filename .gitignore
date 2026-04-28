@@ -1,1 +1,113 @@
-nul
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# IDE - Eclipse
+.settings/
+.classpath
+.project
+.metadata/
+bin/
+tmp/
+
+# IDE - VS Code
+.vscode/
+
+# Database files
+*.db
+*.mv.db
+*.trace.db
+*.lock.db
+data/
+
+# Uploaded files (user generated content)
+uploads/images/
+
+# Sensitive configuration - use environment variables instead
+# Do not commit files with real API keys
+
+# JDK bundle (too large for repo)
+jdk-21/
+
+# Android SDK
+android-sdk/
+
+# Node modules
+node_modules/
+
+# Mobile app build artifacts
+mobile/dist/
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/.idea/
+mobile/android/local.properties
+mobile/android/captures/
+mobile/android/.externalNativeBuild/
+
+# APK files
+*.apk
+
+# Test and temporary files
+test_*.html
+*_test.html
+chapter_preview_*.html
+marked_error_fix_test.html
+hs_err_pid*.log
+curl_test_*.txt
+*_demo.html
+
+# SQL migration scripts (optional - uncomment if not needed)
+# *.sql
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Claude Code
+.claude/

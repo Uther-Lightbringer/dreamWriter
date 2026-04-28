@@ -1,213 +1,92 @@
-# 小说管理平台
+# 梦境文阁 | Dream Library
 
-这是一个基于Spring Boot的小说管理平台，提供了完整的前后端功能。
+<p align="center">
+  <img src="docs/images/logo.png" alt="梦境文阁 Logo" width="200">
+</p>
+
+<p align="center">
+  <strong>一个基于 Spring Boot 的智能小说管理平台</strong>
+</p>
+
+<p align="center">
+  <a href="#功能特性">功能特性</a> •
+  <a href="#技术栈">技术栈</a> •
+  <a href="#快速开始">快速开始</a> •
+  <a href="#配置">配置</a> •
+  <a href="#api-文档">API 文档</a> •
+  <a href="#贡献">贡献</a>
+</p>
+
+<p align="center">
+  <a href="https://www.apache.org/licenses/LICENSE-2.0">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License">
+  </a>
+  <a href="https://spring.io/projects/spring-boot">
+    <img src="https://img.shields.io/badge/Spring%20Boot-3.0.2-brightgreen.svg" alt="Spring Boot">
+  </a>
+  <a href="https://www.java.com/">
+    <img src="https://img.shields.io/badge/Java-17-orange.svg" alt="Java 17">
+  </a>
+</p>
+
+---
 
 ## 功能特性
 
 ### 📚 小说管理
-- 创建新小说（只需输入标题）
-- 查看所有小说列表
-- 删除小说（同时删除相关章节）
+- 创建、查看、删除小说
 - 世界观设置与角色卡管理
+- 小说封面图片上传
 
 ### 📖 章节管理
-- 为小说创建章节（标题 + 内容）
-- 查看小说的所有章节
-- 删除特定章节
+- 章节创建、编辑、删除
+- 智能导航：上一章/下一章快速切换
 - 章节标签自动分析
 
-### 📱 阅读体验
-- **章节详情页面**：单独打开章节进行全文阅读
-- **智能导航**：支持上一章、下一章快速切换
-- **章节列表**：随时返回小说的章节列表
-- **面包屑导航**：清晰的页面路径指示
+### 🎨 AI 功能
+- **AI 配图**：自动分析章节内容，调用 AI 生成配图
+- **AI 聊天**：集成 DeepSeek AI 对话功能
+- **创作助手**：AI 辅助小说创作，创意引导
+- **小说生成器**：自动生成长篇小说
 
-### 🎨 AI功能
-- **AI配图**：自动分析章节内容，调用AI生成配图
-- **AI聊天**：集成DeepSeek AI对话功能
-- **角色图像生成**：为角色卡自动生成AI图像
+### 📱 多平台支持
+- Web 应用（响应式设计）
+- Android 移动应用（Capacitor）
 
-### 🔧 REST API接口
-- 完整的HTTP API供外部调用
-- 新增章节详情查询接口
+### 🔧 REST API
+- 完整的 HTTP API 供外部调用
+- 支持第三方集成
+
+---
 
 ## 技术栈
 
-- **后端**: Spring Boot 3.0.2 + Java 17
-- **前端**: HTML + JavaScript + CSS + Thymeleaf
-- **数据存储**: H2文件数据库
-- **构建工具**: Maven
+| 类别 | 技术 |
+|------|------|
+| 后端 | Java 17 + Spring Boot 3.0.2 |
+| 前端 | HTML + JavaScript + CSS + Thymeleaf |
+| 移动端 | Capacitor (Android) |
+| 数据库 | H2 (文件数据库) |
+| AI 服务 | DeepSeek、EvoLink、火山引擎 |
+| 构建工具 | Maven |
 
-## 🚀 使用流程
+---
 
-1. **创建小说**：在首页输入小说标题创建新小说
-2. **管理章节**：点击"管理章节"进入小说详情页
-3. **添加章节**：在小说详情页添加新章节
-4. **阅读章节**：点击"阅读"按钮进入章节详情页
-5. **导航浏览**：使用上一章/下一章按钮连续阅读
+## 快速开始
 
-## 修改数据库
-启动您的应用
-在浏览器中访问：http://localhost:38081/h2-console
-连接信息：
-JDBC URL: jdbc:h2:file:./data/article_collect
-User Name: sa
-Password: （留空）
+### 环境要求
 
+- JDK 17+
+- Maven 3.6+
+- Node.js 16+ (可选，用于移动端构建)
 
-## API接口文档
+### 安装与运行
 
-### 小说相关接口
-
-#### 1. 创建小说
-```
-POST /api/novels
-Content-Type: application/json
-
-{
-    "title": "小说标题"
-}
-
-返回:
-{
-    "id": 1,
-    "title": "小说标题",
-    "createTime": "2024-01-01T10:00:00",
-    "updateTime": "2024-01-01T10:00:00"
-}
-```
-
-#### 2. 获取所有小说
-```
-GET /api/novels
-
-返回:
-[
-    {
-        "id": 1,
-        "title": "小说标题",
-        "createTime": "2024-01-01T10:00:00",
-        "updateTime": "2024-01-01T10:00:00"
-    }
-]
-```
-
-#### 3. 获取特定小说
-```
-GET /api/novels/{novelId}
-```
-
-#### 4. 删除小说
-```
-DELETE /api/novels/{novelId}
-
-返回:
-{
-    "success": true
-}
-```
-
-### 章节相关接口
-
-#### 1. 为小说创建章节
-```
-POST /api/novels/{novelId}/chapters
-Content-Type: application/json
-
-{
-    "title": "章节标题",
-    "content": "章节内容"
-}
-
-返回:
-{
-    "id": 1,
-    "novelId": 1,
-    "title": "章节标题",
-    "content": "章节内容",
-    "chapterNumber": 1,
-    "createTime": "2024-01-01T10:00:00",
-    "updateTime": "2024-01-01T10:00:00"
-}
-```
-
-#### 2. 获取小说的所有章节
-```
-GET /api/novels/{novelId}/chapters
-
-返回:
-[
-    {
-        "id": 1,
-        "novelId": 1,
-        "title": "第一章",
-        "content": "章节内容",
-        "chapterNumber": 1,
-        "createTime": "2024-01-01T10:00:00",
-        "updateTime": "2024-01-01T10:00:00"
-    }
-]
-```
-
-#### 3. 获取特定章节
-```
-GET /api/novels/{novelId}/chapters/{chapterId}
-```
-
-#### 4. 获取章节详情（新增）
-```
-GET /api/chapters/detail/{novelId}/{chapterId}
-
-返回:
-{
-    "chapter": {
-        "id": 1,
-        "novelId": 1,
-        "title": "章节标题",
-        "content": "章节完整内容",
-        "chapterNumber": 1,
-        "createTime": "2024-01-01T10:00:00",
-        "updateTime": "2024-01-01T10:00:00"
-    },
-    "hasNext": true,
-    "hasPrevious": false,
-    "nextChapterId": 2,
-    "previousChapterId": null,
-    "novelTitle": "小说标题",
-    "novelId": 1
-}
-```
-
-#### 5. 更新章节
-```
-PUT /api/novels/{novelId}/chapters/{chapterId}
-Content-Type: application/json
-
-{
-    "title": "新标题",
-    "content": "新内容"
-}
-```
-
-#### 6. 删除章节
-```
-DELETE /api/novels/{novelId}/chapters/{chapterId}
-
-返回:
-{
-    "success": true
-}
-```
-
-## 如何运行
-
-### 方式一：使用IDEA运行
-1. 在IntelliJ IDEA中打开项目
-2. 确保已安装Java 17
-3. 运行 `ArticleCollectApplication.java` 中的main方法
-
-### 方式二：使用Maven命令行
 ```bash
+# 克隆项目
+git clone https://github.com/zenithon/dreamwriter.git
+cd dream-library
+
 # 编译项目
 mvn clean compile
 
@@ -219,56 +98,189 @@ mvn clean package
 java -jar target/articleCollect-0.0.1-SNAPSHOT.jar
 ```
 
-## 页面导航结构
+### 访问
 
+- **主应用**: http://localhost:38081
+- **H2 数据库控制台**: http://localhost:38081/h2-console
+  - JDBC URL: `jdbc:h2:file:./data/article_collect`
+  - 用户名: `sa`
+  - 密码: (留空)
+
+---
+
+## 配置
+
+### 环境变量配置
+
+创建 `.env` 文件或设置以下环境变量：
+
+| 环境变量 | 说明 | 必需 |
+|---------|------|------|
+| `DEEPSEEK_API_KEY` | DeepSeek AI 聊天 API 密钥 | ✅ AI 聊天功能 |
+| `DEEPSEEK_API_URL` | DeepSeek API 地址 | ❌ 有默认值 |
+| `EVOLINK_API_TOKEN` | EvoLink 图片生成 API 令牌 | ✅ AI 绘图功能 |
+| `VOLCENGINE_ACCESS_KEY` | 火山引擎 Access Key | ❌ 备用图片服务 |
+| `VOLCENGINE_SECRET_KEY` | 火山引擎 Secret Key | ❌ 备用图片服务 |
+
+### 配置文件
+
+复制示例配置文件并根据需要修改：
+
+```bash
+cp src/main/resources/application.properties.example src/main/resources/application.properties
 ```
-首页 (/) 
-├── 创建小说
-├── 小说列表
-│   └── 点击"管理章节" → 小说详情页 (/novel/{novelId})
-│       ├── 添加新章节
-│       ├── 章节列表
-│       │   └── 点击"阅读" → 章节详情页 (/novel/{novelId}/chapter/{chapterId})
-│       │       ├── 章节全文阅读
-│       │       ├── 上一章/下一章导航
-│       │       └── 返回章节列表
-│       └── 删除小说
-└── 删除小说
+
+---
+
+## 截图
+
+<p align="center">
+  <img src="docs/screenshots/home.png" alt="首页" width="400">
+  <img src="docs/screenshots/novel-detail.png" alt="小说详情" width="400">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/ai-image.png" alt="AI绘图" width="400">
+  <img src="docs/screenshots/reader.png" alt="阅读器" width="400">
+</p>
+
+---
+
+## API 文档
+
+### 小说 API
+
+```http
+# 创建小说
+POST /api/novels
+Content-Type: application/json
+{"title": "小说标题"}
+
+# 获取所有小说
+GET /api/novels
+
+# 获取特定小说
+GET /api/novels/{novelId}
+
+# 删除小说
+DELETE /api/novels/{novelId}
 ```
+
+### 章节 API
+
+```http
+# 创建章节
+POST /api/novels/{novelId}/chapters
+Content-Type: application/json
+{"title": "章节标题", "content": "章节内容"}
+
+# 获取章节列表
+GET /api/novels/{novelId}/chapters
+
+# 获取章节详情（含导航信息）
+GET /api/chapters/detail/{novelId}/{chapterId}
+
+# 更新章节
+PUT /api/novels/{novelId}/chapters/{chapterId}
+
+# 删除章节
+DELETE /api/novels/{novelId}/chapters/{chapterId}
+```
+
+### AI API
+
+```http
+# AI 聊天 (SSE 流式)
+POST /api/ai/chat
+
+# 生成 AI 图片
+POST /api/image/generate
+
+# 查询图片生成状态
+GET /api/image/status/{taskId}
+
+# 获取图片生成历史
+GET /api/image/history
+```
+
+更多 API 详情请参考 [CLAUDE.md](CLAUDE.md)。
+
+---
 
 ## 项目结构
 
 ```
 src/
 ├── main/
-│   ├── java/
-│   │   └── org/zenithon/articlecollect/
-│   │       ├── controller/          # Web和REST API控制器
-│   │       ├── service/             # 业务逻辑实现
-│   │       ├── repository/          # 数据访问层
-│   │       ├── entity/              # JPA实体类
-│   │       ├── dto/                 # 数据传输对象
-│   │       ├── config/              # 配置类
-│   │       ├── util/                # 工具类
-│   │       └── ArticleCollectApplication.java
+│   ├── java/org/zenithon/articlecollect/
+│   │   ├── controller/          # Web 和 REST API 控制器
+│   │   ├── service/             # 业务逻辑实现
+│   │   ├── repository/          # 数据访问层
+│   │   ├── entity/              # JPA 实体类
+│   │   ├── dto/                 # 数据传输对象
+│   │   ├── config/              # 配置类
+│   │   └── util/                # 工具类
 │   └── resources/
-│       ├── templates/               # Thymeleaf模板
-│       ├── static/                  # 静态资源
-│       └── application.properties   # 配置文件
-└── test/
+│       ├── templates/           # Thymeleaf 模板
+│       ├── static/              # 静态资源
+│       └── application.properties
+└── test/                        # 测试代码
+
+mobile/                          # Android 移动应用
+├── src/                         # Web 应用源码
+├── android/                     # 原生 Android 项目
+└── capacitor.config.json        # Capacitor 配置
 ```
 
-## 注意事项
+---
 
-- 数据存储在H2文件数据库中，应用重启后数据保留
-- 默认端口为38081，可在application.properties中修改
-- AI功能需要配置相应的API密钥环境变量
+## 移动端构建
 
-## 环境变量配置
+```bash
+cd mobile
 
-| 环境变量 | 说明 |
-|---------|------|
-| `DEEPSEEK_API_KEY` | DeepSeek AI聊天API密钥 |
-| `EVOLINK_API_TOKEN` | EvoLink图片生成API令牌 |
-| `VOLCENGINE_ACCESS_KEY` | 火山引擎Access Key |
-| `VOLCENGINE_SECRET_KEY` | 火山引擎Secret Key |
+# 安装依赖
+npm install
+
+# 构建 Web 资源
+npm run build
+
+# 同步到 Android 项目
+npx cap sync
+
+# 打开 Android Studio
+npx cap open android
+```
+
+---
+
+## 贡献
+
+欢迎贡献代码！请查看 [贡献指南](CONTRIBUTING.md)。
+
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+---
+
+## 许可证
+
+本项目基于 [Apache License 2.0](LICENSE) 开源。
+
+---
+
+## 致谢
+
+- [Spring Boot](https://spring.io/projects/spring-boot)
+- [DeepSeek AI](https://www.deepseek.com/)
+- [Capacitor](https://capacitorjs.com/)
+- 所有贡献者
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/zenithon">Zenithon</a>
+</p>
