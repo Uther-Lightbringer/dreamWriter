@@ -2087,6 +2087,109 @@
             border-radius: 2px;
             padding: 0 2px;
         }
+
+        /* 参考图片生成确认卡片 */
+        .reference-image-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 12px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .reference-image-card .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reference-image-card .prompt-label {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .reference-image-card .prompt-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            resize: vertical;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.8);
+            transition: border-color 0.2s;
+        }
+
+        .reference-image-card .prompt-textarea:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        .reference-image-card .size-options {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .reference-image-card .size-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .reference-image-card .size-option:hover {
+            border-color: var(--accent-purple);
+        }
+
+        .reference-image-card .size-option.selected {
+            background: var(--accent-purple);
+            color: white;
+            border-color: var(--accent-purple);
+        }
+
+        .reference-image-card .size-option input {
+            display: none;
+        }
+
+        .reference-image-card .generate-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-purple), #7b1fa2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .reference-image-card .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
+        }
+
+        .reference-image-card .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -2509,6 +2612,8 @@ let isStreaming = false;
                                     showNotification(`📝 ${json.message}（压缩 ${json.turnsSummarized} 轮对话）`, 'info');
                                 } else if (currentEventType === 'image_result') {
                                     handleImageResult(json);
+                                } else if (currentEventType === 'show_image_card') {
+                                    showImageGenerationCard(json.prompt, json.suggestedSize, json.type);
                                 } else if (currentEventType === 'error') {
                                     showNotification(json.message || '发生错误', 'error');
                                 } else if (currentEventType === 'usage') {
@@ -3180,6 +3285,119 @@ let isStreaming = false;
 
             messagesEl.appendChild(imageEl);
             scrollToBottom();
+        }
+
+        // 显示参考图片生成确认卡片
+        function showImageGenerationCard(prompt, suggestedSize, type) {
+            const messagesEl = document.getElementById('chatMessages');
+            const cardEl = document.createElement('div');
+            cardEl.className = 'message assistant';
+
+            const cardId = 'ref-img-' + Date.now();
+            const typeLabels = {
+                'character': '角色参考',
+                'scene': '场景参考',
+                'costume': '服装道具',
+                'other': '其他'
+            };
+
+            cardEl.innerHTML = `
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <div class="reference-image-card" id="${cardId}">
+                        <div class="card-title">🎨 图片生成确认</div>
+                        <div class="prompt-label">提示词（可编辑）：</div>
+                        <textarea class="prompt-textarea" id="${cardId}-prompt">${escapeHtml(prompt)}</textarea>
+                        <div class="prompt-label" style="margin-top: 15px;">图片尺寸：</div>
+                        <div class="size-options" id="${cardId}-sizes">
+                            <label class="size-option ${suggestedSize === '1:1' ? 'selected' : ''}" data-size="1:1">
+                                <input type="radio" name="${cardId}-size" value="1:1" ${suggestedSize === '1:1' ? 'checked' : ''}>
+                                □ 1:1 方形
+                            </label>
+                            <label class="size-option ${suggestedSize === '16:9' ? 'selected' : ''}" data-size="16:9">
+                                <input type="radio" name="${cardId}-size" value="16:9" ${suggestedSize === '16:9' ? 'checked' : ''}>
+                                ▭ 16:9 横版
+                            </label>
+                            <label class="size-option ${suggestedSize === '9:16' ? 'selected' : ''}" data-size="9:16">
+                                <input type="radio" name="${cardId}-size" value="9:16" ${suggestedSize === '9:16' ? 'checked' : ''}>
+                                ▦ 9:16 竖版
+                            </label>
+                        </div>
+                        <button class="generate-btn" id="${cardId}-btn" onclick="confirmGenerateReferenceImage('${cardId}', '${type}')">
+                            🎨 生成参考图
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            messagesEl.appendChild(cardEl);
+            scrollToBottom();
+
+            // 绑定尺寸选择事件
+            document.querySelectorAll(`#${cardId}-sizes .size-option`).forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll(`#${cardId}-sizes .size-option`).forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    this.querySelector('input').checked = true;
+                });
+            });
+        }
+
+        // 确认生成参考图片
+        async function confirmGenerateReferenceImage(cardId, type) {
+            const promptEl = document.getElementById(`${cardId}-prompt`);
+            const btnEl = document.getElementById(`${cardId}-btn`);
+            const selectedSize = document.querySelector(`input[name="${cardId}-size"]:checked`);
+
+            const prompt = promptEl.value.trim();
+            const size = selectedSize ? selectedSize.value : '1:1';
+
+            if (!prompt) {
+                showNotification('请输入提示词', 'error');
+                return;
+            }
+
+            // 禁用按钮，显示加载状态
+            btnEl.disabled = true;
+            btnEl.textContent = '⏳ 生成中...';
+
+            try {
+                const sessionId = getCurrentSessionId();
+                const response = await fetch(`/api/creative-sessions/${sessionId}/generate-reference-image`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, size })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 显示生成的图片
+                    handleImageResult({
+                        type: type,
+                        name: '参考图',
+                        imageUrl: result.imageUrl
+                    });
+                    showNotification('参考图片生成成功！', 'success');
+
+                    // 移除确认卡片
+                    document.getElementById(cardId).closest('.message').remove();
+                } else {
+                    showNotification(result.error || '生成失败', 'error');
+                    btnEl.disabled = false;
+                    btnEl.textContent = '🎨 生成参考图';
+                }
+            } catch (error) {
+                console.error('生成参考图片失败:', error);
+                showNotification('网络错误，请重试', 'error');
+                btnEl.disabled = false;
+                btnEl.textContent = '🎨 生成参考图';
+            }
+        }
+
+        // 获取当前会话ID
+        function getCurrentSessionId() {
+            return currentSessionId || 'default';
         }
 
         function downloadImage(url, name) {
