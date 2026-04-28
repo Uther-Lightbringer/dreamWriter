@@ -85,10 +85,23 @@ public class DeepSeekConfigService {
         if (dto.getReasoningEffort() != null) {
             config.setReasoningEffort(dto.getReasoningEffort());
         }
+        if (dto.getTemperature() != null) {
+            config.setTemperature(dto.getTemperature());
+        }
+        if (dto.getTopP() != null) {
+            config.setTopP(dto.getTopP());
+        }
+        if (dto.getFrequencyPenalty() != null) {
+            config.setFrequencyPenalty(dto.getFrequencyPenalty());
+        }
+        if (dto.getPresencePenalty() != null) {
+            config.setPresencePenalty(dto.getPresencePenalty());
+        }
 
         DeepSeekFeatureConfig saved = repository.save(config);
-        logger.info("更新 DeepSeek 配置: {} -> model={}, thinking={}, effort={}",
-                featureCode, saved.getModel(), saved.getThinkingEnabled(), saved.getReasoningEffort());
+        logger.info("更新 DeepSeek 配置: {} -> model={}, thinking={}, effort={}, temp={}, topP={}, freqPen={}, presPen={}",
+                featureCode, saved.getModel(), saved.getThinkingEnabled(), saved.getReasoningEffort(),
+                saved.getTemperature(), saved.getTopP(), saved.getFrequencyPenalty(), saved.getPresencePenalty());
 
         return saved;
     }
@@ -110,6 +123,10 @@ public class DeepSeekConfigService {
             builder.model(override.getModel() != null ? override.getModel() : defaultConfig.getModel());
             builder.thinkingEnabled(override.getThinkingEnabled() != null ? override.getThinkingEnabled() : defaultConfig.getThinkingEnabled());
             builder.reasoningEffort(override.getReasoningEffort() != null ? override.getReasoningEffort() : defaultConfig.getReasoningEffort());
+            builder.temperature(override.getTemperature() != null ? override.getTemperature() : defaultConfig.getTemperature());
+            builder.topP(override.getTopP() != null ? override.getTopP() : defaultConfig.getTopP());
+            builder.frequencyPenalty(override.getFrequencyPenalty() != null ? override.getFrequencyPenalty() : defaultConfig.getFrequencyPenalty());
+            builder.presencePenalty(override.getPresencePenalty() != null ? override.getPresencePenalty() : defaultConfig.getPresencePenalty());
 
             logger.debug("运行时配置: {} (覆盖)", featureCode);
         } else {
@@ -117,6 +134,10 @@ public class DeepSeekConfigService {
             builder.model(defaultConfig.getModel());
             builder.thinkingEnabled(defaultConfig.getThinkingEnabled());
             builder.reasoningEffort(defaultConfig.getReasoningEffort());
+            builder.temperature(defaultConfig.getTemperature());
+            builder.topP(defaultConfig.getTopP());
+            builder.frequencyPenalty(defaultConfig.getFrequencyPenalty());
+            builder.presencePenalty(defaultConfig.getPresencePenalty());
 
             logger.debug("运行时配置: {} (默认)", featureCode);
         }

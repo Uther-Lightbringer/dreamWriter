@@ -322,6 +322,112 @@
             background: #f44336;
         }
 
+        /* 高级参数卡片样式 */
+        .advanced-params-card {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(156, 39, 176, 0.2);
+        }
+
+        .param-slider {
+            width: 100%;
+            max-width: 200px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .param-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            cursor: pointer;
+            border: none;
+        }
+
+        .param-value {
+            display: inline-block;
+            min-width: 50px;
+            text-align: right;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .param-explanation {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .param-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent-purple);
+        }
+
+        .param-item h4 {
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .param-item p {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .param-item ul {
+            margin-left: 15px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .param-item .tip {
+            background: rgba(156, 39, 176, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            color: var(--accent-purple);
+        }
+
+        .reset-all-btn {
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--text-light);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .reset-all-btn:hover {
+            background: var(--text-light);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .config-table th:nth-child(4),
             .config-table td:nth-child(4) {
@@ -380,6 +486,74 @@
                     <li><strong>推理强度</strong>: <code>high</code> 适合普通请求，<code>max</code> 适合复杂 Agent 任务</li>
                 </ul>
             </div>
+
+            <!-- 高级参数配置卡片 -->
+            <div class="advanced-params-card" style="margin-top: 30px;">
+                <h3 style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.1rem;">
+                    高级参数配置
+                    <button class="reset-all-btn" onclick="resetAllParams()" style="float: right; font-size: 0.8rem;">重置全部</button>
+                </h3>
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">参数</th>
+                            <th style="width: 200px;">值</th>
+                            <th>说明</th>
+                            <th style="width: 100px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="advancedParamsBody">
+                        <!-- 由 JavaScript 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 参数说明卡片 -->
+            <div class="info-box" style="margin-top: 20px;">
+                <h3>参数详解</h3>
+                <div class="param-explanation">
+                    <div class="param-item">
+                        <h4>🌡️ 温度 (Temperature)</h4>
+                        <p>控制 AI 输出的随机性和创造性。</p>
+                        <ul>
+                            <li><strong>0</strong>: 最确定，输出最可预测，适合需要精确答案的任务</li>
+                            <li><strong>1</strong>: 默认值，平衡创造性和准确性</li>
+                            <li><strong>2</strong>: 最随机，最具创造性，适合头脑风暴、创意写作</li>
+                        </ul>
+                        <p class="tip">💡 建议：写代码用 0.3-0.5，创意写作用 0.7-1.2</p>
+                    </div>
+                    <div class="param-item">
+                        <h4>🎯 核采样 (Top P)</h4>
+                        <p>控制 AI 选择词汇的范围。</p>
+                        <ul>
+                            <li><strong>0.1</strong>: 只从概率最高的 10% 词汇中选择，更保守</li>
+                            <li><strong>0.5</strong>: 从概率最高的 50% 词汇中选择</li>
+                            <li><strong>1.0</strong>: 默认值，考虑所有词汇，最多样</li>
+                        </ul>
+                        <p class="tip">💡 建议：通常保持默认值 1.0，与温度参数配合调节即可</p>
+                    </div>
+                    <div class="param-item">
+                        <h4>🔄 频率惩罚 (Frequency Penalty)</h4>
+                        <p>降低重复使用相同词汇的概率。</p>
+                        <ul>
+                            <li><strong>正值 (0-2)</strong>: 减少重复，输出更多样化</li>
+                            <li><strong>0</strong>: 默认值，不惩罚重复</li>
+                            <li><strong>负值 (-2-0)</strong>: 允许更多重复</li>
+                        </ul>
+                        <p class="tip">💡 建议：长文本生成时设置 0.3-0.7 避免重复</p>
+                    </div>
+                    <div class="param-item">
+                        <h4>✨ 存在惩罚 (Presence Penalty)</h4>
+                        <p>鼓励 AI 谈论新话题，增加内容多样性。</p>
+                        <ul>
+                            <li><strong>正值 (0-2)</strong>: 鼓励引入新话题，内容更丰富</li>
+                            <li><strong>0</strong>: 默认值，不强制多样性</li>
+                            <li><strong>负值 (-2-0)</strong>: 允许聚焦同一话题</li>
+                        </ul>
+                        <p class="tip">💡 建议：对话场景设置 0.3-0.8 让回复更有趣</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -389,6 +563,14 @@
         // 配置数据
         let configs = [];
 
+        // 默认参数值（最保守、最确定）
+        const defaultParams = {
+            temperature: 0.0,
+            topP: 0.1,
+            frequencyPenalty: 1.0,
+            presencePenalty: -2.0
+        };
+
         // 加载配置
         async function loadConfigs() {
             try {
@@ -396,6 +578,7 @@
                 if (response.ok) {
                     configs = await response.json();
                     renderTable();
+                    renderAdvancedParams();
                 } else {
                     showToast('加载配置失败', 'error');
                 }
@@ -468,6 +651,161 @@
             });
         }
 
+        // 渲染高级参数（使用第一个配置的参数作为全局参数）
+        function renderAdvancedParams() {
+            const tbody = document.getElementById('advancedParamsBody');
+            tbody.innerHTML = '';
+
+            // 使用第一个配置的参数值
+            const firstConfig = configs[0] || {};
+
+            // 高级参数定义
+            const params = [
+                {
+                    key: 'temperature',
+                    name: '温度 (Temperature)',
+                    min: 0,
+                    max: 2,
+                    step: 0.1,
+                    value: firstConfig.temperature ?? defaultParams.temperature,
+                    description: '控制输出的随机性，0=确定，1=默认，2=最随机'
+                },
+                {
+                    key: 'topP',
+                    name: '核采样 (Top P)',
+                    min: 0,
+                    max: 1,
+                    step: 0.1,
+                    value: firstConfig.topP ?? defaultParams.topP,
+                    description: '候选词范围，0.1=最保守，1.0=最多样'
+                },
+                {
+                    key: 'frequencyPenalty',
+                    name: '频率惩罚',
+                    min: -2,
+                    max: 2,
+                    step: 0.1,
+                    value: firstConfig.frequencyPenalty ?? defaultParams.frequencyPenalty,
+                    description: '减少重复用词，正值减少重复，负值允许重复'
+                },
+                {
+                    key: 'presencePenalty',
+                    name: '存在惩罚',
+                    min: -2,
+                    max: 2,
+                    step: 0.1,
+                    value: firstConfig.presencePenalty ?? defaultParams.presencePenalty,
+                    description: '鼓励新话题，正值增加多样性，负值允许聚焦'
+                }
+            ];
+
+            params.forEach((param, index) => {
+                const tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="feature-name">${param.name}</div>
+                    </td>
+                    <td>
+                        <input type="range" class="param-slider" id="param-${param.key}"
+                            min="${param.min}" max="${param.max}" step="${param.step}"
+                            value="${param.value}"
+                            oninput="updateParamValue('${param.key}', this.value)"
+                            onchange="markAdvancedChanged()">
+                        <span class="param-value" id="param-value-${param.key}">${param.value}</span>
+                    </td>
+                    <td style="color: var(--text-light); font-size: 0.85rem;">
+                        ${param.description}
+                    </td>
+                    <td>
+                        <button class="reset-btn" onclick="resetParam('${param.key}')">重置</button>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 更新参数显示值
+        function updateParamValue(key, value) {
+            document.getElementById(`param-value-${key}`).textContent = parseFloat(value).toFixed(1);
+        }
+
+        // 标记高级参数已修改
+        function markAdvancedChanged() {
+            const saveBtn = document.getElementById('save-advanced-params');
+            if (saveBtn) {
+                saveBtn.textContent = '保存全部 *';
+                saveBtn.style.background = 'linear-gradient(135deg, #ff9800, #f44336)';
+            }
+        }
+
+        // 重置单个参数
+        function resetParam(key) {
+            const slider = document.getElementById(`param-${key}`);
+            slider.value = defaultParams[key];
+            updateParamValue(key, defaultParams[key]);
+            markAdvancedChanged();
+        }
+
+        // 重置所有参数
+        function resetAllParams() {
+            Object.keys(defaultParams).forEach(key => {
+                const slider = document.getElementById(`param-${key}`);
+                if (slider) {
+                    slider.value = defaultParams[key];
+                    updateParamValue(key, defaultParams[key]);
+                }
+            });
+
+            // 保存到所有配置
+            saveAdvancedParams();
+            showToast('参数已重置为默认值');
+        }
+
+        // 保存高级参数到所有配置
+        async function saveAdvancedParams() {
+            const dto = {
+                temperature: parseFloat(document.getElementById('param-temperature').value),
+                topP: parseFloat(document.getElementById('param-topP').value),
+                frequencyPenalty: parseFloat(document.getElementById('param-frequencyPenalty').value),
+                presencePenalty: parseFloat(document.getElementById('param-presencePenalty').value)
+            };
+
+            // 保存到每个功能配置
+            let success = true;
+            for (const config of configs) {
+                try {
+                    const response = await fetch(`/api/deepseek-config/${config.featureCode}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(dto)
+                    });
+                    if (!response.ok) {
+                        success = false;
+                    }
+                } catch (e) {
+                    success = false;
+                    console.error('保存参数失败:', e);
+                }
+            }
+
+            if (success) {
+                // 更新本地数据
+                configs.forEach(config => {
+                    config.temperature = dto.temperature;
+                    config.topP = dto.topP;
+                    config.frequencyPenalty = dto.frequencyPenalty;
+                    config.presencePenalty = dto.presencePenalty;
+                });
+                renderTable();
+                renderAdvancedParams();
+                showToast('高级参数已保存到所有功能');
+            } else {
+                showToast('部分保存失败', 'error');
+            }
+        }
+
         // 标记已修改
         function markChanged(index) {
             const saveBtn = document.getElementById(`save-${index}`);
@@ -485,7 +823,12 @@
             const dto = {
                 model: document.getElementById(`model-${index}`).value,
                 thinkingEnabled: document.getElementById(`thinking-${index}`).checked,
-                reasoningEffort: document.getElementById(`effort-${index}`).value
+                reasoningEffort: document.getElementById(`effort-${index}`).value,
+                // 保留高级参数
+                temperature: configs[index].temperature,
+                topP: configs[index].topP,
+                frequencyPenalty: configs[index].frequencyPenalty,
+                presencePenalty: configs[index].presencePenalty
             };
 
             try {
@@ -530,6 +873,7 @@
                     const updated = await response.json();
                     configs[index] = updated;
                     renderTable();
+                    renderAdvancedParams();
                     showToast('配置已重置');
                 } else {
                     showToast('重置失败', 'error');

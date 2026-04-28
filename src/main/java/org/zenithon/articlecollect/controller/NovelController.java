@@ -214,7 +214,7 @@ public class NovelController {
             return ResponseEntity.badRequest().body("章节标题不能为空");
         }
         
-        Chapter updatedChapter = novelService.updateChapter(chapterId, title.trim(), content);
+        Chapter updatedChapter = novelService.updateChapter(chapterId, title.trim(), content, null);
         return ResponseEntity.ok(updatedChapter);
     }
     
@@ -287,7 +287,7 @@ public class NovelController {
         }
         
         try {
-            Chapter updatedChapter = novelService.updateChapter(chapterId, title.trim(), content);
+            Chapter updatedChapter = novelService.updateChapter(chapterId, title.trim(), content, null);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "章节更新成功");

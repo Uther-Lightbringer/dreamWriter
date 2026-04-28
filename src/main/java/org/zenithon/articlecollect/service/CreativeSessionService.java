@@ -518,7 +518,14 @@ public class CreativeSessionService {
                                             // 处理推理内容（reasoning_content）
                                             JsonNode reasoningNode = delta.get("reasoning_content");
                                             if (reasoningNode != null && !reasoningNode.isNull() && reasoningNode.isTextual()) {
-                                                reasoningContent.append(reasoningNode.asText());
+                                                String reasoningChunk = reasoningNode.asText();
+                                                if (reasoningChunk != null && !reasoningChunk.isEmpty()) {
+                                                    reasoningContent.append(reasoningChunk);
+                                                    // 实时发送推理内容事件
+                                                    emitter.send(SseEmitter.event()
+                                                            .name("reasoning_content")
+                                                            .data(objectMapper.writeValueAsString(Map.of("text", reasoningChunk))));
+                                                }
                                             }
 
                                             // 处理内容
@@ -781,7 +788,14 @@ public class CreativeSessionService {
 
                                             JsonNode reasoningNode = delta.get("reasoning_content");
                                             if (reasoningNode != null && !reasoningNode.isNull() && reasoningNode.isTextual()) {
-                                                reasoningContent.append(reasoningNode.asText());
+                                                String reasoningChunk = reasoningNode.asText();
+                                                if (reasoningChunk != null && !reasoningChunk.isEmpty()) {
+                                                    reasoningContent.append(reasoningChunk);
+                                                    // 实时发送推理内容事件
+                                                    emitter.send(SseEmitter.event()
+                                                            .name("reasoning_content")
+                                                            .data(objectMapper.writeValueAsString(Map.of("text", reasoningChunk))));
+                                                }
                                             }
 
                                             JsonNode contentNode = delta.get("content");
@@ -931,55 +945,57 @@ public class CreativeSessionService {
     @SuppressWarnings("unchecked")
     private void processToolCalls(List<Map<String, Object>> toolCalls, SseEmitter emitter,
                                   CreativeSession session, List<Map<String, Object>> messages) {
-        try {
-            // 发送工具调用开始事件
-            for (Map<String, Object> toolCall : toolCalls) {
-                Map<String, Object> function = (Map<String, Object>) toolCall.get("function");
-                String functionName = function != null ? (String) function.get("name") : "";
-                String argumentsJson = function != null ? (String) function.get("arguments") : "{}";
-                String displayName = TOOL_NAME_MAP.getOrDefault(functionName, functionName);
-
-                // 解析参数并提取关键信息用于显示
-                String paramsDisplay = extractParamsDisplay(functionName, argumentsJson);
-
-                try {
-                    emitter.send(SseEmitter.event()
-                            .name("tool_call_start")
-                            .data(objectMapper.writeValueAsString(Map.of(
-                                    "tool", functionName,
-                                    "displayName", displayName,
-                                    "params", paramsDisplay
-                            ))));
-                } catch (Exception e) {
-                    logger.warn("发送工具调用开始事件失败: {}", e.getMessage());
-                }
+        // 第一步：为所有工具调用分配/确认唯一的 toolCallId，并发送 tool_call_start 事件
+        Set<String> assignedIds = new HashSet<>();
+        for (Map<String, Object> toolCall : toolCalls) {
+            String toolCallId = (String) toolCall.get("id");
+            if (toolCallId == null || toolCallId.isEmpty()) {
+                toolCallId = "auto_id_" + UUID.randomUUID().toString().substring(0, 8);
+                toolCall.put("id", toolCallId); // 写回，确保后续循环使用相同 ID
             }
 
-            // 检查重复的 tool_call_id
-            Set<String> seenIds = new HashSet<>();
-            for (Map<String, Object> toolCall : toolCalls) {
-                String toolCallId = (String) toolCall.get("id");
+            // 处理重复的 id
+            if (assignedIds.contains(toolCallId)) {
+                toolCallId = "auto_id_" + UUID.randomUUID().toString().substring(0, 8);
+                toolCall.put("id", toolCallId);
+            }
+            assignedIds.add(toolCallId);
 
-                // 如果 toolCallId 为空，生成一个默认 id
-                if (toolCallId == null || toolCallId.isEmpty()) {
-                    toolCallId = "auto_id_" + UUID.randomUUID().toString().substring(0, 8);
-                    logger.info("为工具调用生成默认 id: {}", toolCallId);
-                }
+            Map<String, Object> function = (Map<String, Object>) toolCall.get("function");
+            String functionName = function != null ? (String) function.get("name") : "";
+            String argumentsJson = function != null ? (String) function.get("arguments") : "{}";
+            String displayName = TOOL_NAME_MAP.getOrDefault(functionName, functionName);
 
-                if (seenIds.contains(toolCallId)) {
-                    logger.warn("发现重复的 tool_call_id: {}, 跳过", toolCallId);
-                    continue;
-                }
-                seenIds.add(toolCallId);
+            // 解析参数并提取关键信息用于显示
+            String paramsDisplay = extractParamsDisplay(functionName, argumentsJson);
 
-                Map<String, Object> function = (Map<String, Object>) toolCall.get("function");
-                String functionName = function != null ? (String) function.get("name") : "";
-                String argumentsJson = function != null ? (String) function.get("arguments") : "{}";
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("tool_call_start")
+                        .data(objectMapper.writeValueAsString(Map.of(
+                                "callId", toolCallId,
+                                "tool", functionName,
+                                "displayName", displayName,
+                                "params", paramsDisplay
+                        ))));
+            } catch (Exception e) {
+                logger.warn("发送工具调用开始事件失败: {}", e.getMessage());
+            }
+        }
 
-                logger.info("处理工具调用: {}({})", functionName, argumentsJson);
+        // 第二步：执行工具调用并发送 tool_result 事件
+        for (Map<String, Object> toolCall : toolCalls) {
+            String toolCallId = (String) toolCall.get("id");
+            Map<String, Object> function = (Map<String, Object>) toolCall.get("function");
+            String functionName = function != null ? (String) function.get("name") : "";
+            String argumentsJson = function != null ? (String) function.get("arguments") : "{}";
 
-                String result = "";
+            logger.info("处理工具调用: {}({})", functionName, argumentsJson);
 
+            String result;
+            boolean success = true;
+
+            try {
                 switch (functionName) {
                     case "preview_params":
                         result = previewParams(session);
@@ -1037,25 +1053,34 @@ public class CreativeSessionService {
                         break;
                     default:
                         result = "{\"error\": \"未知工具: " + functionName + "\"}";
+                        success = false;
                 }
+            } catch (Exception e) {
+                logger.error("工具调用 {} 执行失败: {}", functionName, e.getMessage(), e);
+                result = "{\"success\": false, \"error\": \"" + escapeJson(e.getMessage()) + "\"}";
+                success = false;
+            }
 
-                // 添加工具结果到消息历史
-                messages.add(Map.of(
-                        "role", "tool",
-                        "tool_call_id", toolCallId,
-                        "content", result
-                ));
+            // 添加工具结果到消息历史
+            messages.add(Map.of(
+                    "role", "tool",
+                    "tool_call_id", toolCallId,
+                    "content", result
+            ));
 
-                // 发送工具结果事件
+            // 发送工具结果事件（确保即使失败也会发送，让前端知道工具调用已结束）
+            try {
                 emitter.send(SseEmitter.event()
                         .name("tool_result")
                         .data(objectMapper.writeValueAsString(Map.of(
+                                "callId", toolCallId,
                                 "tool", functionName,
-                                "result", result
+                                "result", result,
+                                "success", success
                         ))));
+            } catch (Exception e) {
+                logger.warn("发送工具结果事件失败: {}", e.getMessage());
             }
-        } catch (Exception e) {
-            logger.error("处理工具调用失败: {}", e.getMessage(), e);
         }
     }
 
@@ -3672,5 +3697,17 @@ public class CreativeSessionService {
         } catch (Exception e) {
             logger.error("发送错误事件失败: {}", e.getMessage());
         }
+    }
+
+    /**
+     * 转义 JSON 字符串
+     */
+    private String escapeJson(String text) {
+        if (text == null) return "";
+        return text.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

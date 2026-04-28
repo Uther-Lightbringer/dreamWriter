@@ -838,7 +838,7 @@ public class AIPromptService {
     public String callDeepSeekAPIWithThinking(String systemPrompt, String userPrompt,
                                                boolean enableThinking, String reasoningEffort,
                                                int maxTokens) throws Exception {
-        return callDeepSeekAPIWithThinking(systemPrompt, userPrompt, enableThinking, reasoningEffort, maxTokens, false);
+        return callDeepSeekAPIWithThinking(systemPrompt, userPrompt, enableThinking, reasoningEffort, maxTokens, false, null, null, null, null, null);
     }
 
     /**
@@ -855,19 +855,67 @@ public class AIPromptService {
     public String callDeepSeekAPIWithThinking(String systemPrompt, String userPrompt,
                                                boolean enableThinking, String reasoningEffort,
                                                int maxTokens, boolean jsonMode) throws Exception {
+        return callDeepSeekAPIWithThinking(systemPrompt, userPrompt, enableThinking, reasoningEffort, maxTokens, jsonMode, null, null, null, null, null);
+    }
+
+    /**
+     * 调用 DeepSeek API (完整参数版本，支持所有配置)
+     * @param systemPrompt 系统提示词
+     * @param userPrompt 用户提示词
+     * @param enableThinking 是否开启思考模式
+     * @param reasoningEffort 思考强度 (high/max)
+     * @param maxTokens 最大token数
+     * @param jsonMode 是否启用JSON模式
+     * @param temperature 温度参数 (0-2)
+     * @param topP 核采样参数 (0-1)
+     * @param frequencyPenalty 频率惩罚 (-2到2)
+     * @param presencePenalty 存在惩罚 (-2到2)
+     * @param model 指定模型 (可为null使用默认)
+     * @return AI返回的内容
+     * @throws Exception 调用异常
+     */
+    public String callDeepSeekAPIWithThinking(String systemPrompt, String userPrompt,
+                                               boolean enableThinking, String reasoningEffort,
+                                               int maxTokens, boolean jsonMode,
+                                               Double temperature, Double topP,
+                                               Double frequencyPenalty, Double presencePenalty,
+                                               String model) throws Exception {
         // 检查 API Key 是否配置
         if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().trim().isEmpty()) {
             logger.warn("DeepSeek API Key 未配置");
             throw new RuntimeException("DeepSeek API Key 未配置，请设置环境变量 DEEPSEEK_API_KEY");
         }
 
+        // 使用指定的模型，如果为空则使用默认模型
+        String useModel = (model != null && !model.isEmpty()) ? model : deepSeekConfig.getModel();
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", deepSeekConfig.getModel());
+        requestBody.put("model", useModel);
         requestBody.put("max_tokens", maxTokens);
+
+        // 温度参数
+        if (temperature != null) {
+            requestBody.put("temperature", temperature);
+        }
+
+        // 核采样参数
+        if (topP != null) {
+            requestBody.put("top_p", topP);
+        }
+
+        // 频率惩罚
+        if (frequencyPenalty != null) {
+            requestBody.put("frequency_penalty", frequencyPenalty);
+        }
+
+        // 存在惩罚
+        if (presencePenalty != null) {
+            requestBody.put("presence_penalty", presencePenalty);
+        }
 
         // 思考模式配置
         if (enableThinking) {
@@ -904,7 +952,8 @@ public class AIPromptService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
-        logger.debug("调用DeepSeek API, thinking={}, maxTokens={}, jsonMode={}", enableThinking, maxTokens, jsonMode);
+        logger.debug("调用DeepSeek API, model={}, thinking={}, maxTokens={}, jsonMode={}, temp={}, topP={}, freqPen={}, presPen={}",
+                useModel, enableThinking, maxTokens, jsonMode, temperature, topP, frequencyPenalty, presencePenalty);
         ResponseEntity<String> response = restTemplate.postForEntity(
             deepSeekConfig.getApiUrl(),
             request,
@@ -965,103 +1014,8 @@ public class AIPromptService {
     public String callDeepSeekAPIWithModel(String systemPrompt, String userPrompt,
                                             boolean enableThinking, String reasoningEffort,
                                             int maxTokens, boolean jsonMode, String model) throws Exception {
-        // 检查 API Key 是否配置
-        if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().trim().isEmpty()) {
-            logger.warn("DeepSeek API Key 未配置");
-            throw new RuntimeException("DeepSeek API Key 未配置，请设置环境变量 DEEPSEEK_API_KEY");
-        }
-
-        // 使用指定的模型，如果为空则使用默认模型
-        String useModel = (model != null && !model.isEmpty()) ? model : deepSeekConfig.getModel();
-        logger.info("使用模型: {}", useModel);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + deepSeekConfig.getApiKey());
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", useModel);
-        requestBody.put("max_tokens", maxTokens);
-
-        // 思考模式配置
-        if (enableThinking) {
-            Map<String, Object> thinking = new HashMap<>();
-            thinking.put("type", "enabled");
-            requestBody.put("thinking", thinking);
-            if (reasoningEffort != null) {
-                requestBody.put("reasoning_effort", reasoningEffort);
-            }
-        }
-
-        // JSON模式配置
-        if (jsonMode) {
-            Map<String, String> responseFormat = new HashMap<>();
-            responseFormat.put("type", "json_object");
-            requestBody.put("response_format", responseFormat);
-        }
-
-        // 构建消息
-        List<Map<String, String>> messages = new ArrayList<>();
-        if (systemPrompt != null && !systemPrompt.isEmpty()) {
-            Map<String, String> systemMessage = new HashMap<>();
-            systemMessage.put("role", "system");
-            systemMessage.put("content", systemPrompt);
-            messages.add(systemMessage);
-        }
-        if (userPrompt != null && !userPrompt.isEmpty()) {
-            Map<String, String> userMessage = new HashMap<>();
-            userMessage.put("role", "user");
-            userMessage.put("content", userPrompt);
-            messages.add(userMessage);
-        }
-        requestBody.put("messages", messages);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
-        logger.debug("调用DeepSeek API, model={}, thinking={}, maxTokens={}, jsonMode={}", useModel, enableThinking, maxTokens, jsonMode);
-        ResponseEntity<String> response = restTemplate.postForEntity(
-            deepSeekConfig.getApiUrl(),
-            request,
-            String.class
-        );
-
-        logger.debug("DeepSeek API响应状态: {}", response.getStatusCode());
-
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            String responseBody = response.getBody();
-            logger.debug("DeepSeek API响应体: {}", responseBody.length() > 500 ? responseBody.substring(0, 500) + "..." : responseBody);
-
-            JsonNode rootNode = objectMapper.readTree(responseBody);
-            JsonNode choices = rootNode.path("choices");
-
-            if (choices.isArray() && choices.size() > 0) {
-                JsonNode messageNode = choices.get(0).path("message");
-                String content = messageNode.path("content").asText();
-
-                // 如果content为空，尝试使用reasoning_content
-                if ((content == null || content.isEmpty()) && messageNode.has("reasoning_content")) {
-                    content = messageNode.path("reasoning_content").asText();
-                    logger.debug("使用reasoning_content作为响应内容");
-                }
-
-                // 清理可能的思考标签
-                if (content != null && !content.isEmpty()) {
-                    content = THINK_TAG_PATTERN.matcher(content).replaceAll("").trim();
-                    return content;
-                }
-            }
-
-            // 检查是否有错误信息
-            JsonNode errorNode = rootNode.path("error");
-            if (!errorNode.isMissingNode()) {
-                String errorMsg = errorNode.path("message").asText();
-                throw new RuntimeException("DeepSeek API错误: " + errorMsg);
-            }
-
-            logger.warn("DeepSeek API响应中没有有效内容, choices: {}", choices);
-        }
-
-        throw new RuntimeException("API调用失败: " + response.getStatusCode());
+        return callDeepSeekAPIWithThinking(systemPrompt, userPrompt, enableThinking, reasoningEffort,
+                maxTokens, jsonMode, null, null, null, null, model);
     }
 
     /**
@@ -1286,7 +1240,12 @@ public class AIPromptService {
                 null, prompt,
                 config.getThinkingEnabled(),
                 config.getReasoningEffort(),
-                2000, false
+                2000, false,
+                config.getTemperature(),
+                config.getTopP(),
+                config.getFrequencyPenalty(),
+                config.getPresencePenalty(),
+                config.getModel()
         );
     }
 
@@ -1323,6 +1282,26 @@ public class AIPromptService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", config.getModel());
             requestBody.put("stream", true);
+
+            // 温度参数
+            if (config.getTemperature() != null) {
+                requestBody.put("temperature", config.getTemperature());
+            }
+
+            // 核采样参数
+            if (config.getTopP() != null) {
+                requestBody.put("top_p", config.getTopP());
+            }
+
+            // 频率惩罚
+            if (config.getFrequencyPenalty() != null) {
+                requestBody.put("frequency_penalty", config.getFrequencyPenalty());
+            }
+
+            // 存在惩罚
+            if (config.getPresencePenalty() != null) {
+                requestBody.put("presence_penalty", config.getPresencePenalty());
+            }
 
             // 思考模式配置
             if (config.getThinkingEnabled()) {

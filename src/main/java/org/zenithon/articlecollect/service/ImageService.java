@@ -2,7 +2,6 @@ package org.zenithon.articlecollect.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.zenithon.articlecollect.entity.Novel;
 import org.zenithon.articlecollect.entity.Chapter;
@@ -35,7 +34,6 @@ public class ImageService {
     /**
      * 上传小说封面图片
      */
-    @Transactional
     public ImageUploadResponse uploadNovelCoverImage(Long novelId, MultipartFile file) {
         try {
             // 验证小说是否存在
@@ -67,7 +65,6 @@ public class ImageService {
     /**
      * 上传章节插图
      */
-    @Transactional
     public ImageUploadResponse uploadChapterImage(Long chapterId, MultipartFile file) {
         try {
             // 验证章节是否存在
@@ -115,7 +112,6 @@ public class ImageService {
     /**
      * 删除小说封面图片
      */
-    @Transactional
     public ImageUploadResponse deleteNovelCoverImage(Long novelId) {
         try {
             // 验证小说是否存在
@@ -146,7 +142,6 @@ public class ImageService {
     /**
      * 删除章节插图
      */
-    @Transactional
     public ImageUploadResponse deleteChapterImage(Long chapterId) {
         try {
             // 验证章节是否存在
@@ -193,7 +188,6 @@ public class ImageService {
     /**
      * 上传角色卡图片
      */
-    @Transactional
     public ImageUploadResponse uploadCharacterImage(Long characterId, MultipartFile file) {
         try {
             // 验证角色卡是否存在
@@ -226,7 +220,6 @@ public class ImageService {
      * 上传图片到章节内容（不更新章节封面，仅保存文件并返回 URL）
      * 用于将 AI 生成的图片插入到章节正文中
      */
-    @Transactional
     public ImageUploadResponse uploadChapterContentImage(Long chapterId, MultipartFile file) {
         try {
             // 验证章节是否存在

@@ -2,7 +2,6 @@ package org.zenithon.articlecollect.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.zenithon.articlecollect.entity.Chapter;
 import org.zenithon.articlecollect.entity.ChapterTag;
 import org.zenithon.articlecollect.repository.ChapterRepository;
@@ -53,7 +52,6 @@ public class ChapterTagService {
      * @param chapterId 章节ID
      * @return 生成的标签列表
      */
-    @Transactional
     public List<ChapterTag> analyzeAndGenerateTags(Long chapterId) {
         // 检查是否已有标签
         List<ChapterTag> existingTags = chapterTagRepository.findByChapterId(chapterId);
@@ -110,7 +108,6 @@ public class ChapterTagService {
      * @param novelId 小说ID
      * @return 章节ID到标签列表的映射
      */
-    @Transactional
     public Map<Long, List<ChapterTag>> batchAnalyzeNovelChapters(Long novelId) {
         // 先查询该小说的所有现有标签
         List<ChapterTag> existingTags = chapterTagRepository.findByNovelId(novelId);
@@ -151,7 +148,6 @@ public class ChapterTagService {
      * 删除章节的所有标签
      * @param chapterId 章节ID
      */
-    @Transactional
     public void deleteChapterTags(Long chapterId) {
         chapterTagRepository.deleteByChapterId(chapterId);
     }

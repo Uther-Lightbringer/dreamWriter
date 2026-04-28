@@ -53,6 +53,7 @@
   let currentSessionId = null;
   let voiceInput = null;
   let sessions = [];
+  let pendingSelections = {};  // 存储选项选择状态
   
   const tabTitles = {
     'home': '创作引导',
@@ -99,18 +100,385 @@
     }
   };
   
-  // 添加 Markdown 渲染函数
+  // 提取 OPTIONS 标记的函数
+  function extractOptions(text) {
+    const optionsRegex = /\[OPTIONS:([\w\u4e00-\u9fa5-]+)(?::([^\]]+))?\]([\s\S]*?)\[\/OPTIONS\]/g;
+    const taggedOptions = [];
+    let match;
+
+    while ((match = optionsRegex.exec(text)) !== null) {
+      const field = match[1];
+      const displayName = match[2] || null;
+      const optionsStr = match[3].trim();
+      const options = optionsStr.split('|').map(opt => {
+        opt = opt.trim();
+        return { label: opt, value: opt, field };
+      });
+      taggedOptions.push({ field, displayName, options });
+    }
+
+    // 清理标记，返回纯文本
+    const cleanText = text.replace(optionsRegex, '').trim();
+
+    return { cleanText, taggedOptions };
+  }
+
+  // 渲染选项按钮
+  function renderOptionsButtons(taggedOptions, messageId) {
+    if (taggedOptions.length === 0) return '';
+
+    const fieldsHtml = taggedOptions.map(({ field, displayName, options }) => {
+      const label = displayName || field;
+
+      const buttonsHtml = options.map(opt => `
+        <button class="option-btn" data-value="${escapeHtml(opt.value)}" data-field="${escapeHtml(field)}" data-label="${escapeHtml(opt.label)}" onclick="handleOptionClick(this)">
+          ${opt.label.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')}
+        </button>
+      `).join('');
+
+      return `
+        <div class="option-field" data-field="${escapeHtml(field)}" data-display-name="${escapeHtml(label)}">
+          ${label ? `<div class="option-field-label">${escapeHtml(label)}</div>` : ''}
+          <div class="option-buttons">
+            ${buttonsHtml}
+          </div>
+          <div class="custom-input-container">
+            <input type="text" class="custom-option-input" data-field="${escapeHtml(field)}" placeholder="或直接输入自定义内容..." onkeydown="if(event.key==='Enter' && this.value.trim()) handleCustomInput(this)">
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="options-container" data-message-id="${messageId}">
+        ${fieldsHtml}
+        <div class="options-actions">
+          <button class="btn-skip" onclick="skipOptions()">跳过</button>
+          <button class="btn-confirm" onclick="confirmAndSendOptions()">确认发送</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 处理选项按钮点击
+  window.handleOptionClick = function(btn) {
+    const field = btn.dataset.field;
+    const value = btn.dataset.value;
+    const label = btn.dataset.label;
+    const fieldContainer = btn.closest('.option-field');
+
+    // 清除自定义输入框
+    const customInput = fieldContainer.querySelector('.custom-option-input');
+    if (customInput) {
+      customInput.value = '';
+    }
+
+    // 切换选中状态
+    btn.classList.toggle('selected');
+
+    // 收集所有选中的值
+    const selectedValues = [];
+    const selectedLabels = [];
+    fieldContainer.querySelectorAll('.option-btn.selected').forEach(b => {
+      selectedValues.push(b.dataset.value);
+      selectedLabels.push(b.dataset.label);
+    });
+
+    // 更新 pendingSelections
+    if (selectedValues.length > 0) {
+      const displayName = fieldContainer.dataset.displayName || null;
+      pendingSelections[field] = {
+        value: selectedValues.length === 1 ? selectedValues[0] : selectedValues,
+        label: selectedLabels.join('、'),
+        displayName,
+        isMulti: selectedValues.length > 1
+      };
+
+      // 更新状态显示
+      let statusEl = fieldContainer.querySelector('.selection-status');
+      if (!statusEl) {
+        statusEl = document.createElement('div');
+        statusEl.className = 'selection-status';
+        fieldContainer.appendChild(statusEl);
+      }
+      statusEl.textContent = selectedValues.length === 1
+        ? '✓ 已选：' + selectedLabels[0]
+        : '✓ 已选 ' + selectedValues.length + ' 个';
+    } else {
+      delete pendingSelections[field];
+      const statusEl = fieldContainer.querySelector('.selection-status');
+      if (statusEl) statusEl.remove();
+    }
+  };
+
+  // 处理自定义输入
+  window.handleCustomInput = function(input) {
+    const field = input.dataset.field;
+    const value = input.value.trim();
+    if (!value) return;
+
+    const fieldContainer = input.closest('.option-field');
+    const displayName = fieldContainer.dataset.displayName || null;
+
+    // 清除该字段所有按钮的选中状态
+    fieldContainer.querySelectorAll('.option-btn.selected').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+
+    pendingSelections[field] = {
+      value: value,
+      label: value,
+      displayName,
+      isMulti: false
+    };
+
+    // 更新状态显示
+    let statusEl = fieldContainer.querySelector('.selection-status');
+    if (!statusEl) {
+      statusEl = document.createElement('div');
+      statusEl.className = 'selection-status';
+      fieldContainer.appendChild(statusEl);
+    }
+    statusEl.textContent = '✓ 已选：' + value;
+  };
+
+  // 跳过选项
+  window.skipOptions = function() {
+    pendingSelections = {};
+  };
+
+  // 确认并发送选项
+  window.confirmAndSendOptions = function() {
+    const entries = Object.entries(pendingSelections);
+    if (entries.length === 0) {
+      alert('请先选择至少一个选项');
+      return;
+    }
+
+    // 构建消息文本
+    const parts = entries.map(([field, data]) => {
+      if (data.displayName) {
+        return `${data.displayName}：${data.label}`;
+      }
+      return `${field}：${data.label}`;
+    });
+
+    const message = parts.join('\n');
+
+    // 添加到用户消息
+    addMessage(message, 'user');
+
+    // 清空选择
+    pendingSelections = {};
+
+    // 发送到服务器
+    sendMessageToServer(message);
+  };
+
+  // 发送消息到服务器
+  async function sendMessageToServer(message) {
+    const input = document.getElementById('chat-input');
+    if (input) input.value = '';
+
+    // 添加AI加载中消息
+    const loadingId = addMessage('思考中...', 'ai', true);
+    let aiMessageEl = null;
+    let fullResponse = '';
+
+    try {
+      await chatWithSession(
+        currentSessionId,
+        message,
+        (data) => {
+          if (data.content) {
+            fullResponse += data.content;
+
+            if (!aiMessageEl) {
+              removeMessage(loadingId);
+              // 流式过程中显示纯文本，不渲染Markdown和选项
+              aiMessageEl = addSimpleMessage(fullResponse, 'ai');
+            } else {
+              const msgContainer = document.getElementById(`msg-${aiMessageEl}`);
+              if (msgContainer) {
+                const p = msgContainer.querySelector('p');
+                if (p) {
+                  p.textContent = fullResponse;
+                }
+              }
+            }
+          }
+        },
+        (error) => {
+          console.error('Chat error:', error);
+          removeMessage(loadingId);
+          addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
+        }
+      );
+
+      // 流式完成后，删除临时消息，重新渲染完整消息（包含Markdown和选项按钮）
+      if (aiMessageEl) {
+        removeMessage(aiMessageEl);
+        addMessage(fullResponse, 'ai');
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      removeMessage(loadingId);
+      addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
+    }
+  }
+
+  // 添加简单消息（纯文本，用于流式过程中）
+  function addSimpleMessage(text, type) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return null;
+
+    const id = Date.now() + Math.random();
+    const div = document.createElement('div');
+    div.id = `msg-${id}`;
+    div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'}`;
+
+    div.innerHTML = `
+      <div class="${type === 'user' ? 'max-w-[85%] bg-dream-purple text-white rounded-2xl rounded-tr-sm' : 'max-w-[90%] bg-gray-100 rounded-2xl rounded-tl-sm'} px-4 py-3">
+        <p class="text-sm">${text}</p>
+      </div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+  }
+
+  // Markdown 渲染函数（支持表格、列表、标题、粗体、斜体、代码）
   function renderMarkdown(text) {
     if (!text) return '';
-    // 简单的 Markdown 解析
+
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    let listType = null;
+    let inTable = false;
+    let tableRows = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      const trimmed = line.trim();
+
+      // 表格行检测：以 | 开头和结尾
+      if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+        if (!inTable) {
+          inTable = true;
+          tableRows = [];
+        }
+        // 跳过分隔行 (| --- | --- |)
+        if (!/^(\|\s*[-:]+\s*)+\|$/.test(trimmed)) {
+          tableRows.push(trimmed);
+        }
+        continue;
+      } else if (inTable) {
+        // 表格结束
+        html += renderTable(tableRows);
+        inTable = false;
+        tableRows = [];
+      }
+
+      // 无序列表检测
+      const unorderedMatch = trimmed.match(/^[-*+]\s+(.*)/);
+      // 有序列表检测
+      const orderedMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+
+      if (unorderedMatch) {
+        if (!inList || listType !== 'ul') {
+          if (inList) html += `</${listType}>`;
+          html += '<ul class="markdown-list">';
+          inList = true;
+          listType = 'ul';
+        }
+        html += `<li>${renderInline(unorderedMatch[1])}</li>`;
+        continue;
+      } else if (orderedMatch) {
+        if (!inList || listType !== 'ol') {
+          if (inList) html += `</${listType}>`;
+          html += '<ol class="markdown-list">';
+          inList = true;
+          listType = 'ol';
+        }
+        html += `<li>${renderInline(orderedMatch[2])}</li>`;
+        continue;
+      } else if (inList && trimmed === '') {
+        // 空行结束列表
+        html += `</${listType}>`;
+        inList = false;
+        listType = null;
+        continue;
+      } else if (inList) {
+        html += `</${listType}>`;
+        inList = false;
+        listType = null;
+      }
+
+      // 标题
+      if (trimmed.startsWith('### ')) {
+        html += `<h3 class="text-lg font-bold mt-4 mb-2">${renderInline(trimmed.slice(4))}</h3>`;
+      } else if (trimmed.startsWith('## ')) {
+        html += `<h2 class="text-xl font-bold mt-4 mb-2">${renderInline(trimmed.slice(3))}</h2>`;
+      } else if (trimmed.startsWith('# ')) {
+        html += `<h1 class="text-2xl font-bold mt-4 mb-2">${renderInline(trimmed.slice(2))}</h1>`;
+      } else if (trimmed === '') {
+        html += '<br>';
+      } else {
+        html += `<p>${renderInline(trimmed)}</p>`;
+      }
+    }
+
+    // 关闭未闭合的元素
+    if (inTable) {
+      html += renderTable(tableRows);
+    }
+    if (inList) {
+      html += `</${listType}>`;
+    }
+
+    return html;
+  }
+
+  function renderTable(rows) {
+    if (rows.length === 0) return '';
+    let html = '<div class="overflow-x-auto my-3"><table class="markdown-table">';
+    // 表头
+    html += '<thead><tr>';
+    const headerCells = rows[0].split('|').filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+    headerCells.forEach(h => {
+      html += `<th>${renderInline(h.trim())}</th>`;
+    });
+    html += '</tr></thead>';
+
+    // 表体
+    if (rows.length > 1) {
+      html += '<tbody>';
+      for (let i = 1; i < rows.length; i++) {
+        html += '<tr>';
+        const cells = rows[i].split('|').filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+        cells.forEach(c => {
+          html += `<td>${renderInline(c.trim())}</td>`;
+        });
+        html += '</tr>';
+      }
+      html += '</tbody>';
+    }
+    html += '</table></div>';
+    return html;
+  }
+
+  function renderInline(text) {
     return text
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
-      .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-      .replace(/`(.*?)`/gim, '<code class="bg-gray-200 px-1 rounded text-sm">$1</code>')
-      .replace(/\n/g, '<br>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   
   // 首页
@@ -203,45 +571,12 @@
       // 过滤掉 system 消息（太长了，不显示）
       const displayMessages = messages.filter(msg => msg.role !== 'system');
       
-      let messagesHtml = '';
-      if (displayMessages.length > 0) {
-        messagesHtml = displayMessages.map(msg => {
-          if (msg.role === 'user') {
-            return `
-              <div class="flex justify-end">
-                <div class="max-w-[85%] bg-dream-purple text-white rounded-2xl rounded-tr-sm px-4 py-3">
-                  <p class="text-sm">${msg.content}</p>
-                </div>
-              </div>
-            `;
-          }
-          // AI 消息使用 Markdown 渲染
-          return `
-            <div class="flex justify-start">
-              <div class="max-w-[90%] bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
-                <div class="text-sm text-gray-800 markdown-content">${renderMarkdown(msg.content || '')}</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      } else {
-        // 自定义欢迎语
-        messagesHtml = `
-          <div class="flex justify-start">
-            <div class="max-w-[85%] bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
-              <p class="text-sm text-gray-700">您好，你想开始创作你的第一部小说吗？</p>
-            </div>
-          </div>
-        `;
-      }
-      
       container.innerHTML = `
         <div class="flex flex-col h-full overflow-hidden">
           <div class="px-4 py-2 bg-dream-pink/30 border-b border-dream-pink/20">
             <p class="text-sm text-gray-600">当前会话: ${session.title || '未命名'}</p>
           </div>
           <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
-            ${messagesHtml}
           </div>
           
           <div class="border-t border-gray-100 p-3 bg-white flex-shrink-0">
@@ -291,6 +626,20 @@
         }
       });
       
+      // 渲染历史消息
+      if (displayMessages.length > 0) {
+        displayMessages.forEach(msg => {
+          if (msg.role === 'user') {
+            addMessage(msg.content, 'user');
+          } else if (msg.role === 'assistant') {
+            addMessage(msg.content || '', 'ai');
+          }
+        });
+      } else {
+        // 自定义欢迎语
+        addMessage('您好，你想开始创作你的第一部小说吗？', 'ai');
+      }
+
       // 滚动到底部
       const chatContainer = document.getElementById('chat-messages');
       chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -517,77 +866,38 @@
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
     if (!message || !currentSessionId) return;
-    
+
     // 添加用户消息到界面
     addMessage(message, 'user');
     input.value = '';
-    
-    // 添加AI加载中消息
-    const loadingId = addMessage('思考中...', 'ai', true);
-    let aiMessageEl = null;
-    let fullResponse = '';
-    
-    try {
-      await chatWithSession(
-        currentSessionId,
-        message,
-        (data) => {
-          // 收到流式数据
-          if (data.content) {
-            fullResponse += data.content;
-            
-            // 更新或创建AI消息元素
-            if (!aiMessageEl) {
-              removeMessage(loadingId);
-              aiMessageEl = addMessage(fullResponse, 'ai');
-            } else {
-              // 更新现有消息内容
-              const msgContainer = document.getElementById(`msg-${aiMessageEl}`);
-              if (msgContainer) {
-                const p = msgContainer.querySelector('p');
-                if (p) p.textContent = fullResponse;
-              }
-            }
-          }
-        },
-        (error) => {
-          console.error('Chat error:', error);
-          removeMessage(loadingId);
-          addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
-        }
-      );
-      
-      // 流式完成后，使用 Markdown 重新渲染
-      if (aiMessageEl) {
-        const msgContainer = document.getElementById(`msg-${aiMessageEl}`);
-        if (msgContainer) {
-          const contentDiv = msgContainer.querySelector('div');
-          if (contentDiv) {
-            contentDiv.innerHTML = renderMarkdown(fullResponse);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      removeMessage(loadingId);
-      addMessage('抱歉，服务暂时不可用，请稍后再试。', 'ai');
-    }
+
+    // 使用新的发送逻辑
+    await sendMessageToServer(message);
   };
   
   function addMessage(text, type, isLoading = false) {
     const container = document.getElementById('chat-messages');
     if (!container) return null;
-    
+
     const id = Date.now() + Math.random();
     const div = document.createElement('div');
     div.id = `msg-${id}`;
     div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'}`;
-    
-    // AI 消息始终使用 Markdown 渲染（加载状态除外）
-    const contentHtml = type === 'ai' && !isLoading
-      ? `<div class="markdown-content">${renderMarkdown(text)}</div>`
-      : `<p class="text-sm ${isLoading ? 'animate-pulse' : ''}">${text}</p>`;
-    
+
+    let contentHtml = '';
+    if (type === 'ai' && !isLoading) {
+      // 提取 OPTIONS 标记
+      const { cleanText, taggedOptions } = extractOptions(text);
+      contentHtml = `<div class="markdown-content">${renderMarkdown(cleanText)}</div>`;
+
+      // 如果有选项，渲染选项按钮
+      if (taggedOptions.length > 0) {
+        contentHtml += renderOptionsButtons(taggedOptions, id);
+      }
+    } else {
+      contentHtml = `<p class="text-sm ${isLoading ? 'animate-pulse' : ''}">${text}</p>`;
+    }
+
     div.innerHTML = `
       <div class="${type === 'user' ? 'max-w-[85%] bg-dream-purple text-white rounded-2xl rounded-tr-sm' : 'max-w-[90%] bg-gray-100 rounded-2xl rounded-tl-sm'} px-4 py-3">
         ${contentHtml}

@@ -45,7 +45,38 @@ public class AsyncConfig {
         
         executor.initialize();
         logger.info("角色卡 AI 绘画任务线程池初始化完成");
-        
+
+        return executor;
+    }
+
+    /**
+     * 小说生成器任务线程池
+     * 用于处理小说生成这种长时间运行的任务
+     */
+    @Bean(name = "novelGeneratorTaskExecutor")
+    public Executor novelGeneratorTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        // 核心线程数：3个，适合并行处理章节
+        executor.setCorePoolSize(3);
+        // 最大线程数：5个
+        executor.setMaxPoolSize(5);
+        // 队列容量
+        executor.setQueueCapacity(10);
+        // 线程名称前缀
+        executor.setThreadNamePrefix("novel-generator-");
+        // 线程空闲时间（秒）
+        executor.setKeepAliveSeconds(120);
+        // 拒绝策略：由调用线程处理
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        // 等待所有任务结束后再关闭线程池
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        // 等待时间（秒）
+        executor.setAwaitTerminationSeconds(300);
+
+        executor.initialize();
+        logger.info("小说生成器任务线程池初始化完成");
+
         return executor;
     }
 }

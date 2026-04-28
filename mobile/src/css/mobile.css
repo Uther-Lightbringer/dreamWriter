@@ -87,3 +87,179 @@ html[data-capacitor] body {
   from { transform: translateY(-100%); }
   to { transform: translateY(0); }
 }
+
+/* Markdown 表格样式 */
+.markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.markdown-table th,
+.markdown-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.markdown-table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* Markdown 列表样式 */
+.markdown-list {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.markdown-list li {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+
+/* Markdown 内容通用 */
+.markdown-content p {
+  margin: 6px 0;
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.markdown-content code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+/* 选项按钮样式（AI对话中的交互选项） */
+.options-container {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(156, 39, 176, 0.15);
+}
+
+.option-field {
+  margin-bottom: 12px;
+}
+
+.option-field:last-of-type {
+  margin-bottom: 8px;
+}
+
+.option-field-label {
+  font-size: 14px;
+  color: #5d4037;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.option-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.option-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(156, 39, 176, 0.3);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #9c27b0;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.option-btn:active {
+  transform: scale(0.95);
+}
+
+.option-btn.selected {
+  background: #9c27b0;
+  color: white;
+  border-color: #9c27b0;
+}
+
+.selection-status {
+  font-size: 12px;
+  color: #9c27b0;
+  margin-top: 4px;
+}
+
+.custom-input-container {
+  margin-top: 8px;
+}
+
+.custom-option-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px dashed rgba(156, 39, 176, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.custom-option-input:focus {
+  border-color: #9c27b0;
+  border-style: solid;
+}
+
+.options-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+.btn-confirm {
+  padding: 8px 20px;
+  background: #9c27b0;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: opacity 0.2s;
+  font-family: inherit;
+}
+
+.btn-confirm:active {
+  opacity: 0.8;
+}
+
+.btn-skip {
+  padding: 8px 20px;
+  background: transparent;
+  color: #8d6e63;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-skip:active {
+  background: #f5f5f5;
+}

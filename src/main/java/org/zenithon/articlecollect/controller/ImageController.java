@@ -43,14 +43,15 @@ public class ImageController {
     
     /**
      * 自动保存 AI 生成的图片到章节目录
+     * 注意：此接口仅保存图片文件，不会覆盖章节封面
      */
     @PostMapping("/chapter/{chapterId}/auto-save")
     public ResponseEntity<ImageUploadResponse> autoSaveAIImage(
             @PathVariable Long chapterId,
             @RequestParam("file") MultipartFile file) {
-        
-        // 使用通用的章节图片保存逻辑
-        ImageUploadResponse response = imageService.uploadChapterImage(chapterId, file);
+
+        // 使用内容图片保存逻辑，不覆盖章节封面
+        ImageUploadResponse response = imageService.uploadChapterContentImage(chapterId, file);
         return ResponseEntity.ok(response);
     }
     

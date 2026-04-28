@@ -8,17 +8,24 @@
 - 创建新小说（只需输入标题）
 - 查看所有小说列表
 - 删除小说（同时删除相关章节）
+- 世界观设置与角色卡管理
 
 ### 📖 章节管理
 - 为小说创建章节（标题 + 内容）
 - 查看小说的所有章节
 - 删除特定章节
+- 章节标签自动分析
 
 ### 📱 阅读体验
 - **章节详情页面**：单独打开章节进行全文阅读
 - **智能导航**：支持上一章、下一章快速切换
 - **章节列表**：随时返回小说的章节列表
 - **面包屑导航**：清晰的页面路径指示
+
+### 🎨 AI功能
+- **AI配图**：自动分析章节内容，调用AI生成配图
+- **AI聊天**：集成DeepSeek AI对话功能
+- **角色图像生成**：为角色卡自动生成AI图像
 
 ### 🔧 REST API接口
 - 完整的HTTP API供外部调用
@@ -27,9 +34,9 @@
 ## 技术栈
 
 - **后端**: Spring Boot 3.0.2 + Java 17
-- **前端**: HTML + JavaScript + CSS
-- **模板引擎**: Thymeleaf
-- **数据存储**: 内存存储（ConcurrentHashMap）
+- **前端**: HTML + JavaScript + CSS + Thymeleaf
+- **数据存储**: H2文件数据库
+- **构建工具**: Maven
 
 ## 🚀 使用流程
 
@@ -236,38 +243,32 @@ src/
 ├── main/
 │   ├── java/
 │   │   └── org/zenithon/articlecollect/
-│   │       ├── controller/          
-│   │       │   ├── NovelController.java    # REST API控制器
-│   │       │   └── PageController.java     # 页面控制器
-│   │       ├── entity/              
-│   │       │   ├── Novel.java              # 小说实体
-│   │       │   ├── Chapter.java            # 章节实体
-│   │       │   └── ChapterDetailView.java  # 章节详情视图实体
-│   │       ├── service/             
-│   │       │   └── NovelService.java       # 小说管理服务
-│   │       └── ArticleCollectApplication.java # 启动类
+│   │       ├── controller/          # Web和REST API控制器
+│   │       ├── service/             # 业务逻辑实现
+│   │       ├── repository/          # 数据访问层
+│   │       ├── entity/              # JPA实体类
+│   │       ├── dto/                 # 数据传输对象
+│   │       ├── config/              # 配置类
+│   │       ├── util/                # 工具类
+│   │       └── ArticleCollectApplication.java
 │   └── resources/
-│       ├── templates/               
-│       │   ├── index.html           # 主页面
-│       │   ├── novel-detail.html    # 小说详情页
-│       │   └── chapter-detail.html  # 章节详情页
+│       ├── templates/               # Thymeleaf模板
+│       ├── static/                  # 静态资源
 │       └── application.properties   # 配置文件
-└── test/                            
+└── test/
 ```
 
 ## 注意事项
 
-- 数据存储在内存中，应用重启后数据会丢失
-- 这是一个演示项目，生产环境建议使用数据库存储
-- 默认端口为8080，如需修改可在application.properties中配置
+- 数据存储在H2文件数据库中，应用重启后数据保留
+- 默认端口为38081，可在application.properties中修改
+- AI功能需要配置相应的API密钥环境变量
 
-## 扩展建议
+## 环境变量配置
 
-1. 集成数据库（MySQL、PostgreSQL等）
-2. 添加用户认证和权限管理
-3. 实现章节内容的富文本编辑
-4. 添加小说分类和标签功能
-5. 实现搜索功能
-6. 添加数据导入导出功能
-7. 支持章节评论功能
-8. 添加阅读进度记录
+| 环境变量 | 说明 |
+|---------|------|
+| `DEEPSEEK_API_KEY` | DeepSeek AI聊天API密钥 |
+| `EVOLINK_API_TOKEN` | EvoLink图片生成API令牌 |
+| `VOLCENGINE_ACCESS_KEY` | 火山引擎Access Key |
+| `VOLCENGINE_SECRET_KEY` | 火山引擎Secret Key |

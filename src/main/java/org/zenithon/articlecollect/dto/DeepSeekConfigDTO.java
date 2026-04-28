@@ -12,6 +12,10 @@ public class DeepSeekConfigDTO {
     private String model;
     private Boolean thinkingEnabled;
     private String reasoningEffort;
+    private Double temperature;
+    private Double topP;
+    private Double frequencyPenalty;
+    private Double presencePenalty;
     private String description;
 
     // 标记是否为运行时覆盖（前端传入，不持久化）
@@ -28,6 +32,10 @@ public class DeepSeekConfigDTO {
         dto.setModel(entity.getModel());
         dto.setThinkingEnabled(entity.getThinkingEnabled());
         dto.setReasoningEffort(entity.getReasoningEffort());
+        dto.setTemperature(entity.getTemperature());
+        dto.setTopP(entity.getTopP());
+        dto.setFrequencyPenalty(entity.getFrequencyPenalty());
+        dto.setPresencePenalty(entity.getPresencePenalty());
         dto.setDescription(entity.getDescription());
         dto.setIsRuntimeOverride(false);
         return dto;
@@ -73,6 +81,38 @@ public class DeepSeekConfigDTO {
 
     public void setReasoningEffort(String reasoningEffort) {
         this.reasoningEffort = reasoningEffort;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public Double getTopP() {
+        return topP;
+    }
+
+    public void setTopP(Double topP) {
+        this.topP = topP;
+    }
+
+    public Double getFrequencyPenalty() {
+        return frequencyPenalty;
+    }
+
+    public void setFrequencyPenalty(Double frequencyPenalty) {
+        this.frequencyPenalty = frequencyPenalty;
+    }
+
+    public Double getPresencePenalty() {
+        return presencePenalty;
+    }
+
+    public void setPresencePenalty(Double presencePenalty) {
+        this.presencePenalty = presencePenalty;
     }
 
     public String getDescription() {

@@ -1,5 +1,6 @@
 package org.zenithon.articlecollect.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +33,17 @@ public class NovelGeneratorController {
 
     private final NovelGeneratorService generatorService;
     private final NovelGeneratorTaskRepository taskRepository;
+    private final ObjectMapper objectMapper;
     private final Executor sseExecutor = Executors.newCachedThreadPool();
 
     @Autowired
     public NovelGeneratorController(
             NovelGeneratorService generatorService,
-            NovelGeneratorTaskRepository taskRepository) {
+            NovelGeneratorTaskRepository taskRepository,
+            ObjectMapper objectMapper) {
         this.generatorService = generatorService;
         this.taskRepository = taskRepository;
+        this.objectMapper = objectMapper;
     }
 
     // ==================== 页面入口 ====================
@@ -141,9 +145,10 @@ public class NovelGeneratorController {
                     }
 
                     // 只有进度或步骤变化时才发送
-                    if (task.getProgress() != lastProgress || !task.getCurrentStep().equals(lastStep)) {
+                    String currentStep = task.getCurrentStep() != null ? task.getCurrentStep() : "";
+                    if (task.getProgress() != lastProgress || !currentStep.equals(lastStep)) {
                         Map<String, Object> data = new HashMap<>();
-                        data.put("step", task.getCurrentStep());
+                        data.put("step", currentStep);
                         data.put("progress", task.getProgress());
                         data.put("status", task.getStatus().name());
 
@@ -156,12 +161,13 @@ public class NovelGeneratorController {
                             data.put("error", task.getErrorMessage());
                         }
 
+                        String jsonData = objectMapper.writeValueAsString(data);
                         emitter.send(SseEmitter.event()
                                 .name("progress")
-                                .data(data));
+                                .data(jsonData));
 
                         lastProgress = task.getProgress();
-                        lastStep = task.getCurrentStep();
+                        lastStep = currentStep;
                     }
 
                     // 如果任务完成或失败，结束SSE
@@ -173,9 +179,10 @@ public class NovelGeneratorController {
                         completeData.put("novelId", task.getResultNovelId());
                         completeData.put("novelTitle", task.getResultNovelTitle());
 
+                        String jsonData = objectMapper.writeValueAsString(completeData);
                         emitter.send(SseEmitter.event()
                                 .name("complete")
-                                .data(completeData));
+                                .data(jsonData));
                         emitter.complete();
                         break;
                     }
@@ -185,11 +192,12 @@ public class NovelGeneratorController {
                         errorData.put("step", "失败");
                         errorData.put("progress", task.getProgress());
                         errorData.put("status", "FAILED");
-                        errorData.put("error", task.getErrorMessage());
+                        errorData.put("error", task.getErrorMessage() != null ? task.getErrorMessage() : "未知错误");
 
+                        String jsonData = objectMapper.writeValueAsString(errorData);
                         emitter.send(SseEmitter.event()
                                 .name("error")
-                                .data(errorData));
+                                .data(jsonData));
                         emitter.complete();
                         break;
                     }

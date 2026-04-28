@@ -10,6 +10,7 @@ public class AutoImageTask {
 
     private String taskId;
     private Long chapterId;
+    private String style; // 画风选项
     private TaskStatus status;
     private int totalCount;
     private int completedCount;
@@ -109,6 +110,9 @@ public class AutoImageTask {
 
     public Long getChapterId() { return chapterId; }
     public void setChapterId(Long chapterId) { this.chapterId = chapterId; }
+
+    public String getStyle() { return style; }
+    public void setStyle(String style) { this.style = style; }
 
     public TaskStatus getStatus() { return status; }
     public void setStatus(TaskStatus status) { this.status = status; }

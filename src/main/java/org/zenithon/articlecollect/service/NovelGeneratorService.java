@@ -3,7 +3,6 @@ package org.zenithon.articlecollect.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.zenithon.articlecollect.dto.NovelGeneratorProgress;
 import org.zenithon.articlecollect.dto.NovelGeneratorRequest;
 import org.zenithon.articlecollect.entity.NovelGeneratorTask;
@@ -40,7 +39,6 @@ public class NovelGeneratorService {
      * @param request 生成请求参数
      * @return 任务ID
      */
-    @Transactional
     public String startGeneration(NovelGeneratorRequest request) {
         // 验证请求参数
         if (!request.isValid()) {
@@ -62,6 +60,8 @@ public class NovelGeneratorService {
         task.setTools(request.getTools());
         task.setPointOfView(request.getPointOfView());
         task.setProtagonist(request.getProtagonist());
+        task.setLanguageStyle(request.getLanguageStyle());
+        task.setWordsPerChapter(request.getWordsPerChapter());
 
         task = taskRepository.save(task);
 
@@ -122,7 +122,6 @@ public class NovelGeneratorService {
      * 删除任务记录
      * @param taskId 任务ID
      */
-    @Transactional
     public void deleteTask(String taskId) {
         Optional<NovelGeneratorTask> taskOpt = taskRepository.findByTaskId(taskId);
         if (taskOpt.isPresent()) {

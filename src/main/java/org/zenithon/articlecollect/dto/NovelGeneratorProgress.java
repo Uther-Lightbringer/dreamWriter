@@ -16,6 +16,20 @@ public class NovelGeneratorProgress {
     private String errorMessage;
     private Long durationSeconds;
     private String createTime;
+    private Integer chapterCount;
+
+    // 生成参数
+    private String keyword;
+    private String genre;
+    private String requires;
+    private Boolean newWorld;
+    private Integer roleCount;
+    private String gameplay;
+    private String tools;
+    private String pointOfView;
+    private String protagonist;
+    private String languageStyle;
+    private Integer wordsPerChapter;
 
     public NovelGeneratorProgress() {
     }
@@ -30,6 +44,20 @@ public class NovelGeneratorProgress {
         this.errorMessage = task.getErrorMessage();
         this.durationSeconds = task.getDurationSeconds();
         this.createTime = task.getFormattedCreateTime();
+        this.chapterCount = task.getChapterCount();
+
+        // 生成参数
+        this.keyword = task.getKeyword();
+        this.genre = task.getGenre();
+        this.requires = task.getRequires();
+        this.newWorld = task.getNewWorld();
+        this.roleCount = task.getRoleCount();
+        this.gameplay = task.getGameplay();
+        this.tools = task.getTools();
+        this.pointOfView = task.getPointOfView();
+        this.protagonist = task.getProtagonist();
+        this.languageStyle = task.getLanguageStyle();
+        this.wordsPerChapter = task.getWordsPerChapter();
     }
 
     // ========== Getters and Setters ==========
@@ -104,6 +132,102 @@ public class NovelGeneratorProgress {
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public Integer getChapterCount() {
+        return chapterCount;
+    }
+
+    public void setChapterCount(Integer chapterCount) {
+        this.chapterCount = chapterCount;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public String getRequires() {
+        return requires;
+    }
+
+    public void setRequires(String requires) {
+        this.requires = requires;
+    }
+
+    public Boolean getNewWorld() {
+        return newWorld;
+    }
+
+    public void setNewWorld(Boolean newWorld) {
+        this.newWorld = newWorld;
+    }
+
+    public Integer getRoleCount() {
+        return roleCount;
+    }
+
+    public void setRoleCount(Integer roleCount) {
+        this.roleCount = roleCount;
+    }
+
+    public String getGameplay() {
+        return gameplay;
+    }
+
+    public void setGameplay(String gameplay) {
+        this.gameplay = gameplay;
+    }
+
+    public String getTools() {
+        return tools;
+    }
+
+    public void setTools(String tools) {
+        this.tools = tools;
+    }
+
+    public String getPointOfView() {
+        return pointOfView;
+    }
+
+    public void setPointOfView(String pointOfView) {
+        this.pointOfView = pointOfView;
+    }
+
+    public String getProtagonist() {
+        return protagonist;
+    }
+
+    public void setProtagonist(String protagonist) {
+        this.protagonist = protagonist;
+    }
+
+    public String getLanguageStyle() {
+        return languageStyle;
+    }
+
+    public void setLanguageStyle(String languageStyle) {
+        this.languageStyle = languageStyle;
+    }
+
+    public Integer getWordsPerChapter() {
+        return wordsPerChapter;
+    }
+
+    public void setWordsPerChapter(Integer wordsPerChapter) {
+        this.wordsPerChapter = wordsPerChapter;
     }
 
     /**

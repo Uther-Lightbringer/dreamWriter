@@ -35,6 +35,40 @@
         isNativePlatform: () => false
       };
     }
+    
+    // ===== 全局错误捕获 =====
+    window.onerror = function(msg, url, line, col, error) {
+      const errorDiv = document.getElementById('global-error') || document.createElement('div');
+      errorDiv.id = 'global-error';
+      errorDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:99999;padding:20px;overflow:auto;';
+      errorDiv.innerHTML = `
+        <h2 style="color:red;font-size:18px;margin-bottom:10px;">发生错误</h2>
+        <pre style="background:#f5f5f5;padding:10px;border-radius:8px;font-size:12px;white-space:pre-wrap;word-break:break-all;">
+错误: ${msg}
+文件: ${url}
+行号: ${line}:${col}
+堆栈: ${error ? error.stack : '无'}
+        </pre>
+        <button onclick="location.reload()" style="margin-top:10px;padding:10px 20px;background:#9c27b0;color:#fff;border:none;border-radius:8px;">刷新重试</button>
+      `;
+      document.body.appendChild(errorDiv);
+      return false;
+    };
+    
+    window.addEventListener('unhandledrejection', function(event) {
+      const errorDiv = document.getElementById('global-error') || document.createElement('div');
+      errorDiv.id = 'global-error';
+      errorDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:99999;padding:20px;overflow:auto;';
+      errorDiv.innerHTML = `
+        <h2 style="color:red;font-size:18px;margin-bottom:10px;">未处理的 Promise 错误</h2>
+        <pre style="background:#f5f5f5;padding:10px;border-radius:8px;font-size:12px;white-space:pre-wrap;word-break:break-all;">
+错误: ${event.reason}
+堆栈: ${event.reason && event.reason.stack ? event.reason.stack : '无'}
+        </pre>
+        <button onclick="location.reload()" style="margin-top:10px;padding:10px 20px;background:#9c27b0;color:#fff;border:none;border-radius:8px;">刷新重试</button>
+      `;
+      document.body.appendChild(errorDiv);
+    });
   </script>
 </head>
 <body class="bg-gradient-to-br from-dream-pink via-dream-lavender to-dream-mint min-h-screen">

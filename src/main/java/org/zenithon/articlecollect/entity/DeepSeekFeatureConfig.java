@@ -50,6 +50,35 @@ public class DeepSeekFeatureConfig {
     private String reasoningEffort = "high";
 
     /**
+     * 温度参数 (0-2)
+     * 控制输出随机性：0=最确定，1=默认，2=最随机
+     * 较低值适合精确任务，较高值适合创意任务
+     */
+    @Column(nullable = false)
+    private Double temperature = 0.0;
+
+    /**
+     * 核采样参数 (0-1)
+     * 控制候选词范围：0.1=只选最高概率词，1=考虑所有词
+     */
+    @Column(name = "top_p", nullable = false)
+    private Double topP = 0.1;
+
+    /**
+     * 频率惩罚 (-2到2)
+     * 降低重复用词概率：正值减少重复，负值允许更多重复
+     */
+    @Column(name = "frequency_penalty", nullable = false)
+    private Double frequencyPenalty = 1.0;
+
+    /**
+     * 存在惩罚 (-2到2)
+     * 鼓励谈论新话题：正值鼓励多样性，负值允许聚焦同一话题
+     */
+    @Column(name = "presence_penalty", nullable = false)
+    private Double presencePenalty = -2.0;
+
+    /**
      * 功能描述
      */
     @Column(length = 500)
@@ -155,6 +184,38 @@ public class DeepSeekFeatureConfig {
 
     public void setReasoningEffort(String reasoningEffort) {
         this.reasoningEffort = reasoningEffort;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public Double getTopP() {
+        return topP;
+    }
+
+    public void setTopP(Double topP) {
+        this.topP = topP;
+    }
+
+    public Double getFrequencyPenalty() {
+        return frequencyPenalty;
+    }
+
+    public void setFrequencyPenalty(Double frequencyPenalty) {
+        this.frequencyPenalty = frequencyPenalty;
+    }
+
+    public Double getPresencePenalty() {
+        return presencePenalty;
+    }
+
+    public void setPresencePenalty(Double presencePenalty) {
+        this.presencePenalty = presencePenalty;
     }
 
     public String getDescription() {

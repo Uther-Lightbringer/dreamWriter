@@ -194,6 +194,69 @@
             margin-bottom: 6px;
         }
 
+        /* Markdown 表格样式 */
+        .message.assistant .message-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+            font-size: 0.9rem;
+        }
+
+        .message.assistant .message-content table th,
+        .message.assistant .message-content table td {
+            border: 1px solid rgba(93, 64, 55, 0.2);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .message.assistant .message-content table th {
+            background: rgba(156, 39, 176, 0.1);
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .message.assistant .message-content table tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .message.assistant .message-content table tr:hover {
+            background: rgba(156, 39, 176, 0.05);
+        }
+
+        /* Markdown 代码块样式 */
+        .message.assistant .message-content pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 12px 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .message.assistant .message-content code {
+            font-family: "Fira Code", "Consolas", monospace;
+            font-size: 0.85rem;
+        }
+
+        .message.assistant .message-content pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .message.assistant .message-content p code {
+            background: rgba(156, 39, 176, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Markdown 引用样式 */
+        .message.assistant .message-content blockquote {
+            border-left: 3px solid var(--accent-purple);
+            padding-left: 12px;
+            margin: 12px 0;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
         /* 选项容器样式 */
         .options-container {
             margin-top: 15px;
@@ -633,6 +696,11 @@
         .tool-toast.pending {
             background: rgba(33, 150, 243, 0.15);
             border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+
+        .tool-toast.error {
+            background: rgba(244, 67, 54, 0.15);
+            border: 1px solid rgba(244, 67, 54, 0.3);
         }
 
         .tool-toast.fade-out {
@@ -1684,6 +1752,341 @@
             color: #4caf50;
             font-size: 0.8rem;
         }
+
+        /* 思考内容区块 */
+        .reasoning-block {
+            margin-bottom: 12px;
+            border: 1px solid rgba(156, 39, 176, 0.15);
+            border-radius: 12px;
+            background: rgba(156, 39, 176, 0.03);
+            overflow: hidden;
+        }
+
+        .reasoning-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            background: rgba(156, 39, 176, 0.06);
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .reasoning-header:hover {
+            background: rgba(156, 39, 176, 0.1);
+        }
+
+        .reasoning-icon {
+            font-size: 0.9rem;
+        }
+
+        .reasoning-title {
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .reasoning-toggle {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            transition: transform 0.2s;
+        }
+
+        .reasoning-block.collapsed .reasoning-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .reasoning-content {
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--text-light);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .reasoning-block.collapsed .reasoning-content {
+            max-height: 0;
+            padding: 0 14px;
+            overflow: hidden;
+        }
+
+        /* 工具调用区块 */
+        .tool-calls-block {
+            margin-bottom: 12px;
+            border: 1px solid rgba(33, 150, 243, 0.15);
+            border-radius: 12px;
+            background: rgba(33, 150, 243, 0.03);
+            overflow: hidden;
+        }
+
+        .tool-calls-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            background: rgba(33, 150, 243, 0.06);
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .tool-calls-header:hover {
+            background: rgba(33, 150, 243, 0.1);
+        }
+
+        .tool-calls-icon {
+            font-size: 0.9rem;
+        }
+
+        .tool-calls-title {
+            font-size: 0.85rem;
+            color: #1976d2;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .tool-calls-toggle {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            transition: transform 0.2s;
+        }
+
+        .tool-calls-block.collapsed .tool-calls-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .tool-calls-content {
+            padding: 12px 14px;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tool-calls-block.collapsed .tool-calls-content {
+            max-height: 0;
+            padding: 0 14px;
+            overflow: hidden;
+        }
+
+        .tool-call-item {
+            padding: 10px 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #2196f3;
+        }
+
+        .tool-call-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .tool-call-name {
+            font-weight: 600;
+            color: #1976d2;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .tool-call-params {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            background: rgba(0, 0, 0, 0.03);
+            padding: 8px;
+            border-radius: 6px;
+            font-family: "Fira Code", "Consolas", monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .tool-call-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+
+        .tool-call-status.pending {
+            color: #ff9800;
+        }
+
+        .tool-call-status.success {
+            color: #4caf50;
+        }
+
+        .tool-call-status.error {
+            color: #f44336;
+        }
+
+        /* ========== 批注功能样式 ========== */
+        .annotation-toolbar {
+            position: fixed;
+            z-index: 10001;
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+            animation: fadeInUp 0.2s ease;
+            transition: all 0.2s;
+        }
+        .annotation-toolbar:hover {
+            background: #7b1fa2;
+            transform: translateY(-1px);
+        }
+
+        .annotation-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 10002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .annotation-dialog {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .annotation-dialog h4 {
+            margin: 0 0 12px 0;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .annotation-dialog .selected-text-preview {
+            background: rgba(156, 39, 176, 0.08);
+            border-left: 3px solid var(--accent-purple);
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            max-height: 100px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .annotation-dialog textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .annotation-dialog textarea:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .annotation-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .annotation-dialog-actions button {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .annotation-dialog-actions .btn-cancel {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-dark);
+        }
+        .annotation-dialog-actions .btn-cancel:hover {
+            background: rgba(0,0,0,0.1);
+        }
+
+        .annotation-dialog-actions .btn-save {
+            background: var(--accent-purple);
+            color: white;
+        }
+        .annotation-dialog-actions .btn-save:hover {
+            background: #7b1fa2;
+        }
+
+        .annotation-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(156, 39, 176, 0.2);
+        }
+
+        .annotation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(156, 39, 176, 0.1);
+            color: var(--accent-purple);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            max-width: 200px;
+        }
+        .annotation-badge:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+        .annotation-badge .badge-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .annotation-tooltip {
+            position: absolute;
+            background: var(--text-dark);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            max-width: 280px;
+            z-index: 10003;
+            pointer-events: none;
+            animation: fadeIn 0.2s ease;
+            line-height: 1.5;
+        }
+
+        .annotation-highlight {
+            background: rgba(255, 235, 59, 0.35);
+            border-radius: 2px;
+            padding: 0 2px;
+        }
     </style>
 </head>
 <body>
@@ -1883,11 +2286,12 @@
     </div>
 
     <script>
-        let currentSessionId = null;
-        let currentMessageId = null;
-        let pendingSelections = {};
-        let currentParams = {};
-        let isStreaming = false;
+let currentSessionId = null;
+let currentMessageId = null;
+let pendingSelections = {};
+let pendingAnnotations = []; // 待发送的批注列表 {messageEl, selectedText, annotationText}
+
+let isStreaming = false;
 
         // 默认配置（从服务器加载）
         let defaultConfig = {
@@ -1982,8 +2386,11 @@
 
         async function sendMessage() {
             const input = document.getElementById('chatInput');
-            const content = input.value.trim();
-            if (!content || isStreaming) return;
+            const originalContent = input.value.trim();
+            if (!originalContent || isStreaming) return;
+
+            // 如果有批注，构建带批注的完整内容
+            const content = buildAnnotationContent(originalContent);
 
             // 隐藏欢迎消息
             const welcomeEl = document.getElementById('welcomeMessage');
@@ -1991,8 +2398,8 @@
                 welcomeEl.style.display = 'none';
             }
 
-            // 添加用户消息
-            addUserMessage(content);
+            // 添加用户消息（显示原始输入，不包含批注附加内容）
+            addUserMessage(originalContent);
             input.value = '';
 
             // 如果没有会话，先创建
@@ -2032,9 +2439,15 @@
                 let buffer = '';
                 let currentEventType = 'content';
                 let fullResponse = '';
+                let fullReasoning = '';
                 let currentUsage = null;  // 存储 usage 信息
                 let aiMessageEl = null;
                 let aiContentEl = null;
+                let reasoningBlockEl = null;
+                let reasoningContentEl = null;
+                let toolCallsBlockEl = null;
+                let toolCallsContentEl = null;
+                let currentToolCalls = []; // 当前消息的工具调用
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -2056,8 +2469,42 @@
 
                                 if (currentEventType === 'tool_call_start') {
                                     handleToolCallStart(json);
+                                    // 同时记录到当前消息的工具调用列表
+                                    currentToolCalls.push({
+                                        callId: json.callId,
+                                        tool: json.tool,
+                                        displayName: json.displayName,
+                                        params: json.params || '',
+                                        status: 'pending'
+                                    });
+                                    // 更新消息中的工具调用显示
+                                    if (aiMessageEl) {
+                                        updateToolCallsDisplay(aiMessageEl, currentToolCalls);
+                                    }
                                 } else if (currentEventType === 'tool_result') {
                                     handleToolResult(json);
+                                    // 更新工具调用状态（优先用 callId 匹配，fallback 到 tool 名）
+                                    try {
+                                        const result = json.result ? JSON.parse(json.result) : {};
+                                        const tc = currentToolCalls.find(t =>
+                                            (json.callId && t.callId === json.callId) ||
+                                            (!json.callId && t.tool === json.tool && t.status === 'pending')
+                                        );
+                                        if (tc) {
+                                            // 优先使用后端直接返回的 success 字段
+                                            if (typeof json.success === 'boolean') {
+                                                tc.status = json.success ? 'success' : 'error';
+                                            } else {
+                                                tc.status = result.success ? 'success' : 'error';
+                                            }
+                                            tc.result = result;
+                                            if (aiMessageEl) {
+                                                updateToolCallsDisplay(aiMessageEl, currentToolCalls);
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error('更新工具调用状态失败:', e);
+                                    }
                                 } else if (currentEventType === 'summary_generated') {
                                     showNotification(`📝 ${json.message}（压缩 ${json.turnsSummarized} 轮对话）`, 'info');
                                 } else if (currentEventType === 'image_result') {
@@ -2067,6 +2514,38 @@
                                 } else if (currentEventType === 'usage') {
                                     // 存储 usage 信息
                                     currentUsage = json;
+                                } else if (currentEventType === 'reasoning_content') {
+                                    if (json.text && json.text !== 'null') {
+                                        fullReasoning += json.text;
+
+                                        // 移除思考中
+                                        if (thinkingEl) {
+                                            thinkingEl.remove();
+                                        }
+
+                                        // 创建或更新 AI 消息
+                                        if (!aiMessageEl) {
+                                            aiMessageEl = document.createElement('div');
+                                            aiMessageEl.className = 'message assistant';
+                                            aiMessageEl.innerHTML = `
+                                                <div class="message-avatar">AI</div>
+                                                <div class="message-content"></div>
+                                            `;
+                                            aiContentEl = aiMessageEl.querySelector('.message-content');
+                                            document.getElementById('chatMessages').appendChild(aiMessageEl);
+                                        }
+
+                                        // 创建或更新思考内容区块
+                                        if (!reasoningBlockEl) {
+                                            reasoningBlockEl = createReasoningBlock();
+                                            aiContentEl.appendChild(reasoningBlockEl);
+                                            reasoningContentEl = reasoningBlockEl.querySelector('.reasoning-content');
+                                        }
+                                        if (reasoningContentEl) {
+                                            reasoningContentEl.textContent = fullReasoning;
+                                        }
+                                        scrollToBottom();
+                                    }
                                 } else if (currentEventType === 'content') {
                                     if (json.text && json.text !== 'null') {
                                         fullResponse += json.text;
@@ -2088,8 +2567,14 @@
                                             document.getElementById('chatMessages').appendChild(aiMessageEl);
                                         }
 
-                                        // 实时显示原始文本
-                                        aiContentEl.textContent = fullResponse;
+                                        // 实时显示原始文本（不覆盖已有的特殊区块）
+                                        let streamingEl = aiContentEl.querySelector('.streaming-content');
+                                        if (!streamingEl) {
+                                            streamingEl = document.createElement('div');
+                                            streamingEl.className = 'streaming-content';
+                                            aiContentEl.appendChild(streamingEl);
+                                        }
+                                        streamingEl.textContent = fullResponse;
                                         scrollToBottom();
                                     }
                                 }
@@ -2105,6 +2590,19 @@
                     renderAIMessage(aiContentEl, fullResponse);
                 }
 
+                // 如果有思考内容，确保显示在消息顶部
+                if (aiMessageEl && fullReasoning && reasoningBlockEl) {
+                    const contentEl = aiMessageEl.querySelector('.message-content');
+                    if (contentEl && reasoningBlockEl.parentElement !== contentEl) {
+                        contentEl.insertBefore(reasoningBlockEl, contentEl.firstChild);
+                    }
+                }
+
+                // 如果有工具调用，确保显示在消息中
+                if (aiMessageEl && currentToolCalls.length > 0) {
+                    updateToolCallsDisplay(aiMessageEl, currentToolCalls);
+                }
+
                 // 添加 token 用量标识
                 if (aiMessageEl && currentUsage) {
                     addUsageIndicator(aiMessageEl, currentUsage);
@@ -2112,6 +2610,11 @@
 
                 // 刷新参数面板
                 loadSessionParams();
+
+                // 发送成功后清空待发送批注（视觉上保留标记，但不再附加到新消息）
+                if (pendingAnnotations.length > 0) {
+                    pendingAnnotations = [];
+                }
 
             } catch (e) {
                 console.error('发送消息失败:', e);
@@ -2275,9 +2778,117 @@
             return thinkingEl;
         }
 
+        // 创建思考内容区块（默认收起）
+        function createReasoningBlock() {
+            const block = document.createElement('div');
+            block.className = 'reasoning-block collapsed';
+            block.innerHTML = `
+                <div class="reasoning-header" onclick="toggleReasoning(this)">
+                    <span class="reasoning-icon">🧠</span>
+                    <span class="reasoning-title">思考过程</span>
+                    <span class="reasoning-toggle">▼</span>
+                </div>
+                <div class="reasoning-content"></div>
+            `;
+            return block;
+        }
+
+        // 切换思考内容展开/收起
+        function toggleReasoning(header) {
+            const block = header.closest('.reasoning-block');
+            block.classList.toggle('collapsed');
+        }
+
+        // 更新工具调用显示
+        function updateToolCallsDisplay(messageEl, toolCalls) {
+            let block = messageEl.querySelector('.tool-calls-block');
+            let contentEl;
+
+            if (!block) {
+                block = document.createElement('div');
+                block.className = 'tool-calls-block collapsed';
+                block.innerHTML = `
+                    <div class="tool-calls-header" onclick="toggleToolCalls(this)">
+                        <span class="tool-calls-icon">🔧</span>
+                        <span class="tool-calls-title">工具调用 (${toolCalls.length})</span>
+                        <span class="tool-calls-toggle">▼</span>
+                    </div>
+                    <div class="tool-calls-content"></div>
+                `;
+                contentEl = block.querySelector('.tool-calls-content');
+                const contentContainer = messageEl.querySelector('.message-content');
+                if (contentContainer) {
+                    // 插入到内容之前（如果还没有渲染Markdown）
+                    const firstChild = contentContainer.firstChild;
+                    if (firstChild && firstChild.classList && firstChild.classList.contains('reasoning-block')) {
+                        contentContainer.insertBefore(block, firstChild.nextSibling);
+                    } else {
+                        contentContainer.insertBefore(block, firstChild);
+                    }
+                }
+            } else {
+                contentEl = block.querySelector('.tool-calls-content');
+                // 更新标题
+                const titleEl = block.querySelector('.tool-calls-title');
+                if (titleEl) {
+                    titleEl.textContent = `工具调用 (${toolCalls.length})`;
+                }
+            }
+
+            // 渲染工具调用列表
+            const toolOperationMap = {
+                'create_novel': '创建小说',
+                'add_chapter': '添加章节',
+                'update_chapter': '修改章节',
+                'update_novel': '修改小说',
+                'list_character_cards': '查询角色卡',
+                'create_character_card': '创建角色卡',
+                'update_character_card': '更新角色卡',
+                'generate_character_image': '生成角色图片',
+                'generate_chapter_images': '生成章节配图',
+                'get_chapter_summaries': '获取章节概括',
+                'fill_params': '更新参数',
+                'add_memory': '保存偏好',
+                'preview_params': '预览参数',
+                'remove_memory': '删除记忆',
+                'show_examples': '展示示例',
+                'generate_outline': '生成大纲',
+                'update_outline': '更新大纲'
+            };
+
+            contentEl.innerHTML = toolCalls.map(tc => {
+                const displayName = toolOperationMap[tc.tool] || tc.tool;
+                const statusIcon = tc.status === 'success' ? '✅' : tc.status === 'error' ? '❌' : '⏳';
+                const statusClass = tc.status || 'pending';
+                const statusText = tc.status === 'success' ? '已完成' : tc.status === 'error' ? '失败' : '执行中...';
+
+                return `
+                    <div class="tool-call-item">
+                        <div class="tool-call-name">${statusIcon} ${escapeHtml(displayName)}</div>
+                        ${tc.params ? `<div class="tool-call-params">${escapeHtml(tc.params)}</div>` : ''}
+                        <div class="tool-call-status ${statusClass}">
+                            <span>${statusText}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 切换工具调用展开/收起
+        function toggleToolCalls(header) {
+            const block = header.closest('.tool-calls-block');
+            block.classList.toggle('collapsed');
+        }
+
         function renderAIMessage(contentEl, text) {
             currentMessageId = 'msg_' + Date.now();
             pendingSelections = {};
+
+            // 保存已有的特殊区块（思考过程、工具调用、批注标记）
+            const existingBlocks = [];
+            contentEl.querySelectorAll('.reasoning-block, .tool-calls-block, .annotation-badges').forEach(block => {
+                existingBlocks.push(block);
+            });
 
             // 1. 提取 [OPTIONS:字段名:显示名称] 标记格式的选项
             // 字段名支持字母、数字、下划线、连字符和中文字符
@@ -2300,12 +2911,31 @@
             let cleanText = text.replace(optionsRegex, '');
             cleanText = cleanText.trim();
 
-            // 3. 渲染 Markdown
+            // 3. 渲染 Markdown（保留已有的特殊区块）
+            let markdownHtml = '';
             if (typeof marked !== 'undefined') {
-                contentEl.innerHTML = marked.parse(cleanText);
+                markdownHtml = marked.parse(cleanText);
             } else {
-                contentEl.innerHTML = cleanText.replace(/\n/g, '<br>');
+                markdownHtml = cleanText.replace(/\n/g, '<br>');
             }
+
+            // 移除流式内容容器
+            const streamingEl = contentEl.querySelector('.streaming-content');
+            if (streamingEl) streamingEl.remove();
+
+            // 清空内容但保留特殊区块
+            contentEl.innerHTML = '';
+
+            // 先添加已有的特殊区块
+            existingBlocks.forEach(block => {
+                contentEl.appendChild(block);
+            });
+
+            // 再添加 Markdown 内容（包装在一个div中）
+            const markdownContainer = document.createElement('div');
+            markdownContainer.className = 'markdown-content';
+            markdownContainer.innerHTML = markdownHtml;
+            contentEl.appendChild(markdownContainer);
 
             // 4. 决定选择模式
             // 始终使用批量模式（显示确认按钮），让用户明确提交选择
@@ -2579,6 +3209,249 @@
             el.scrollTop = el.scrollHeight;
         }
 
+        // ========== 批注功能 ==========
+
+        let annotationToolbarEl = null;
+        let annotationDialogEl = null;
+        let currentAnnotationTarget = null; // { messageEl, selectedText }
+
+        // 监听文字选择（只用 mouseup，避免 selectionchange 竞争导致工具栏闪烁）
+        document.addEventListener('mouseup', handleTextSelection);
+
+        // 全局 mousedown：点击工具栏外部时隐藏工具栏（mousedown 不会在 mouseup 后立即触发）
+        document.addEventListener('mousedown', (e) => {
+            if (annotationToolbarEl && !annotationToolbarEl.contains(e.target)) {
+                hideAnnotationToolbar();
+            }
+        });
+
+        function handleTextSelection(e) {
+            // 如果点击的是工具栏本身，忽略 mouseup（让 toolbar.onclick 处理）
+            if (annotationToolbarEl && e && annotationToolbarEl.contains(e.target)) {
+                return;
+            }
+
+            const selection = window.getSelection();
+            const text = selection.toString().trim();
+
+            // 如果没有选中文本，隐藏工具栏
+            if (!text || text.length < 2) {
+                hideAnnotationToolbar();
+                return;
+            }
+
+            // 检查选区是否在 AI 消息气泡内
+            let node = selection.anchorNode;
+            let messageContentEl = null;
+            while (node) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.classList && node.classList.contains('message-content')) {
+                        const messageEl = node.closest('.message');
+                        if (messageEl && messageEl.classList.contains('assistant')) {
+                            messageContentEl = node;
+                            break;
+                        }
+                    }
+                }
+                node = node.parentElement;
+            }
+
+            if (!messageContentEl) {
+                hideAnnotationToolbar();
+                return;
+            }
+
+            // 显示批注按钮
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            showAnnotationToolbar(rect, text, messageContentEl.closest('.message'));
+        }
+
+        function showAnnotationToolbar(rect, selectedText, messageEl) {
+            hideAnnotationToolbar();
+
+            const toolbar = document.createElement('button');
+            toolbar.className = 'annotation-toolbar';
+            toolbar.textContent = '批注';
+            toolbar.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+            toolbar.style.top = (rect.top - 40) + 'px';
+            toolbar.onclick = (e) => {
+                e.stopPropagation();
+                hideAnnotationToolbar();
+                openAnnotationDialog(selectedText, messageEl);
+            };
+
+            document.body.appendChild(toolbar);
+            annotationToolbarEl = toolbar;
+        }
+
+        function hideAnnotationToolbar() {
+            if (annotationToolbarEl) {
+                annotationToolbarEl.remove();
+                annotationToolbarEl = null;
+            }
+        }
+
+        function openAnnotationDialog(selectedText, messageEl) {
+            // 清除之前的对话框
+            if (annotationDialogEl) {
+                annotationDialogEl.remove();
+                annotationDialogEl = null;
+            }
+
+            currentAnnotationTarget = { messageEl, selectedText };
+
+            const overlay = document.createElement('div');
+            overlay.className = 'annotation-dialog-overlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) cancelAnnotation();
+            };
+
+            const previewText = selectedText.length > 80 ? selectedText.substring(0, 80) + '...' : selectedText;
+
+            overlay.innerHTML = `
+                <div class="annotation-dialog" onclick="event.stopPropagation()">
+                    <h4>添加批注</h4>
+                    <div class="selected-text-preview">${escapeHtml(previewText)}</div>
+                    <textarea id="annotationInput" placeholder="请输入你对这段内容的批注..." autofocus></textarea>
+                    <div class="annotation-dialog-actions">
+                        <button class="btn-cancel" onclick="cancelAnnotation()">取消</button>
+                        <button class="btn-save" onclick="saveAnnotation()">保存</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            annotationDialogEl = overlay;
+
+            // 自动聚焦 textarea
+            setTimeout(() => {
+                const ta = document.getElementById('annotationInput');
+                if (ta) ta.focus();
+            }, 50);
+        }
+
+        function saveAnnotation() {
+            const input = document.getElementById('annotationInput');
+            const annotationText = input ? input.value.trim() : '';
+            if (!annotationText) {
+                showToast('批注内容不能为空', 'warn');
+                return;
+            }
+
+            if (!currentAnnotationTarget) return;
+
+            const { messageEl, selectedText } = currentAnnotationTarget;
+
+            // 保存到 pendingAnnotations
+            pendingAnnotations.push({
+                messageEl,
+                selectedText,
+                annotationText
+            });
+
+            // 在该消息上渲染批注标记
+            renderAnnotationBadges(messageEl);
+
+            // 清除选区
+            window.getSelection().removeAllRanges();
+
+            showToast('批注已添加，将在下次发送时一并送出', 'success');
+            closeAnnotationDialog();
+        }
+
+        function cancelAnnotation() {
+            closeAnnotationDialog();
+        }
+
+        function closeAnnotationDialog() {
+            if (annotationDialogEl) {
+                annotationDialogEl.remove();
+                annotationDialogEl = null;
+            }
+            currentAnnotationTarget = null;
+        }
+
+        function renderAnnotationBadges(messageEl) {
+            // 找到或创建批注徽章容器
+            let contentEl = messageEl.querySelector('.message-content');
+            if (!contentEl) return;
+
+            let badgesContainer = contentEl.querySelector('.annotation-badges');
+            if (!badgesContainer) {
+                badgesContainer = document.createElement('div');
+                badgesContainer.className = 'annotation-badges';
+                contentEl.appendChild(badgesContainer);
+            }
+
+            // 清空并重新渲染
+            badgesContainer.innerHTML = '';
+
+            // 找到所有属于这条消息的批注
+            const annotations = pendingAnnotations.filter(a => a.messageEl === messageEl);
+            annotations.forEach((ann, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'annotation-badge';
+                const shortText = ann.selectedText.length > 12 ? ann.selectedText.substring(0, 12) + '...' : ann.selectedText;
+                badge.innerHTML = `<span class="badge-text">📌 ${escapeHtml(shortText)}</span>`;
+
+                // 悬停显示 tooltip
+                badge.onmouseenter = (e) => showAnnotationTooltip(e, ann);
+                badge.onmouseleave = hideAnnotationTooltip;
+
+                // 点击删除批注
+                badge.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm('删除这条批注？')) {
+                        pendingAnnotations = pendingAnnotations.filter(a => a !== ann);
+                        renderAnnotationBadges(messageEl);
+                        if (pendingAnnotations.filter(a => a.messageEl === messageEl).length === 0) {
+                            badgesContainer.remove();
+                        }
+                    }
+                };
+
+                badgesContainer.appendChild(badge);
+            });
+        }
+
+        let annotationTooltipEl = null;
+        function showAnnotationTooltip(e, ann) {
+            hideAnnotationTooltip();
+            const tooltip = document.createElement('div');
+            tooltip.className = 'annotation-tooltip';
+            tooltip.innerHTML = `<strong>原文：</strong>${escapeHtml(ann.selectedText)}<br><strong>批注：</strong>${escapeHtml(ann.annotationText)}`;
+
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 8) + 'px';
+
+            document.body.appendChild(tooltip);
+            annotationTooltipEl = tooltip;
+        }
+
+        function hideAnnotationTooltip() {
+            if (annotationTooltipEl) {
+                annotationTooltipEl.remove();
+                annotationTooltipEl = null;
+            }
+        }
+
+        function buildAnnotationContent(userContent) {
+            if (pendingAnnotations.length === 0) return userContent;
+
+            const parts = [userContent, ''];
+            pendingAnnotations.forEach((ann, idx) => {
+                parts.push(`---`);
+                parts.push(`[批注 ${idx + 1}]`);
+                parts.push(`原文："${ann.selectedText}"`);
+                parts.push(`批注：${ann.annotationText}`);
+                parts.push(`---`);
+            });
+
+            return parts.join('\n');
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
@@ -2619,7 +3492,8 @@
             'get_chapter_summaries': { pending: '正在获取章节概括...', success: '章节概括获取成功' }
         };
 
-        let activeToolToasts = new Map(); // toolName -> toastElement
+        let activeToolToasts = new Map(); // callId -> { toastElement, timeoutId }
+        const TOAST_TIMEOUT_MS = 30000; // pending toast 30秒超时
 
         function showToolToast(toolName, status, params = '') {
             const container = document.getElementById('toolToastContainer');
@@ -2712,64 +3586,115 @@
 
         function handleToolCallStart(data) {
             const toast = showToolToast(data.tool, 'pending', data.params || '');
-            activeToolToasts.set(data.tool, toast);
+            const callId = data.callId || data.tool + '_' + Date.now();
+
+            // 设置超时自动消失
+            const timeoutId = setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.className = 'tool-toast error';
+                    toast.innerHTML = '❌ 操作超时';
+                    setTimeout(() => {
+                        toast.classList.add('fade-out');
+                        setTimeout(() => toast.remove(), 500);
+                    }, 2000);
+                }
+                activeToolToasts.delete(callId);
+            }, TOAST_TIMEOUT_MS);
+
+            activeToolToasts.set(callId, { toast, timeoutId });
         }
 
         function handleToolResult(data) {
+            const callId = data.callId || data.tool;
+            const entry = activeToolToasts.get(callId);
+            const existingToast = entry ? entry.toast : null;
+
+            // 清除超时定时器
+            if (entry && entry.timeoutId) {
+                clearTimeout(entry.timeoutId);
+            }
+
+            const operation = toolOperationMap[data.tool] || { success: data.tool + ' 完成', pending: data.tool + '...' };
+
+            // 优先使用后端直接返回的 success 字段
+            let isSuccess = false;
+            let result = null;
             try {
-                const result = JSON.parse(data.result);
-                if (result.success) {
-                    // 更新或显示成功提示
-                    const existingToast = activeToolToasts.get(data.tool);
-                    if (existingToast) {
-                        existingToast.className = 'tool-toast success';
-                        const operation = toolOperationMap[data.tool] || { success: data.tool + ' 完成' };
-                        existingToast.innerHTML = `✅ ${operation.success}`;
-
-                        // 2秒后淡出
-                        setTimeout(() => {
-                            existingToast.classList.add('fade-out');
-                            setTimeout(() => existingToast.remove(), 500);
-                        }, 2000);
-
-                        activeToolToasts.delete(data.tool);
-                    } else {
-                        showToolToast(data.tool, 'success');
-                    }
-
-                    // 创建小说后，更新 currentNovelId 并刷新面板
-                    if (data.tool === 'create_novel') {
-                        const newNovelId = result.novelId;
-                        if (newNovelId) {
-                            currentNovelId = newNovelId;
-                            console.log('小说创建成功，更新 currentNovelId:', currentNovelId);
-
-                            // 显示带有跳转按钮的成功提示
-                            showNovelCreatedToast(newNovelId, result.title);
-                        }
-                        // 刷新会话参数（可能包含小说标题等）
-                        setTimeout(() => {
-                            loadNovelInfo(newNovelId);
-                            loadSessionParams();
-                            loadSessionStats();
-                            if (characterDrawerOpen) {
-                                loadCharacterCards(newNovelId);
-                                loadOutline(newNovelId);
-                            }
-                        }, 300);
-                    }
-
-                    // 创建角色卡后刷新列表
-                    if (data.tool === 'create_character_card' ||
-                        data.tool === 'update_character_card' ||
-                        data.tool === 'generate_character_image') {
-                        if (typeof loadCharacterCards === 'function' && characterDrawerOpen) {
-                            setTimeout(() => loadCharacterCards(), 300);
-                        }
-                    }
+                result = data.result ? JSON.parse(data.result) : {};
+                if (typeof data.success === 'boolean') {
+                    isSuccess = data.success;
+                } else {
+                    isSuccess = !!result.success;
                 }
             } catch (e) {
                 console.error('解析工具结果失败', e);
+                isSuccess = false;
+            }
+
+            if (isSuccess) {
+                // 成功情况
+                if (existingToast) {
+                    existingToast.className = 'tool-toast success';
+                    existingToast.innerHTML = `✅ ${operation.success}`;
+
+                    // 2秒后淡出
+                    setTimeout(() => {
+                        existingToast.classList.add('fade-out');
+                        setTimeout(() => existingToast.remove(), 500);
+                    }, 2000);
+
+                    activeToolToasts.delete(callId);
+                } else {
+                    showToolToast(data.tool, 'success');
+                }
+
+                // 创建小说后，更新 currentNovelId 并刷新面板
+                if (data.tool === 'create_novel') {
+                    const newNovelId = result ? result.novelId : null;
+                    if (newNovelId) {
+                        currentNovelId = newNovelId;
+                        console.log('小说创建成功，更新 currentNovelId:', currentNovelId);
+
+                        // 显示带有跳转按钮的成功提示
+                        showNovelCreatedToast(newNovelId, result ? result.title : null);
+                    }
+                    // 刷新会话参数（可能包含小说标题等）
+                    setTimeout(() => {
+                        loadNovelInfo(newNovelId);
+                        loadSessionParams();
+                        loadSessionStats();
+                        if (characterDrawerOpen) {
+                            loadCharacterCards(newNovelId);
+                            loadOutline(newNovelId);
+                        }
+                    }, 300);
+                }
+
+                // 创建角色卡后刷新列表
+                if (data.tool === 'create_character_card' ||
+                    data.tool === 'update_character_card' ||
+                    data.tool === 'generate_character_image') {
+                    if (typeof loadCharacterCards === 'function' && characterDrawerOpen) {
+                        setTimeout(() => loadCharacterCards(), 300);
+                    }
+                }
+            } else {
+                // 失败情况
+                const errorMsg = (result && (result.error || result.message)) || '操作失败';
+                if (existingToast) {
+                    existingToast.className = 'tool-toast error';
+                    existingToast.innerHTML = `❌ ${operation.pending.replace('...', '')} 失败: ${errorMsg}`;
+
+                    // 3秒后淡出
+                    setTimeout(() => {
+                        existingToast.classList.add('fade-out');
+                        setTimeout(() => existingToast.remove(), 500);
+                    }, 3000);
+
+                    activeToolToasts.delete(callId);
+                } else {
+                    showNotification(`❌ ${operation.pending.replace('...', '')} 失败: ${errorMsg}`, 'error');
+                }
             }
         }
 
@@ -3269,6 +4194,41 @@
                                 <div class="message-content"></div>
                             `;
                             const contentEl = msgEl.querySelector('.message-content');
+
+                            // 如果有思考内容，先添加思考区块（默认收起）
+                            if (msg.reasoning_content) {
+                                const reasoningBlock = document.createElement('div');
+                                reasoningBlock.className = 'reasoning-block collapsed';
+                                reasoningBlock.innerHTML = `
+                                    <div class="reasoning-header" onclick="toggleReasoning(this)">
+                                        <span class="reasoning-icon">🧠</span>
+                                        <span class="reasoning-title">思考过程</span>
+                                        <span class="reasoning-toggle">▼</span>
+                                    </div>
+                                    <div class="reasoning-content">${escapeHtml(msg.reasoning_content)}</div>
+                                `;
+                                contentEl.appendChild(reasoningBlock);
+                            }
+
+                            // 如果有工具调用，添加工具调用区块（默认收起）
+                            if (msg.tool_calls && msg.tool_calls.length > 0) {
+                                const toolCalls = msg.tool_calls.map(tc => {
+                                    const func = tc.function || {};
+                                    return {
+                                        tool: func.name || tc.name || 'unknown',
+                                        displayName: func.name || tc.name || 'unknown',
+                                        params: func.arguments || tc.arguments || '',
+                                        status: 'success'
+                                    };
+                                });
+                                updateToolCallsDisplay(msgEl, toolCalls);
+                                // 确保历史消息的工具调用区块默认收起
+                                const toolBlock = msgEl.querySelector('.tool-calls-block');
+                                if (toolBlock && !toolBlock.classList.contains('collapsed')) {
+                                    toolBlock.classList.add('collapsed');
+                                }
+                            }
+
                             renderAIMessage(contentEl, msg.content || '');
                         }
 
