@@ -65,6 +65,7 @@ public class CreativeSessionService {
         Map.entry("update_character_card", "更新角色卡"),
         Map.entry("generate_character_image", "生成角色图片"),
         Map.entry("generate_chapter_images", "生成章节配图"),
+        Map.entry("generate_reference_image", "生成参考图片"),
         Map.entry("get_chapter_summaries", "获取章节概括"),
         Map.entry("fill_params", "更新参数"),
         Map.entry("add_memory", "保存偏好"),
@@ -1033,6 +1034,9 @@ public class CreativeSessionService {
                     case "generate_chapter_images":
                         result = generateChapterImages(argumentsJson, session, emitter);
                         break;
+                    case "generate_reference_image":
+                        result = generateReferenceImage(argumentsJson, session);
+                        break;
                     case "get_chapter_summaries":
                         result = getChapterSummaries(argumentsJson, session);
                         break;
@@ -1951,6 +1955,36 @@ public class CreativeSessionService {
         } catch (Exception e) {
             logger.error("生成章节配图失败: {}", e.getMessage(), e);
             return "{\"error\": \"" + e.getMessage() + "\"}";
+        }
+    }
+
+    /**
+     * 生成参考图片工具实现
+     * 不直接生成图片，返回确认卡片数据供前端渲染
+     */
+    @SuppressWarnings("unchecked")
+    private String generateReferenceImage(String argumentsJson, CreativeSession session) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+
+            String prompt = (String) args.get("prompt");
+            String suggestedSize = (String) args.getOrDefault("suggestedSize", "1:1");
+            String type = (String) args.getOrDefault("type", "other");
+
+            if (prompt == null || prompt.trim().isEmpty()) {
+                return "{\"error\": \"提示词不能为空\", \"errorCode\": \"EMPTY_PROMPT\"}";
+            }
+
+            // 返回确认卡片数据，不直接生成图片
+            return objectMapper.writeValueAsString(Map.of(
+                "action", "show_image_card",
+                "prompt", prompt,
+                "suggestedSize", suggestedSize,
+                "type", type
+            ));
+        } catch (Exception e) {
+            logger.error("生成参考图片失败: {}", e.getMessage(), e);
+            return "{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}";
         }
     }
 
@@ -3040,6 +3074,13 @@ public class CreativeSessionService {
         genChapterImgProps.put("mode", Map.of("type", "string", "description", "auto-自动生成/confirm-先确认后生成", "enum", Arrays.asList("auto", "confirm")));
         tools.add(createTool("generate_chapter_images", "为章节生成配图。confirm模式返回推荐位置供用户确认。", genChapterImgProps, Arrays.asList("chapterId")));
 
+        // generate_reference_image 工具
+        Map<String, Object> genRefImgProps = new LinkedHashMap<>();
+        genRefImgProps.put("prompt", Map.of("type", "string", "description", "图片描述提示词，详细描述要生成的内容"));
+        genRefImgProps.put("suggestedSize", Map.of("type", "string", "description", "推荐尺寸：1:1角色图、16:9场景图、9:16竖版图", "enum", Arrays.asList("1:1", "16:9", "9:16")));
+        genRefImgProps.put("type", Map.of("type", "string", "description", "图片类型：角色/场景/服装道具/其他", "enum", Arrays.asList("character", "scene", "costume", "other")));
+        tools.add(createTool("generate_reference_image", "生成参考图片。当用户需要角色/场景/服装道具的视觉参考时调用。返回提示词建议，由用户确认后生成。", genRefImgProps, Arrays.asList("prompt")));
+
         // get_chapter_summaries 工具
         Map<String, Object> getSummariesProps = new LinkedHashMap<>();
         getSummariesProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
@@ -3644,6 +3685,14 @@ public class CreativeSessionService {
                 case "generate_chapter_images":
                     if (args.get("chapterId") != null) {
                         parts.add("章节ID: " + args.get("chapterId"));
+                    }
+                    break;
+                case "generate_reference_image":
+                    if (args.get("type") != null) {
+                        parts.add("类型: " + args.get("type"));
+                    }
+                    if (args.get("suggestedSize") != null) {
+                        parts.add("尺寸: " + args.get("suggestedSize"));
                     }
                     break;
                 case "fill_params":
