@@ -24,7 +24,7 @@ public class GenreMemory {
     @Column(name = "key_name", nullable = false)
     private String key;
 
-    @Column(name = "value", columnDefinition = "TEXT")
+    @Column(name = "memory_value", columnDefinition = "TEXT")
     private String value;
 
     @Column(name = "create_time")
