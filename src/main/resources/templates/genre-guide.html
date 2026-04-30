@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${genreName} + '创作引导 - 梦境文阁'">创作引导 - 梦境文阁</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 50%, var(--dream-mint) 100%);
+            min-height: 100vh;
+        }
+
+        .guide-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .guide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .guide-header h1 {
+            color: var(--text-dark);
+            font-size: 1.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: var(--text-dark);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .header-btn:hover {
+            background: rgba(156, 39, 176, 0.1);
+        }
+
+        .chat-area {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--dream-lavender);
+            color: var(--accent-purple);
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: var(--accent-purple);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-dark);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.assistant .message-content p {
+            margin-bottom: 8px;
+        }
+
+        .message.assistant .message-content ul,
+        .message.assistant .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .chat-input-area {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #7b1fa2;
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .options-container {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .option-btn {
+            padding: 8px 16px;
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--accent-purple);
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .loading {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .loading span {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .loading span:nth-child(1) { animation-delay: -0.32s; }
+        .loading span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-container">
+        <div class="guide-header">
+            <h1 th:text="${genreName} + '创作引导'">创作引导</h1>
+            <div class="header-actions">
+                <a href="/genre-select" class="header-btn">切换体裁</a>
+                <a href="/" class="header-btn">返回首页</a>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <div class="chat-input-area">
+                <div class="input-container">
+                    <input type="text" class="chat-input" id="chatInput"
+                           placeholder="输入你的想法..." onkeypress="handleKeyPress(event)">
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+                </div>
+                <div class="options-container" id="optionsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const genreType = [[${genreType}]];
+        const genreName = [[${genreName}]];
+        let currentSessionId = null;
+        let isProcessing = false;
+
+        window.onload = function() {
+            createNewSession();
+        };
+
+        async function createNewSession() {
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const session = await response.json();
+                currentSessionId = session.sessionId;
+                addMessage('assistant', `你好！我是你的${genreName}创作顾问。让我们开始创作之旅吧！请告诉我，你想创作什么类型的作品？`);
+            } catch (error) {
+                console.error('创建会话失败:', error);
+                addMessage('assistant', '抱歉，创建会话时出现问题，请刷新页面重试。');
+            }
+        }
+
+        function addMessage(role, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = role === 'user' ? '我' : 'AI';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = marked.parse(content);
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+
+            parseOptions(content);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function parseOptions(content) {
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const optionRegex = /\[OPTIONS:(\w+):([^\]]+)\]([^[]+)\[\/OPTIONS\]/g;
+            let match;
+
+            while ((match = optionRegex.exec(content)) !== null) {
+                const fieldName = match[1];
+                const displayName = match[2];
+                const options = match[3].split('|');
+
+                options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = option.trim();
+                    btn.onclick = () => selectOption(fieldName, option.trim());
+                    optionsContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function selectOption(fieldName, value) {
+            const input = document.getElementById('chatInput');
+            input.value = value;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+
+            const input = document.getElementById('chatInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            addMessage('user', content);
+            input.value = '';
+            document.getElementById('optionsContainer').innerHTML = '';
+
+            isProcessing = true;
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '思考中...';
+
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions/${currentSessionId}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let assistantMessage = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.text) {
+                                    assistantMessage += data.text;
+                                }
+                            } catch (e) {
+                                // 忽略解析错误
+                            }
+                        }
+                    }
+                }
+
+                if (assistantMessage) {
+                    addMessage('assistant', assistantMessage);
+                }
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                addMessage('assistant', '抱歉，发送消息时出现问题，请重试。');
+            } finally {
+                isProcessing = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>

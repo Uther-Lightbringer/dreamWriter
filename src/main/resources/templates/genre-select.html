@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选择创作体裁 - 梦境文阁</title>
+    <style>
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-purple: #9c27b0;
+            --accent-blue: #3f51b5;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 50%, var(--dream-mint) 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+
+        .genre-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .genre-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .genre-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        .genre-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+
+        .genre-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+
+        .genre-description {
+            color: var(--text-light);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .genre-features {
+            margin-top: 20px;
+            text-align: left;
+            list-style: none;
+        }
+
+        .genre-features li {
+            color: var(--text-light);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .genre-features li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-purple);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(156, 39, 176, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>选择创作体裁</h1>
+            <p>选择你想要创作的文学体裁，开始你的创作之旅</p>
+        </div>
+
+        <div class="genre-grid">
+            <div class="genre-card" onclick="selectGenre('novel')">
+                <div class="genre-icon">📖</div>
+                <div class="genre-title">小说</div>
+                <div class="genre-description">传统小说创作，支持多种题材和风格</div>
+                <ul class="genre-features">
+                    <li>支持多种题材：古代宫廷、现代都市、玄幻修仙等</li>
+                    <li>角色设定、世界观构建</li>
+                    <li>章节管理和剧情规划</li>
+                </ul>
+            </div>
+
+            <div class="genre-card" onclick="selectGenre('script')">
+                <div class="genre-icon">🎬</div>
+                <div class="genre-title">剧本</div>
+                <div class="genre-description">影视剧本、舞台剧本、广播剧脚本</div>
+                <ul class="genre-features">
+                    <li>场景描述和角色对白</li>
+                    <li>剧情结构设计（三幕式、五幕式）</li>
+                    <li>动作指导和音效标注</li>
+                </ul>
+            </div>
+
+            <div class="genre-card" onclick="selectGenre('visual')">
+                <div class="genre-icon">🎨</div>
+                <div class="genre-title">视觉叙事</div>
+                <div class="genre-description">漫画脚本、分镜脚本、故事板</div>
+                <ul class="genre-features">
+                    <li>分镜设计和画面描述</li>
+                    <li>镜头语言和构图指导</li>
+                    <li>对话气泡和音效设计</li>
+                </ul>
+            </div>
+
+            <div class="genre-card" onclick="selectGenre('essay')">
+                <div class="genre-icon">✍️</div>
+                <div class="genre-title">散文</div>
+                <div class="genre-description">散文、随笔、杂文、游记</div>
+                <ul class="genre-features">
+                    <li>情感表达和意境营造</li>
+                    <li>语言风格和修辞手法</li>
+                    <li>结构安排和节奏把控</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="/" class="back-link">← 返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        function selectGenre(genreType) {
+            window.location.href = `/genre-guide/${genreType}`;
+        }
+    </script>
+</body>
+</html>
