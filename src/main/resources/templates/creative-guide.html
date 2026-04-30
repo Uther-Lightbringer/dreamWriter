@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>创作引导 - 梦境文阁</title>
     <!-- Markdown 渲染库 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/js/marked.min.js"></script>
     <style>
         :root {
             --dream-pink: #fce4ec;
@@ -554,6 +554,81 @@
         }
 
         /* 图片卡片样式 */
+        .image-progress-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 320px;
+            margin-top: 12px;
+            border-left: 4px solid var(--accent-purple);
+            transition: border-color 0.3s;
+        }
+
+        .image-progress-card.failed {
+            border-left-color: #e53935;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .progress-icon {
+            font-size: 1.2rem;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .progress-character {
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .progress-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-percent {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            min-width: 35px;
+            text-align: right;
+        }
+
+        .progress-message {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
         .generated-image-card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 12px;
@@ -1093,6 +1168,30 @@
             color: var(--text-light);
         }
 
+        .novel-worldview {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-teal);
+        }
+
+        .worldview-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent-teal);
+            margin-bottom: 4px;
+        }
+
+        .worldview-text {
+            font-size: 0.8rem;
+            color: var(--text-dark);
+            line-height: 1.4;
+            word-break: break-word;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
         .no-novel-hint {
             color: var(--text-light);
             font-size: 0.85rem;
@@ -1347,7 +1446,46 @@
         }
 
         .outline-text {
-            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .outline-text .md-h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+            margin: 12px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(156, 39, 176, 0.2);
+        }
+
+        .outline-text .md-h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 10px 0 6px 0;
+        }
+
+        .outline-text .md-h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 8px 0 4px 0;
+        }
+
+        .outline-text .md-list {
+            margin: 4px 0;
+            padding-left: 20px;
+            list-style-type: disc;
+        }
+
+        .outline-text .md-list li {
+            margin: 2px 0;
+            font-size: 0.85rem;
+        }
+
+        .outline-text strong {
+            color: var(--accent-purple);
+            font-weight: 600;
         }
 
         .character-status {
@@ -2610,6 +2748,8 @@ let isStreaming = false;
                                     }
                                 } else if (currentEventType === 'summary_generated') {
                                     showNotification(`📝 ${json.message}（压缩 ${json.turnsSummarized} 轮对话）`, 'info');
+                                } else if (currentEventType === 'image_progress') {
+                                    handleImageProgress(json);
                                 } else if (currentEventType === 'image_result') {
                                     handleImageResult(json);
                                 } else if (currentEventType === 'show_image_card') {
@@ -3260,7 +3400,89 @@ let isStreaming = false;
             sendMessage();
         }
 
+        // 图片生成进度处理
+        let currentProgressCard = null;
+
+        function handleImageProgress(data) {
+            const messagesEl = document.getElementById('chatMessages');
+
+            // 如果是开始状态，创建进度卡片
+            if (data.status === 'started' || !currentProgressCard) {
+                // 移除旧的进度卡片
+                if (currentProgressCard) {
+                    currentProgressCard.remove();
+                }
+
+                const progressEl = document.createElement('div');
+                progressEl.className = 'message assistant';
+                progressEl.id = 'image-progress-' + data.taskId;
+
+                progressEl.innerHTML = `
+                    <div class="message-avatar">AI</div>
+                    <div class="message-content">
+                        <div class="image-progress-card">
+                            <div class="progress-header">
+                                <span class="progress-icon">🎨</span>
+                                <span class="progress-title">正在生成角色图片</span>
+                            </div>
+                            <div class="progress-character">${escapeHtml(data.characterName || '未知角色')}</div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar">
+                                    <div class="progress-bar-fill" style="width: ${data.progress}%"></div>
+                                </div>
+                                <span class="progress-percent">${data.progress}%</span>
+                            </div>
+                            <div class="progress-message">${escapeHtml(data.message || '生成中...')}</div>
+                        </div>
+                    </div>
+                `;
+
+                messagesEl.appendChild(progressEl);
+                currentProgressCard = progressEl;
+                scrollToBottom();
+            } else {
+                // 更新现有进度卡片
+                const progressFill = currentProgressCard.querySelector('.progress-bar-fill');
+                const progressPercent = currentProgressCard.querySelector('.progress-percent');
+                const progressMessage = currentProgressCard.querySelector('.progress-message');
+
+                if (progressFill) {
+                    progressFill.style.width = data.progress + '%';
+                }
+                if (progressPercent) {
+                    progressPercent.textContent = data.progress + '%';
+                }
+                if (progressMessage) {
+                    progressMessage.textContent = data.message || '生成中...';
+                }
+
+                // 如果是完成或失败状态，更新样式
+                if (data.status === 'completed') {
+                    const progressIcon = currentProgressCard.querySelector('.progress-icon');
+                    const progressTitle = currentProgressCard.querySelector('.progress-title');
+                    if (progressIcon) progressIcon.textContent = '✅';
+                    if (progressTitle) progressTitle.textContent = '图片生成完成';
+                    if (progressMessage) progressMessage.textContent = '图片已生成，正在加载...';
+                } else if (data.status === 'failed') {
+                    const progressIcon = currentProgressCard.querySelector('.progress-icon');
+                    const progressTitle = currentProgressCard.querySelector('.progress-title');
+                    const progressCard = currentProgressCard.querySelector('.image-progress-card');
+                    if (progressIcon) progressIcon.textContent = '❌';
+                    if (progressTitle) progressTitle.textContent = '图片生成失败';
+                    if (progressCard) progressCard.classList.add('failed');
+                }
+
+                scrollToBottom();
+            }
+        }
+
         function handleImageResult(data) {
+            // 移除进度卡片
+            if (currentProgressCard) {
+                currentProgressCard.remove();
+                currentProgressCard = null;
+            }
+
             const messagesEl = document.getElementById('chatMessages');
             const imageEl = document.createElement('div');
             imageEl.className = 'message assistant';
@@ -4021,12 +4243,41 @@ let isStreaming = false;
                 if (novel.id) {
                     currentNovelId = novel.id;  // 确保 currentNovelId 同步
                     const chapterCount = novel.chapterCount || 0;
+
+                    // 优先使用 worldView 字段，如果没有则从 outline 中提取
+                    let worldView = novel.worldView || novel.worldview || '';
+
+                    // 如果 worldView 为空，尝试从 outline 中提取世界观部分
+                    if (!worldView && novel.outline) {
+                        const outline = novel.outline;
+                        // 匹配 "## 世界观" 或 "### 世界观" 后面的内容
+                        const worldviewMatch = outline.match(/#{2,3}\s*世界观\s*\n([\s\S]*?)(?=\n#{2,3}\s|\n##\s|$)/);
+                        if (worldviewMatch && worldviewMatch[1]) {
+                            worldView = worldviewMatch[1].trim();
+                        }
+                    }
+
+                    let worldViewHtml = '';
+                    if (worldView) {
+                        // 截断显示，最多显示 150 个字符
+                        const displayText = worldView.length > 150
+                            ? worldView.substring(0, 150) + '...'
+                            : worldView;
+                        worldViewHtml = `
+                            <div class="novel-worldview">
+                                <div class="worldview-label">🌍 世界观</div>
+                                <div class="worldview-text" title="${escapeHtml(worldView)}">${escapeHtml(displayText)}</div>
+                            </div>
+                        `;
+                    }
+
                     content.innerHTML = `
                         <div class="novel-title">${escapeHtml(novel.title || '未命名小说')}</div>
                         <div class="novel-meta">
                             <span>📝 ${chapterCount} 章</span>
                             <span>📅 ${novel.createTime ? new Date(novel.createTime).toLocaleDateString('zh-CN') : ''}</span>
                         </div>
+                        ${worldViewHtml}
                     `;
                 } else {
                     content.innerHTML = '<div class="no-novel-hint">小说不存在</div>';
@@ -4574,6 +4825,37 @@ let isStreaming = false;
         }
 
         // 加载大纲内容
+        // 简单的 Markdown 渲染函数
+        function renderMarkdown(text) {
+            if (!text) return '';
+
+            let html = escapeHtml(text);
+
+            // 标题：### 标题 -> <h4>标题</h4>
+            html = html.replace(/^### (.+)$/gm, '<h4 class="md-h3">$1</h4>');
+            // 标题：## 标题 -> <h3>标题</h3>
+            html = html.replace(/^## (.+)$/gm, '<h3 class="md-h2">$1</h3>');
+            // 标题：# 标题 -> <h2>标题</h2>
+            html = html.replace(/^# (.+)$/gm, '<h2 class="md-h1">$1</h2>');
+
+            // 粗体：**文本** -> <strong>文本</strong>
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            // 列表项：- 文本 -> <li>文本</li>
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            // 包装连续的 <li> 为 <ul>
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul class="md-list">$&</ul>');
+
+            // 换行：\n -> <br>
+            html = html.replace(/\n/g, '<br>');
+
+            // 清理多余的 <br>
+            html = html.replace(/<br><br>(<[uh])/g, '<br>$1');
+            html = html.replace(/(<\/[hlu][^>]*>)<br>/g, '$1');
+
+            return html;
+        }
+
         async function loadOutline(novelId) {
             try {
                 const response = await fetch('/api/novels/' + novelId);
@@ -4581,8 +4863,9 @@ let isStreaming = false;
 
                 const outlineContent = document.getElementById('outlineContent');
                 if (novel.outline) {
+                    const renderedOutline = renderMarkdown(novel.outline);
                     outlineContent.innerHTML = `
-                        <div class="outline-text">${escapeHtml(novel.outline)}</div>
+                        <div class="outline-text">${renderedOutline}</div>
                         <div class="outline-actions" style="margin-top: 8px;">
                             <button class="outline-generate-btn" onclick="generateOutline()">重新生成</button>
                         </div>
