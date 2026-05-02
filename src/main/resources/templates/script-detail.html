@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${script.title} + ' - 梦境文阁'">剧本详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --accent-purple: #9c27b0;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Noto Serif SC", serif;
+            background: linear-gradient(135deg, var(--dream-pink) 0%, var(--dream-lavender) 50%, var(--dream-mint) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-header h1 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            font-size: 1.6rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: rgba(156, 39, 176, 0.1);
+            color: var(--accent-purple);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .script-info {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .script-info .type-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(156, 39, 176, 0.1);
+            color: var(--accent-purple);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .script-info .description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .scene-content {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            line-height: 1.8;
+        }
+
+        .scene-content h2 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .scene-meta {
+            color: var(--text-light);
+            font-style: italic;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .scene-body {
+            color: var(--text-dark);
+            white-space: pre-wrap;
+        }
+
+        .scene-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .scene-nav a {
+            color: var(--accent-purple);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(156, 39, 176, 0.1);
+            transition: background 0.2s;
+        }
+
+        .scene-nav a:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .scene-list {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 20px 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .scene-list h2 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .scene-item {
+            display: block;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(156, 39, 176, 0.05);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: background 0.2s;
+        }
+
+        .scene-item:hover {
+            background: rgba(156, 39, 176, 0.1);
+        }
+
+        .scene-item .scene-number {
+            font-weight: bold;
+            color: var(--accent-purple);
+        }
+
+        .scene-item .scene-location {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .delete-btn {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+
+        .delete-btn:hover {
+            background: rgba(244, 67, 54, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 th:text="${script.title}">剧本标题</h1>
+            <div class="header-actions">
+                <a href="/scripts" class="btn btn-secondary">返回列表</a>
+                <a href="/" class="btn btn-secondary">首页</a>
+            </div>
+        </div>
+
+        <div class="script-info">
+            <span class="type-badge" th:text="${script.scriptType}">影视剧本</span>
+            <p class="description" th:if="${script.description}" th:text="${script.description}">剧本简介</p>
+        </div>
+
+        <!-- 场景详情视图 -->
+        <div th:if="${scene}" class="scene-content">
+            <h2 th:text="'场景 ' + ${scene.sceneNumber}">场景 1</h2>
+            <div class="scene-meta">
+                <span th:if="${scene.location}" th:text="'地点：' + ${scene.location}">地点</span>
+                <span th:if="${scene.time}" th:text="' | 时间：' + ${scene.time}">时间</span>
+            </div>
+            <div class="scene-body" th:text="${scene.content}">场景内容</div>
+
+            <div class="scene-nav">
+                <a th:if="${prevScene}" th:href="@{/script/{id}/scene/{sceneId}(id=${script.id},sceneId=${prevScene.id})}">上一场景</a>
+                <span th:unless="${prevScene}"></span>
+                <a th:if="${nextScene}" th:href="@{/script/{id}/scene/{sceneId}(id=${script.id},sceneId=${nextScene.id})}">下一场景</a>
+                <span th:unless="${nextScene}"></span>
+            </div>
+        </div>
+
+        <!-- 场景列表视图 -->
+        <div class="scene-list">
+            <h2>场景列表</h2>
+            <div th:if="${#lists.isEmpty(scenes)}" style="color: var(--text-light); padding: 20px; text-align: center;">
+                还没有场景，通过创作引导添加吧！
+            </div>
+            <a th:each="s : ${scenes}" th:href="@{/script/{id}/scene/{sceneId}(id=${script.id},sceneId=${s.id})}" class="scene-item">
+                <span class="scene-number" th:text="'场景 ' + ${s.sceneNumber}">场景 1</span>
+                <span class="scene-location" th:if="${s.location}" th:text="' - ' + ${s.location}">地点</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${work.title} + ' - 梦境文阁'">视觉叙事详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --accent-blue: #3f51b5;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Noto Serif SC", serif;
+            background: linear-gradient(135deg, var(--dream-lavender) 0%, var(--dream-mint) 50%, var(--dream-pink) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-header h1 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            font-size: 1.6rem;
+        }
+
+        .header-actions { display: flex; gap: 10px; }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: rgba(63, 81, 181, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .btn-secondary:hover { background: rgba(63, 81, 181, 0.2); }
+
+        .work-info {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .work-info .type-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(63, 81, 181, 0.1);
+            color: var(--accent-blue);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .work-info .description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* 分镜卡片布局 */
+        .panel-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(10px);
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .panel-number {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--accent-blue);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .camera-angle {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(63, 81, 181, 0.1);
+            color: var(--accent-blue);
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .panel-scene {
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+        }
+
+        .panel-dialogue {
+            background: rgba(63, 81, 181, 0.05);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .panel-dialogue::before {
+            content: "对话";
+            display: block;
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            margin-bottom: 4px;
+        }
+
+        .panel-action {
+            color: var(--text-light);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        .panel-sound {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .panel-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .panel-nav a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(63, 81, 181, 0.1);
+            transition: background 0.2s;
+        }
+
+        .panel-nav a:hover { background: rgba(63, 81, 181, 0.2); }
+
+        /* 分镜缩略图导航 */
+        .panel-thumbnails {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 12px 0;
+            margin-bottom: 16px;
+        }
+
+        .panel-thumb {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background: rgba(63, 81, 181, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--accent-blue);
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .panel-thumb:hover,
+        .panel-thumb.active {
+            background: rgba(63, 81, 181, 0.3);
+            color: white;
+        }
+
+        .panel-list {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 20px 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-list h2 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .panel-item {
+            display: block;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(63, 81, 181, 0.05);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: background 0.2s;
+        }
+
+        .panel-item:hover { background: rgba(63, 81, 181, 0.1); }
+
+        .panel-item .panel-num {
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 th:text="${work.title}">作品标题</h1>
+            <div class="header-actions">
+                <a href="/visual-works" class="btn btn-secondary">返回列表</a>
+                <a href="/" class="btn btn-secondary">首页</a>
+            </div>
+        </div>
+
+        <div class="work-info">
+            <span class="type-badge" th:text="${work.visualType}">漫画脚本</span>
+            <p class="description" th:if="${work.description}" th:text="${work.description}">作品简介</p>
+        </div>
+
+        <!-- 分镜详情视图 -->
+        <div th:if="${panel}">
+            <!-- 缩略图导航 -->
+            <div class="panel-thumbnails">
+                <a th:each="p : ${allPanels}" th:href="@{/visual/{id}/panel/{panelId}(id=${work.id},panelId=${p.id})}"
+                   th:classappend="${p.id == panel.id} ? 'active'" class="panel-thumb"
+                   th:text="${p.panelNumber}">1</a>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-header">
+                    <span class="panel-number" th:text="'分镜 ' + ${panel.panelNumber}">分镜 1</span>
+                    <span th:if="${panel.cameraAngle}" class="camera-angle" th:text="${panel.cameraAngle}">特写</span>
+                </div>
+                <div class="panel-scene" th:text="${panel.scene}">画面描述</div>
+                <div th:if="${panel.dialogue}" class="panel-dialogue" th:text="${panel.dialogue}">对话内容</div>
+                <div th:if="${panel.action}" class="panel-action" th:text="'动作：' + ${panel.action}">动作描述</div>
+                <div th:if="${panel.soundEffect}" class="panel-sound" th:text="'音效：' + ${panel.soundEffect}">音效描述</div>
+            </div>
+
+            <div class="panel-nav">
+                <a th:if="${prevPanel}" th:href="@{/visual/{id}/panel/{panelId}(id=${work.id},panelId=${prevPanel.id})}">上一分镜</a>
+                <span th:unless="${prevPanel}"></span>
+                <a th:if="${nextPanel}" th:href="@{/visual/{id}/panel/{panelId}(id=${work.id},panelId=${nextPanel.id})}">下一分镜</a>
+                <span th:unless="${nextPanel}"></span>
+            </div>
+        </div>
+
+        <!-- 分镜列表视图 -->
+        <div class="panel-list">
+            <h2>分镜列表</h2>
+            <div th:if="${#lists.isEmpty(panels)}" style="color: var(--text-light); padding: 20px; text-align: center;">
+                还没有分镜，通过创作引导添加吧！
+            </div>
+            <a th:each="p : ${panels}" th:href="@{/visual/{id}/panel/{panelId}(id=${work.id},panelId=${p.id})}" class="panel-item">
+                <span class="panel-num" th:text="'分镜 ' + ${p.panelNumber}">分镜 1</span>
+                <span th:if="${p.cameraAngle}" th:text="' [' + ${p.cameraAngle} + ']'"> [特写]</span>
+                <span th:text="' - ' + ${p.scene}"> 画面描述</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${essay.title} + ' - 梦境文阁'">散文详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-teal: #009688;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Noto Serif SC", serif;
+            background: linear-gradient(135deg, var(--dream-mint) 0%, var(--dream-peach) 50%, var(--dream-pink) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 700px; margin: 0 auto; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-header h1 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            font-size: 1.6rem;
+        }
+
+        .header-actions { display: flex; gap: 10px; }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: rgba(0, 150, 136, 0.1);
+            color: var(--accent-teal);
+        }
+
+        .btn-secondary:hover { background: rgba(0, 150, 136, 0.2); }
+
+        .essay-info {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .essay-info h2 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .essay-info .type-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(0, 150, 136, 0.1);
+            color: var(--accent-teal);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .essay-info .description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* 散文优雅排版 */
+        .essay-body {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 40px 48px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .essay-paragraph {
+            margin-bottom: 24px;
+            line-height: 2;
+            color: var(--text-dark);
+            text-indent: 2em;
+            font-size: 1.05rem;
+            white-space: pre-wrap;
+        }
+
+        .essay-paragraph:last-child {
+            margin-bottom: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 th:text="${essay.title}">散文标题</h1>
+            <div class="header-actions">
+                <a href="/essays" class="btn btn-secondary">返回列表</a>
+                <a href="/" class="btn btn-secondary">首页</a>
+            </div>
+        </div>
+
+        <div class="essay-info">
+            <h2 th:text="${essay.title}">散文标题</h2>
+            <span class="type-badge" th:text="${essay.essayType}">抒情散文</span>
+            <p class="description" th:if="${essay.description}" th:text="${essay.description}">散文简介</p>
+        </div>
+
+        <div class="essay-body">
+            <div th:if="${#lists.isEmpty(paragraphs)}" class="empty-state">
+                还没有段落内容，通过创作引导添加吧！
+            </div>
+            <div th:each="paragraph : ${paragraphs}" class="essay-paragraph" th:text="${paragraph.content}">
+                段落内容
+            </div>
+        </div>
+    </div>
+</body>
+</html>

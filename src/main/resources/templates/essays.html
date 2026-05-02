@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的散文 - 梦境文阁</title>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dream-pink: #fce4ec;
+            --dream-lavender: #e8eaf6;
+            --dream-mint: #e0f7fa;
+            --dream-peach: #fff3e0;
+            --accent-teal: #009688;
+            --text-dark: #5d4037;
+            --text-light: #8d6e63;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Noto Serif SC", serif;
+            background: linear-gradient(135deg, var(--dream-mint) 0%, var(--dream-peach) 50%, var(--dream-pink) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-header h1 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            font-size: 1.8rem;
+        }
+
+        .header-actions { display: flex; gap: 10px; }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: rgba(0, 150, 136, 0.1);
+            color: var(--accent-teal);
+        }
+
+        .btn-secondary:hover { background: rgba(0, 150, 136, 0.2); }
+
+        .essay-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .essay-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .essay-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .essay-card h3 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .essay-card .type-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(0, 150, 136, 0.1);
+            color: var(--accent-teal);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .essay-card .description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .essay-card .meta {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-state p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+        }
+
+        .empty-state a {
+            color: var(--accent-teal);
+            text-decoration: none;
+        }
+
+        .empty-state a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>我的散文</h1>
+            <div class="header-actions">
+                <a href="/genre-guide/essay" class="btn btn-secondary">去创作</a>
+                <a href="/" class="btn btn-secondary">返回首页</a>
+            </div>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(essays)}" class="essay-grid">
+            <a th:each="essay : ${essays}" th:href="@{/essay/{id}(id=${essay.id})}" class="essay-card">
+                <h3 th:text="${essay.title}">散文标题</h3>
+                <span class="type-badge" th:text="${essay.essayType}">抒情散文</span>
+                <p class="description" th:text="${essay.description}">散文简介</p>
+                <div class="meta">
+                    <span th:text="${#temporals.format(essay.createTime, 'yyyy-MM-dd HH:mm')}">2026-01-01</span>
+                </div>
+            </a>
+        </div>
+
+        <div th:if="${#lists.isEmpty(essays)}" class="empty-state">
+            <p>还没有散文，去创作引导开始吧！</p>
+            <a href="/genre-guide/essay">开始创作散文</a>
+        </div>
+    </div>
+</body>
+</html>
