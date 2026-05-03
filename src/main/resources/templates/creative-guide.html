@@ -1767,8 +1767,16 @@
 
         .character-image-container img {
             max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .character-image-container img:hover {
+            transform: scale(1.02);
         }
 
         .character-card-item {
@@ -5000,6 +5008,7 @@ let isStreaming = false;
                     </div>
                     <div class="character-image-container">
                         <img src="${escapeHtml(card.generatedImageUrl)}" alt="${escapeHtml(card.name)}"
+                             onclick="viewImageFullscreen('${escapeHtml(card.generatedImageUrl)}')"
                              onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'padding: 30px; text-align: center; background: rgba(255,255,255,0.5); border-radius: 12px; color: var(--text-light);\'>图片加载失败</div>';" />
                     </div>
                     <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-light);">
