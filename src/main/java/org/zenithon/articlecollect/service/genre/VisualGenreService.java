@@ -7,8 +7,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.zenithon.articlecollect.entity.GenreSession;
 import org.zenithon.articlecollect.entity.VisualWork;
 import org.zenithon.articlecollect.entity.VisualPanel;
+import org.zenithon.articlecollect.entity.CharacterCardEntity;
 import org.zenithon.articlecollect.repository.VisualWorkRepository;
 import org.zenithon.articlecollect.repository.VisualPanelRepository;
+import org.zenithon.articlecollect.repository.CharacterCardRepository;
 import org.zenithon.articlecollect.service.EvoLinkImageService;
 
 import java.io.BufferedReader;
@@ -27,6 +29,9 @@ public class VisualGenreService extends AbstractGenreService {
 
     @Autowired
     private VisualPanelRepository visualPanelRepository;
+
+    @Autowired
+    private CharacterCardRepository characterCardRepository;
 
     @Autowired
     private EvoLinkImageService evoLinkImageService;
@@ -56,21 +61,80 @@ public class VisualGenreService extends AbstractGenreService {
 
             1. **作品类型**：选择创作哪种类型的视觉叙事
             2. **题材和风格**：确定作品的题材和视觉风格
-            3. **角色设定**：主角、配角的外貌和性格
+            3. **角色设定**：主角、配角的外貌和性格（必须创建角色卡！）
             4. **场景设定**：主要场景和环境描述
             5. **画面风格**：写实、卡通、水彩、像素等
             6. **分镜设计**：镜头语言、构图要求
 
-            ## 视觉叙事格式
+            ## 角色设定流程（重要）
 
-            ### 分镜描述格式
+            **关键要求**：每个角色在确定基本信息后，必须创建角色卡！
+
+            ### 角色卡必填信息
+            - 姓名、性别、年龄
+            - **完整外貌描述**（用于AI绘图一致性）：
+              - 身高（如：168cm）
+              - 发型发色（如：齐腰黑发，微卷）
+              - 眼睛描述（如：丹凤眼，深褐色瞳孔）
+              - 脸型（如：瓜子脸）
+              - 体型（如：身材苗条）
+              - 服装风格（如：白色衬衫配淡蓝色长裙）
+              - 显著特征（如：左眉有一道疤痕）
+
+            ### 角色设定示例
+            用户确认角色信息后，立即调用 `create_character_card` 工具创建角色卡：
             ```
-            分镜1：
-            画面：[画面描述]
-            镜头：[镜头类型：特写/中景/远景/俯视/仰视]
+            好的，我已经记录下沈清漪的基本信息：
+            - 性别：女
+            - 年龄：26岁
+            - 身份：富豪千金
+
+            现在让我为她创建角色卡，记录完整的外貌信息...
+            ```
+
+            ## 分镜描述规则（关键）
+
+            **重要**：分镜描述中必须包含角色的完整外貌信息，确保AI绘图一致性！
+
+            ### 规则
+            1. 每个角色**首次出场**时，必须附带完整外貌描述
+            2. 后续出场可简化，但仍需包含关键特征（性别、发色、服装）
+            3. 外貌描述必须具体，避免比喻
+
+            ### 正确示例
+            ```
+            分镜1 [中景]：
+            夜晚，奢华别墅主卧。沈清漪（女，26岁，齐腰黑发微卷，瓜子脸，身材苗条，身穿墨绿色晚礼裙）坐在梳妆台前，神情疲倦。林小鹿（女，22岁，齐肩棕色短发，圆脸，身穿整洁的黑色女仆制服）站在她身后，正在帮她解开项链。
+            ```
+
+            ### 错误示例
+            ```
+            分镜1 [中景]：
+            夜晚，奢华别墅主卧。沈清漪坐在梳妆台前，神情疲倦。林小鹿站在她身后。
+            ```
+            ❌ 缺少角色外貌描述，会导致AI绘图时角色外观不一致！
+
+            ## 分镜描述格式
+
+            ```
+            分镜X [镜头角度]：
+            [包含角色完整外貌的画面描述]。[动作描述]。[环境/光影描述]。
             对话：[对话内容]
             音效：[音效描述]
             ```
+
+            ## 可用工具
+
+            - `create_character_card`：创建角色卡（角色确定后立即调用）
+            - `list_character_cards`：查看已有角色卡
+            - `update_character_card`：更新角色卡信息
+            - `create_visual_work`：创建视觉叙事作品
+            - `add_panel`：添加分镜
+            - `update_panel`：修改分镜
+            - `get_panel_summaries`：获取分镜概括
+            - `generate_storyboard`：生成分镜脚本
+            - `generate_panel_image`：为分镜生成图片
+            - `generate_reference_image`：生成参考图片
 
             ## 回复格式
 
@@ -113,6 +177,83 @@ public class VisualGenreService extends AbstractGenreService {
             )
         ));
 
+        // list_character_cards - 查看角色卡
+        tools.add(Map.of(
+            "type", "function",
+            "function", Map.of(
+                "name", "list_character_cards",
+                "description", "查看已有角色卡列表。创建新角色前必须先调用此工具查看现有角色，避免重复创建。",
+                "parameters", Map.of(
+                    "type", "object",
+                    "properties", Map.of(),
+                    "required", List.of()
+                )
+            )
+        ));
+
+        // create_character_card - 创建角色卡
+        Map<String, Object> appearanceProps = new LinkedHashMap<>();
+        appearanceProps.put("height", Map.of("type", "string", "description", "身高，如：168cm"));
+        appearanceProps.put("hair", Map.of("type", "string", "description", "发型发色，如：齐腰黑发，微卷"));
+        appearanceProps.put("eyes", Map.of("type", "string", "description", "眼睛描述，如：丹凤眼，深褐色瞳孔"));
+        appearanceProps.put("face", Map.of("type", "string", "description", "脸型，如：瓜子脸"));
+        appearanceProps.put("build", Map.of("type", "string", "description", "体型，如：身材苗条"));
+        appearanceProps.put("clothing", Map.of("type", "string", "description", "服装，如：白色衬衫配淡蓝色长裙"));
+        appearanceProps.put("legwear", Map.of("type", "string", "description", "腿部穿着"));
+        appearanceProps.put("shoes", Map.of("type", "string", "description", "鞋子"));
+        appearanceProps.put("accessories", Map.of("type", "string", "description", "配饰"));
+        appearanceProps.put("distinguishingFeatures", Map.of("type", "string", "description", "显著特征"));
+        Map<String, Object> appearanceObj = new LinkedHashMap<>();
+        appearanceObj.put("type", "object");
+        appearanceObj.put("description", "外貌特征（必须填写所有必填字段，用于AI生成角色图片）");
+        appearanceObj.put("properties", appearanceProps);
+
+        tools.add(Map.of(
+            "type", "function",
+            "function", Map.of(
+                "name", "create_character_card",
+                "description", "创建角色卡。角色信息确认后立即调用。必须填写完整外貌信息用于AI绘图一致性。每部作品只能有一个主角。",
+                "parameters", Map.of(
+                    "type", "object",
+                    "properties", Map.ofEntries(
+                        Map.entry("name", Map.of("type", "string", "description", "角色姓名")),
+                        Map.entry("role", Map.of("type", "string", "description", "角色定位：protagonist(主角)/supporting(配角)/antagonist(反派)", "enum", List.of("protagonist", "supporting", "antagonist"))),
+                        Map.entry("gender", Map.of("type", "string", "description", "性别")),
+                        Map.entry("age", Map.of("type", "integer", "description", "年龄")),
+                        Map.entry("occupation", Map.of("type", "string", "description", "职业/身份")),
+                        Map.entry("appearance", appearanceObj),
+                        Map.entry("personality", Map.of("type", "string", "description", "性格特点")),
+                        Map.entry("description", Map.of("type", "string", "description", "角色背景描述"))
+                    ),
+                    "required", List.of("name", "gender", "appearance")
+                )
+            )
+        ));
+
+        // update_character_card - 更新角色卡
+        tools.add(Map.of(
+            "type", "function",
+            "function", Map.of(
+                "name", "update_character_card",
+                "description", "更新已有角色卡信息。用户补充或修改角色设定时调用。",
+                "parameters", Map.of(
+                    "type", "object",
+                    "properties", Map.ofEntries(
+                        Map.entry("characterId", Map.of("type", "integer", "description", "角色卡ID")),
+                        Map.entry("name", Map.of("type", "string", "description", "角色姓名")),
+                        Map.entry("role", Map.of("type", "string", "description", "角色定位", "enum", List.of("protagonist", "supporting", "antagonist"))),
+                        Map.entry("gender", Map.of("type", "string", "description", "性别")),
+                        Map.entry("age", Map.of("type", "integer", "description", "年龄")),
+                        Map.entry("occupation", Map.of("type", "string", "description", "职业/身份")),
+                        Map.entry("appearance", appearanceObj),
+                        Map.entry("personality", Map.of("type", "string", "description", "性格特点")),
+                        Map.entry("description", Map.of("type", "string", "description", "角色背景描述"))
+                    ),
+                    "required", List.of("characterId")
+                )
+            )
+        ));
+
         // create_visual_work
         tools.add(Map.of(
             "type", "function",
@@ -136,13 +277,13 @@ public class VisualGenreService extends AbstractGenreService {
             "type", "function",
             "function", Map.of(
                 "name", "add_panel",
-                "description", "添加分镜",
+                "description", "添加分镜。画面描述必须包含角色的完整外貌信息（性别、发型、服装等）。",
                 "parameters", Map.of(
                     "type", "object",
                     "properties", Map.of(
                         "workId", Map.of("type", "integer", "description", "作品ID"),
                         "panelNumber", Map.of("type", "integer", "description", "分镜序号"),
-                        "scene", Map.of("type", "string", "description", "画面描述"),
+                        "scene", Map.of("type", "string", "description", "画面描述（必须包含角色外貌信息）"),
                         "cameraAngle", Map.of("type", "string", "description", "镜头角度：特写、中景、远景、俯视、仰视"),
                         "dialogue", Map.of("type", "string", "description", "对话内容"),
                         "soundEffect", Map.of("type", "string", "description", "音效描述"),
@@ -242,7 +383,7 @@ public class VisualGenreService extends AbstractGenreService {
             )
         ));
 
-        // generate_panel_image - 根据分镜生成图片
+        // generate_panel_image
         tools.add(Map.of(
             "type", "function",
             "function", Map.of(
@@ -259,7 +400,7 @@ public class VisualGenreService extends AbstractGenreService {
             )
         ));
 
-        // generate_reference_image - 生成参考图片
+        // generate_reference_image
         tools.add(Map.of(
             "type", "function",
             "function", Map.of(
@@ -337,7 +478,6 @@ public class VisualGenreService extends AbstractGenreService {
                                     if (choices.isArray() && choices.size() > 0) {
                                         var delta = choices.get(0).path("delta");
 
-                                        // 处理推理内容（reasoning_content）
                                         var reasoningNode = delta.get("reasoning_content");
                                         if (reasoningNode != null && !reasoningNode.isNull() && reasoningNode.isTextual()) {
                                             String reasoningText = reasoningNode.asText();
@@ -476,6 +616,15 @@ public class VisualGenreService extends AbstractGenreService {
                     case "fill_params":
                         result = executeFillParams(argumentsJson, session);
                         break;
+                    case "list_character_cards":
+                        result = executeListCharacterCards();
+                        break;
+                    case "create_character_card":
+                        result = executeCreateCharacterCard(argumentsJson);
+                        break;
+                    case "update_character_card":
+                        result = executeUpdateCharacterCard(argumentsJson);
+                        break;
                     case "create_visual_work":
                         result = executeCreateVisualWork(argumentsJson, session);
                         break;
@@ -583,7 +732,6 @@ public class VisualGenreService extends AbstractGenreService {
                                     if (choices.isArray() && choices.size() > 0) {
                                         var delta = choices.get(0).path("delta");
 
-                                        // 处理推理内容（reasoning_content）
                                         var reasoningNode = delta.get("reasoning_content");
                                         if (reasoningNode != null && !reasoningNode.isNull() && reasoningNode.isTextual()) {
                                             String reasoningText = reasoningNode.asText();
@@ -698,7 +846,138 @@ public class VisualGenreService extends AbstractGenreService {
         }
     }
 
-    // ==================== 工具实现 ====================
+    // ==================== 角色卡工具实现 ====================
+
+    private String executeListCharacterCards() {
+        try {
+            List<CharacterCardEntity> cards = characterCardRepository.findAll();
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (CharacterCardEntity card : cards) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("id", card.getId());
+                item.put("name", card.getName());
+                item.put("role", card.getRole());
+                item.put("gender", card.getGender());
+                item.put("age", card.getAge());
+                item.put("occupation", card.getOccupation());
+                result.add(item);
+            }
+            return objectMapper.writeValueAsString(Map.of("success", true, "characters", result));
+        } catch (Exception e) {
+            return "{\"success\": false, \"error\": \"" + escapeJson(e.getMessage()) + "\"}";
+        }
+    }
+
+    private String executeCreateCharacterCard(String argumentsJson) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<Map<String, Object>>() {});
+
+            CharacterCardEntity card = new CharacterCardEntity();
+            card.setName((String) args.get("name"));
+            card.setRole((String) args.get("role"));
+            card.setGender((String) args.get("gender"));
+            if (args.get("age") != null) {
+                card.setAge(((Number) args.get("age")).intValue());
+            }
+            card.setOccupation((String) args.get("occupation"));
+            card.setPersonality((String) args.get("personality"));
+            card.setBackground((String) args.get("description"));
+
+            // 处理外貌信息 - 存储为JSON和描述文本
+            if (args.get("appearance") != null) {
+                Map<String, Object> appearance = (Map<String, Object>) args.get("appearance");
+
+                // 存储JSON格式
+                card.setAppearanceJson(objectMapper.writeValueAsString(appearance));
+
+                // 构建描述文本用于AI绘图
+                StringBuilder appearanceDesc = new StringBuilder();
+                if (appearance.get("height") != null) appearanceDesc.append("身高").append(appearance.get("height")).append("，");
+                if (appearance.get("hair") != null) appearanceDesc.append(appearance.get("hair")).append("，");
+                if (appearance.get("eyes") != null) appearanceDesc.append(appearance.get("eyes")).append("，");
+                if (appearance.get("face") != null) appearanceDesc.append(appearance.get("face")).append("，");
+                if (appearance.get("build") != null) appearanceDesc.append(appearance.get("build")).append("，");
+                if (appearance.get("clothing") != null) appearanceDesc.append("身穿").append(appearance.get("clothing")).append("，");
+                if (appearance.get("legwear") != null) appearanceDesc.append(appearance.get("legwear")).append("，");
+                if (appearance.get("shoes") != null) appearanceDesc.append(appearance.get("shoes")).append("，");
+                if (appearance.get("accessories") != null) appearanceDesc.append("配饰：").append(appearance.get("accessories")).append("，");
+                if (appearance.get("distinguishingFeatures") != null) appearanceDesc.append("特征：").append(appearance.get("distinguishingFeatures"));
+
+                // 移除末尾的逗号
+                String desc = appearanceDesc.toString();
+                if (desc.endsWith("，")) {
+                    desc = desc.substring(0, desc.length() - 1);
+                }
+                card.setAppearanceDescription(desc);
+            }
+
+            card = characterCardRepository.save(card);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "characterId", card.getId(),
+                "message", "角色卡「" + card.getName() + "」创建成功"
+            ));
+        } catch (Exception e) {
+            return "{\"success\": false, \"error\": \"" + escapeJson(e.getMessage()) + "\"}";
+        }
+    }
+
+    private String executeUpdateCharacterCard(String argumentsJson) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<Map<String, Object>>() {});
+            Long characterId = ((Number) args.get("characterId")).longValue();
+
+            CharacterCardEntity card = characterCardRepository.findById(characterId)
+                .orElseThrow(() -> new RuntimeException("角色卡不存在: " + characterId));
+
+            if (args.get("name") != null) card.setName((String) args.get("name"));
+            if (args.get("role") != null) card.setRole((String) args.get("role"));
+            if (args.get("gender") != null) card.setGender((String) args.get("gender"));
+            if (args.get("age") != null) card.setAge(((Number) args.get("age")).intValue());
+            if (args.get("occupation") != null) card.setOccupation((String) args.get("occupation"));
+            if (args.get("personality") != null) card.setPersonality((String) args.get("personality"));
+            if (args.get("description") != null) card.setBackground((String) args.get("description"));
+
+            if (args.get("appearance") != null) {
+                Map<String, Object> appearance = (Map<String, Object>) args.get("appearance");
+
+                // 存储JSON格式
+                card.setAppearanceJson(objectMapper.writeValueAsString(appearance));
+
+                // 构建描述文本用于AI绘图
+                StringBuilder appearanceDesc = new StringBuilder();
+                if (appearance.get("height") != null) appearanceDesc.append("身高").append(appearance.get("height")).append("，");
+                if (appearance.get("hair") != null) appearanceDesc.append(appearance.get("hair")).append("，");
+                if (appearance.get("eyes") != null) appearanceDesc.append(appearance.get("eyes")).append("，");
+                if (appearance.get("face") != null) appearanceDesc.append(appearance.get("face")).append("，");
+                if (appearance.get("build") != null) appearanceDesc.append(appearance.get("build")).append("，");
+                if (appearance.get("clothing") != null) appearanceDesc.append("身穿").append(appearance.get("clothing")).append("，");
+                if (appearance.get("legwear") != null) appearanceDesc.append(appearance.get("legwear")).append("，");
+                if (appearance.get("shoes") != null) appearanceDesc.append(appearance.get("shoes")).append("，");
+                if (appearance.get("accessories") != null) appearanceDesc.append("配饰：").append(appearance.get("accessories")).append("，");
+                if (appearance.get("distinguishingFeatures") != null) appearanceDesc.append("特征：").append(appearance.get("distinguishingFeatures"));
+
+                // 移除末尾的逗号
+                String desc = appearanceDesc.toString();
+                if (desc.endsWith("，")) {
+                    desc = desc.substring(0, desc.length() - 1);
+                }
+                card.setAppearanceDescription(desc);
+            }
+
+            characterCardRepository.save(card);
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "message", "角色卡更新成功"
+            ));
+        } catch (Exception e) {
+            return "{\"success\": false, \"error\": \"" + escapeJson(e.getMessage()) + "\"}";
+        }
+    }
+
+    // ==================== 其他工具实现 ====================
 
     private String executeFillParams(String argumentsJson, GenreSession session) {
         try {
@@ -891,9 +1170,6 @@ public class VisualGenreService extends AbstractGenreService {
         }
     }
 
-    /**
-     * 根据分镜生成图片（使用 EvoLink）
-     */
     private String executeGeneratePanelImage(String argumentsJson, SseEmitter emitter) {
         try {
             Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<Map<String, Object>>() {});
@@ -903,7 +1179,6 @@ public class VisualGenreService extends AbstractGenreService {
             VisualPanel panel = visualPanelRepository.findById(panelId)
                 .orElseThrow(() -> new RuntimeException("分镜不存在: " + panelId));
 
-            // 构建提示词：场景 + 镜头角度 + 动作
             StringBuilder prompt = new StringBuilder();
             if (panel.getScene() != null && !panel.getScene().isEmpty()) {
                 prompt.append(panel.getScene());
@@ -919,7 +1194,6 @@ public class VisualGenreService extends AbstractGenreService {
             String promptStr = prompt.toString();
             logger.info("生成分镜图片: panelId={}, prompt={}", panelId, promptStr);
 
-            // 发送进度事件
             emitter.send(SseEmitter.event()
                 .name("image_progress")
                 .data(objectMapper.writeValueAsString(Map.of(
@@ -929,10 +1203,8 @@ public class VisualGenreService extends AbstractGenreService {
                     "message", "正在为分镜" + panel.getPanelNumber() + "生成图片..."
                 ))));
 
-            // 调用 EvoLink 生成图片
             String taskId = evoLinkImageService.generateImage(promptStr, size, null);
 
-            // 轮询获取结果（最多5分钟）
             String imageUrl = null;
             int maxAttempts = 150;
             for (int i = 0; i < maxAttempts; i++) {
@@ -963,11 +1235,9 @@ public class VisualGenreService extends AbstractGenreService {
                 return "{\"success\": false, \"error\": \"图片生成超时\"}";
             }
 
-            // 保存图片URL到分镜
             panel.setImageUrl(imageUrl);
             visualPanelRepository.save(panel);
 
-            // 发送结果事件
             emitter.send(SseEmitter.event()
                 .name("image_result")
                 .data(objectMapper.writeValueAsString(Map.of(
@@ -990,9 +1260,6 @@ public class VisualGenreService extends AbstractGenreService {
         }
     }
 
-    /**
-     * 生成参考图片（使用 EvoLink）
-     */
     private String executeGenerateReferenceImage(String argumentsJson, SseEmitter emitter) {
         try {
             Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<Map<String, Object>>() {});
@@ -1006,7 +1273,6 @@ public class VisualGenreService extends AbstractGenreService {
 
             logger.info("生成参考图片: type={}, prompt={}", type, prompt);
 
-            // 发送进度事件
             emitter.send(SseEmitter.event()
                 .name("image_progress")
                 .data(objectMapper.writeValueAsString(Map.of(
@@ -1016,10 +1282,8 @@ public class VisualGenreService extends AbstractGenreService {
                     "message", "开始生成参考图片..."
                 ))));
 
-            // 调用 EvoLink 生成图片
             String taskId = evoLinkImageService.generateImage(prompt, size, null);
 
-            // 轮询获取结果
             String imageUrl = null;
             int maxAttempts = 150;
             for (int i = 0; i < maxAttempts; i++) {
@@ -1050,7 +1314,6 @@ public class VisualGenreService extends AbstractGenreService {
                 return "{\"success\": false, \"error\": \"图片生成超时\"}";
             }
 
-            // 发送结果事件
             emitter.send(SseEmitter.event()
                 .name("image_result")
                 .data(objectMapper.writeValueAsString(Map.of(
