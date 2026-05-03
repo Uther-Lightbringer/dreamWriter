@@ -55,4 +55,19 @@ public interface GenreService {
      * 删除会话
      */
     void deleteSession(String sessionId);
+
+    /**
+     * 获取会话统计信息
+     */
+    Map<String, Object> getSessionStats(String sessionId);
+
+    /**
+     * 压缩会话历史
+     */
+    Map<String, Object> compressSession(String sessionId);
+
+    /**
+     * 更新会话标题
+     */
+    void updateSessionTitle(String sessionId, String title);
 }

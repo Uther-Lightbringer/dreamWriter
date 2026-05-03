@@ -232,6 +232,312 @@
             font-weight: bold;
             color: var(--accent-blue);
         }
+
+        /* 图片生成按钮 */
+        .btn-primary {
+            background: linear-gradient(135deg, #7c4dff, #536dfe);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #651fff, #3d5afe);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 77, 255, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 图片分组历史 */
+        .image-groups-section {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .image-groups-section h2 {
+            font-family: "ZCOOL XiaoWei", serif;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .group-card {
+            background: rgba(63, 81, 181, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .group-card:hover {
+            background: rgba(63, 81, 181, 0.1);
+            border-color: rgba(63, 81, 181, 0.2);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .group-name {
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .group-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .group-cover {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 0;
+        }
+
+        .group-cover img {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(63, 81, 181, 0.1);
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .btn-danger {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        /* 图片画廊模态框 */
+        .gallery-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .gallery-modal.active {
+            display: block;
+        }
+
+        .gallery-header {
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .gallery-title {
+            color: white;
+            font-family: "ZCOOL XiaoWei", serif;
+            font-size: 1.2rem;
+        }
+
+        .gallery-close {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+
+        .gallery-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .gallery-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .gallery-item-info {
+            padding: 12px;
+            color: white;
+        }
+
+        .gallery-item-panel {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .gallery-item-prompt {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 大图查看 */
+        .image-lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-lightbox.active {
+            display: flex;
+        }
+
+        .image-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+
+        .lightbox-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* 生成进度 */
+        .generation-progress {
+            background: rgba(63, 81, 181, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .generation-progress.active {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(63, 81, 181, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c4dff, #536dfe);
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(63, 81, 181, 0.3);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -239,8 +545,19 @@
         <div class="page-header">
             <h1 th:text="${work.title}">作品标题</h1>
             <div class="header-actions">
+                <button class="btn btn-primary" id="generateBtn" th:attr="data-work-id=${work.id}" onclick="generateImages()">
+                    生成视觉图片
+                </button>
                 <a href="/visual-works" class="btn btn-secondary">返回列表</a>
                 <a href="/" class="btn btn-secondary">首页</a>
+            </div>
+        </div>
+
+        <!-- 生成进度 -->
+        <div class="generation-progress" id="generationProgress">
+            <div class="progress-text" id="progressText">准备生成...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
 
@@ -289,6 +606,266 @@
                 <span th:text="' - ' + ${p.scene}"> 画面描述</span>
             </a>
         </div>
+
+        <!-- 图片分组历史 -->
+        <div class="image-groups-section" id="imageGroupsSection">
+            <h2>图片生成历史</h2>
+            <div id="imageGroupsList">
+                <div style="color: var(--text-light); padding: 20px; text-align: center;">
+                    加载中...
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- 图片画廊模态框 -->
+    <div class="gallery-modal" id="galleryModal">
+        <div class="gallery-header">
+            <span class="gallery-title" id="galleryTitle">图片画廊</span>
+            <button class="gallery-close" onclick="closeGallery()">&times;</button>
+        </div>
+        <div class="gallery-grid" id="galleryGrid">
+        </div>
+    </div>
+
+    <!-- 大图查看 -->
+    <div class="image-lightbox" id="imageLightbox">
+        <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); navigateLightbox(-1)">&#10094;</button>
+        <img id="lightboxImage" src="" alt="大图" onclick="closeLightbox()">
+        <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); navigateLightbox(1)">&#10095;</button>
+        <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
+
+    <script th:inline="javascript">
+        const workId = [[${work.id}]];
+        let currentGalleryImages = [];
+        let currentImageIndex = 0;
+
+        // 加载图片分组历史
+        async function loadImageGroups() {
+            try {
+                const response = await fetch(`/api/visual/${workId}/image-groups`);
+                const groups = await response.json();
+                renderImageGroups(groups);
+            } catch (e) {
+                console.error('加载图片分组失败:', e);
+                document.getElementById('imageGroupsList').innerHTML =
+                    '<div style="color: var(--text-light); padding: 20px; text-align: center;">加载失败</div>';
+            }
+        }
+
+        // 渲染图片分组列表
+        function renderImageGroups(groups) {
+            const container = document.getElementById('imageGroupsList');
+
+            if (groups.length === 0) {
+                container.innerHTML =
+                    '<div style="color: var(--text-light); padding: 20px; text-align: center;">还没有生成过图片，点击上方按钮开始生成</div>';
+                return;
+            }
+
+            container.innerHTML = groups.map(group => `
+                <div class="group-card" onclick="openGallery(${group.id})">
+                    <div class="group-header">
+                        <span class="group-name">${escapeHtml(group.groupName)}</span>
+                        <span class="group-meta">${group.completedCount}/${group.imageCount} 张图片</span>
+                    </div>
+                    ${group.coverImage ? `
+                    <div class="group-cover">
+                        <img src="${group.coverImage}" alt="封面" loading="lazy">
+                    </div>
+                    ` : ''}
+                    <div class="group-actions">
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteGroup(${group.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 生成图片（异步，带视觉大纲）
+        async function generateImages() {
+            const btn = document.getElementById('generateBtn');
+            const progress = document.getElementById('generationProgress');
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+
+            btn.disabled = true;
+            btn.textContent = '生成中...';
+            progress.classList.add('active');
+            progressText.textContent = '正在启动异步生成...';
+            progressFill.style.width = '0%';
+
+            try {
+                // 调用异步生成接口
+                const response = await fetch(`/api/visual/${workId}/generate-async`, { method: 'POST' });
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data.error || '生成失败');
+                    return;
+                }
+
+                const groupId = data.groupId;
+                progressText.textContent = '正在生成视觉大纲...';
+
+                // 轮询进度
+                await pollProgress(groupId);
+
+            } catch (e) {
+                console.error('生成图片失败:', e);
+                alert('生成失败: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '生成视觉图片';
+            }
+        }
+
+        // 轮询生成进度
+        async function pollProgress(groupId) {
+            const progress = document.getElementById('generationProgress');
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+
+            while (true) {
+                await new Promise(r => setTimeout(r, 2000));
+
+                try {
+                    const response = await fetch(`/api/visual/progress/${groupId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'not_found') {
+                        progressText.textContent = '任务未找到';
+                        break;
+                    }
+
+                    if (data.status === 'generating_outline') {
+                        progressText.textContent = '正在生成视觉大纲（统一风格定义）...';
+                        progressFill.style.width = '10%';
+                    } else if (data.status === 'generating_images') {
+                        const total = data.totalPanels || 0;
+                        const completed = data.completedPanels || 0;
+                        const percent = total > 0 ? 10 + (completed / total) * 90 : 50;
+                        progressText.textContent = `正在生成图片 (${completed}/${total})...`;
+                        progressFill.style.width = `${percent}%`;
+                    } else if (data.status === 'completed') {
+                        progressText.textContent = '生成完成！';
+                        progressFill.style.width = '100%';
+
+                        // 刷新分组列表
+                        await loadImageGroups();
+
+                        // 自动打开画廊
+                        setTimeout(() => {
+                            progress.classList.remove('active');
+                            openGallery(groupId);
+                        }, 1000);
+                        break;
+                    } else if (data.status === 'failed') {
+                        progressText.textContent = '生成失败: ' + (data.errorMessage || '未知错误');
+                        progressFill.style.width = '0%';
+                        break;
+                    }
+                } catch (e) {
+                    console.error('轮询进度失败:', e);
+                }
+            }
+        }
+
+        // 打开画廊
+        async function openGallery(groupId) {
+            try {
+                const response = await fetch(`/api/visual/image-groups/${groupId}`);
+                const data = await response.json();
+
+                currentGalleryImages = data.images || [];
+
+                document.getElementById('galleryTitle').textContent = data.groupName || '图片画廊';
+                document.getElementById('galleryGrid').innerHTML = currentGalleryImages.map((img, index) => `
+                    <div class="gallery-item" onclick="openLightbox(${index})">
+                        <img src="${img.imageUrl}" alt="分镜 ${img.panelNumber}" loading="lazy">
+                        <div class="gallery-item-info">
+                            <div class="gallery-item-panel">分镜 ${img.panelNumber}</div>
+                            <div class="gallery-item-prompt">${escapeHtml(img.prompt || '')}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('galleryModal').classList.add('active');
+            } catch (e) {
+                console.error('加载画廊失败:', e);
+                alert('加载画廊失败');
+            }
+        }
+
+        // 关闭画廊
+        function closeGallery() {
+            document.getElementById('galleryModal').classList.remove('active');
+        }
+
+        // 打开大图
+        function openLightbox(index) {
+            currentImageIndex = index;
+            updateLightboxImage();
+            document.getElementById('imageLightbox').classList.add('active');
+        }
+
+        // 更新大图显示
+        function updateLightboxImage() {
+            if (currentGalleryImages.length === 0) return;
+            const img = currentGalleryImages[currentImageIndex];
+            document.getElementById('lightboxImage').src = img.imageUrl;
+            document.getElementById('lightboxCounter').textContent =
+                `${currentImageIndex + 1} / ${currentGalleryImages.length} - 分镜 ${img.panelNumber}`;
+        }
+
+        // 导航大图
+        function navigateLightbox(direction) {
+            if (currentGalleryImages.length === 0) return;
+            currentImageIndex = (currentImageIndex + direction + currentGalleryImages.length) % currentGalleryImages.length;
+            updateLightboxImage();
+        }
+
+        // 关闭大图
+        function closeLightbox() {
+            document.getElementById('imageLightbox').classList.remove('active');
+        }
+
+        // 删除分组
+        async function deleteGroup(groupId) {
+            if (!confirm('确定要删除这个图片分组吗？')) return;
+
+            try {
+                await fetch(`/api/visual/image-groups/${groupId}`, { method: 'DELETE' });
+                await loadImageGroups();
+            } catch (e) {
+                console.error('删除分组失败:', e);
+                alert('删除失败');
+            }
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 键盘事件处理
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLightbox();
+                closeGallery();
+            } else if (document.getElementById('imageLightbox').classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    navigateLightbox(-1);
+                } else if (e.key === 'ArrowRight') {
+                    navigateLightbox(1);
+                }
+            }
+        });
+
+        // 页面加载时获取图片分组
+        document.addEventListener('DOMContentLoaded', loadImageGroups);
+    </script>
 </body>
 </html>

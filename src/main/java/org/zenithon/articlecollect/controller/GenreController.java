@@ -86,4 +86,42 @@ public class GenreController {
         service.chat(sessionId, content, emitter);
         return emitter;
     }
+
+    /**
+     * 获取会话统计
+     */
+    @GetMapping("/{genreType}/sessions/{sessionId}/stats")
+    public ResponseEntity<Map<String, Object>> getSessionStats(
+            @PathVariable String genreType,
+            @PathVariable String sessionId) {
+        GenreService service = genreServiceFactory.getGenreService(genreType);
+        return ResponseEntity.ok(service.getSessionStats(sessionId));
+    }
+
+    /**
+     * 压缩会话历史
+     */
+    @PostMapping("/{genreType}/sessions/{sessionId}/compress")
+    public ResponseEntity<Map<String, Object>> compressSession(
+            @PathVariable String genreType,
+            @PathVariable String sessionId) {
+        GenreService service = genreServiceFactory.getGenreService(genreType);
+        return ResponseEntity.ok(service.compressSession(sessionId));
+    }
+
+    /**
+     * 更新会话标题
+     */
+    @PutMapping("/{genreType}/sessions/{sessionId}")
+    public ResponseEntity<Void> updateSession(
+            @PathVariable String genreType,
+            @PathVariable String sessionId,
+            @RequestBody Map<String, String> request) {
+        GenreService service = genreServiceFactory.getGenreService(genreType);
+        String title = request.get("title");
+        if (title != null) {
+            service.updateSessionTitle(sessionId, title);
+        }
+        return ResponseEntity.ok().build();
+    }
 }

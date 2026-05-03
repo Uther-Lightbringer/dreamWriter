@@ -14,6 +14,8 @@ import org.zenithon.articlecollect.repository.VisualImageRepository;
 import org.zenithon.articlecollect.repository.VisualPanelRepository;
 import org.zenithon.articlecollect.repository.VisualWorkRepository;
 import org.zenithon.articlecollect.service.EvoLinkImageService;
+import org.zenithon.articlecollect.service.VisualImageAsyncService;
+import org.zenithon.articlecollect.util.FileUploadUtil;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +41,9 @@ public class VisualImageController {
 
     @Autowired
     private EvoLinkImageService evoLinkImageService;
+
+    @Autowired
+    private VisualImageAsyncService visualImageAsyncService;
 
     /**
      * 为作品的所有分镜生成图片（使用 EvoLink）
@@ -114,6 +119,78 @@ public class VisualImageController {
     }
 
     /**
+     * 异步生成视觉大纲和图片
+     */
+    @PostMapping("/{workId}/generate-async")
+    public ResponseEntity<Map<String, Object>> generateAsync(@PathVariable Long workId) {
+        VisualWork work = visualWorkRepository.findById(workId).orElse(null);
+        if (work == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<VisualPanel> panels = visualPanelRepository.findByWorkIdOrderByPanelNumberAsc(workId);
+        if (panels.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "error", "该作品还没有分镜，请先添加分镜"
+            ));
+        }
+
+        // 创建图片分组
+        VisualImageGroup group = new VisualImageGroup();
+        group.setWorkId(workId);
+        group.setGroupName("生成于 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")));
+        group = imageGroupRepository.save(group);
+
+        // 启动异步生成
+        visualImageAsyncService.generateOutlineAndImagesAsync(workId, group.getId());
+
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "groupId", group.getId(),
+            "groupName", group.getGroupName(),
+            "message", "已开始异步生成视觉大纲和图片"
+        ));
+    }
+
+    /**
+     * 查询异步生成进度
+     */
+    @GetMapping("/progress/{groupId}")
+    public ResponseEntity<Map<String, Object>> getProgress(@PathVariable Long groupId) {
+        VisualImageAsyncService.TaskProgress progress = visualImageAsyncService.getTaskProgress(groupId);
+        if (progress == null) {
+            return ResponseEntity.ok(Map.of(
+                "status", "not_found",
+                "error", "未找到该任务"
+            ));
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("status", progress.getStatus());
+        result.put("totalPanels", progress.getTotalPanels());
+        result.put("completedPanels", progress.getCompletedPanels());
+        result.put("progress", progress.getProgress());
+        result.put("outline", progress.getOutline() != null ? progress.getOutline() : "");
+        result.put("errorMessage", progress.getErrorMessage() != null ? progress.getErrorMessage() : "");
+
+        // 如果已完成，同时返回图片列表
+        if ("completed".equals(progress.getStatus())) {
+            List<VisualImage> images = imageRepository.findByGroupIdOrderByPanelNumberAsc(groupId);
+            result.put("images", images.stream().map(i -> {
+                Map<String, Object> img = new LinkedHashMap<>();
+                img.put("id", i.getId());
+                img.put("panelNumber", i.getPanelNumber());
+                img.put("imageUrl", i.getImageUrl());
+                img.put("prompt", i.getPrompt());
+                return img;
+            }).toList());
+        }
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
      * 查询单个任务状态
      */
     @GetMapping("/task-status/{taskId}")
@@ -163,7 +240,7 @@ public class VisualImageController {
     }
 
     /**
-     * 保存生成的图片到分组
+     * 保存生成的图片到分组（下载到本地）
      */
     @PostMapping("/image-groups/{groupId}/save-image")
     public ResponseEntity<Map<String, Object>> saveImage(
@@ -175,6 +252,18 @@ public class VisualImageController {
             return ResponseEntity.notFound().build();
         }
 
+        String remoteImageUrl = (String) request.get("imageUrl");
+        String localImagePath = null;
+
+        // 下载图片到本地
+        try {
+            localImagePath = FileUploadUtil.downloadAndSaveImage(remoteImageUrl, "visual", group.getWorkId());
+            logger.info("图片已下载到本地: {}", localImagePath);
+        } catch (Exception e) {
+            logger.error("下载图片失败，使用原始URL: {}", e.getMessage());
+            localImagePath = remoteImageUrl; // 下载失败时使用原始URL
+        }
+
         VisualImage image = new VisualImage();
         image.setGroupId(groupId);
         if (request.get("panelId") != null) {
@@ -183,13 +272,14 @@ public class VisualImageController {
         if (request.get("panelNumber") != null) {
             image.setPanelNumber(((Number) request.get("panelNumber")).intValue());
         }
-        image.setImageUrl((String) request.get("imageUrl"));
+        image.setImageUrl(localImagePath);
         image.setPrompt((String) request.get("prompt"));
         image = imageRepository.save(image);
 
         return ResponseEntity.ok(Map.of(
             "success", true,
-            "imageId", image.getId()
+            "imageId", image.getId(),
+            "imageUrl", localImagePath
         ));
     }
 

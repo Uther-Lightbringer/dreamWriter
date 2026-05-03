@@ -26,7 +26,7 @@ public class SystemConfigInitializer implements CommandLineRunner {
 
         // 初始化图片模型配置
         configService.initDefaultConfig("image.model", "z-image-turbo", "当前使用的文生图模型");
-        configService.initDefaultConfig("image.available_models", "z-image-turbo,gpt-image-2", "可用模型列表");
+        configService.initDefaultConfig("image.available_models", "z-image-turbo,gpt-image-2,doubao-seedream-4.0,doubao-seedream-4.5", "可用模型列表");
 
         logger.info("系统配置初始化完成");
     }

@@ -4,9 +4,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 /**
@@ -332,5 +335,42 @@ public class FileUploadUtil {
 
         // 返回相对路径用于 Web 访问
         return "/images/character-card/" + fileName;
+    }
+
+    /**
+     * 从 URL 下载图片并保存到本地
+     * @param imageUrl 图片 URL
+     * @param subDir 子目录名（如 "visual"）
+     * @param entityId 实体 ID（如作品 ID）
+     * @return 保存的文件相对路径
+     * @throws IOException 文件操作异常
+     */
+    public static String downloadAndSaveImage(String imageUrl, String subDir, Long entityId) throws IOException {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            throw new IllegalArgumentException("图片 URL 不能为空");
+        }
+
+        // 创建目录结构：uploads/images/{subDir}/{entityId}/
+        Path uploadPath = Paths.get(UPLOAD_DIR + subDir + "/" + entityId);
+
+        // 确保目录存在
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // 生成唯一文件名
+        String fileName = UUID.randomUUID().toString() + ".png";
+        Path filePath = uploadPath.resolve(fileName);
+
+        // 下载图片
+        URL url = new URL(imageUrl);
+        try (InputStream inputStream = url.openStream()) {
+            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        System.out.println("图片已下载保存：" + filePath.toString());
+
+        // 返回相对路径用于 Web 访问
+        return "/images/" + subDir + "/" + entityId + "/" + fileName;
     }
 }

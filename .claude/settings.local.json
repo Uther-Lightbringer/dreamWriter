@@ -52,7 +52,28 @@
       "Bash(cmd /c \"where mvn\")",
       "Bash(mvn.cmd clean:*)",
       "Bash(rm -f secrets-to-replace.txt)",
-      "Bash(rm -rf .git/filter-repo)"
+      "Bash(rm -rf .git/filter-repo)",
+      "Bash(grep -v \"^$\")",
+      "Bash(mvn spring-boot:run)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:38081/creative-guide)",
+      "Bash(curl -s http://localhost:38081/api/creative-guide/tools)",
+      "Bash(curl -s \"http://localhost:38081/api/novels\")",
+      "Bash(curl -s \"http://localhost:38081/api/novels/1\")",
+      "Bash(npm run:*)",
+      "Bash([ ! -d dist ])",
+      "Bash(mkdir dist:*)",
+      "Bash(cp -r src/* dist/)",
+      "Bash(npx cap:*)",
+      "Read(//d//**)",
+      "Read(//e//**)",
+      "Bash(env)",
+      "Bash(cat /c/Users/1/.android/studio/*.ini)",
+      "Bash(curl -sL \"https://cdn.jsdelivr.net/npm/marked/marked.min.js\" -o \"E:\\\\WorkSpace\\\\articleCollect\\\\src\\\\main\\\\resources\\\\static\\\\js\\\\marked.min.js\")",
+      "Bash(curl -s -N -X POST http://localhost:38081/api/genres/script/sessions -H \"Content-Type: application/json\")",
+      "Bash(curl -s -N -X POST \"http://localhost:38081/api/genres/script/sessions/genre_15620184219f4753/chat\" -H \"Content-Type: application/json\" -d '{\"content\":\"你好\"}')",
+      "Bash(curl -s -N -X POST \"http://localhost:38081/api/genres/script/sessions/genre_15620184219f4753/chat\" -H \"Content-Type: application/json\" -d \"{\\\\\"content\\\\\":\\\\\"hello\\\\\"}\")",
+      "Bash(curl -s -X POST http://localhost:38081/api/genres/script/sessions -H \"Content-Type: application/json\")",
+      "Bash(node:*)"
     ]
   }
 }

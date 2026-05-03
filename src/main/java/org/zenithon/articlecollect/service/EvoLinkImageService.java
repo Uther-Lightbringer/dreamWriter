@@ -116,19 +116,39 @@ public class EvoLinkImageService {
      * 根据模型类型自动添加对应参数：
      * - z-image-turbo: 支持 seed 参数
      * - gpt-image-2: 支持 resolution, quality, n, image_urls 参数
+     * - doubao-seedream-4.0: 支持 quality, n, image_urls, prompt_priority 参数
      *
      * @param prompt 提示词
      * @param size 图片尺寸
      * @param seed 随机种子（可选，z-image-turbo专用）
      * @param resolution 分辨率（可选，gpt-image-2专用，如 "1024x1024"）
-     * @param quality 图片质量（可选，gpt-image-2专用，如 "high", "medium", "low"）
-     * @param n 生成图片数量（可选，gpt-image-2专用，1-10）
-     * @param imageUrls 参考图片URL列表（可选，gpt-image-2专用）
+     * @param quality 图片质量（可选，gpt-image-2/doubao-seedream-4.0专用）
+     * @param n 生成图片数量（可选，gpt-image-2/doubao-seedream-4.0专用）
+     * @param imageUrls 参考图片URL列表（可选，gpt-image-2/doubao-seedream-4.0专用）
      * @return 任务ID
      */
     public String generateImage(String prompt, String size, Integer seed,
                                 String resolution, String quality, Integer n,
                                 List<String> imageUrls) {
+        return generateImage(prompt, size, seed, resolution, quality, n, imageUrls, null);
+    }
+
+    /**
+     * 创建图片生成任务（支持所有参数，包括promptPriority）
+     *
+     * @param prompt 提示词
+     * @param size 图片尺寸
+     * @param seed 随机种子（可选，z-image-turbo专用）
+     * @param resolution 分辨率（可选，gpt-image-2专用）
+     * @param quality 图片质量（可选，gpt-image-2/doubao-seedream-4.0专用）
+     * @param n 生成图片数量（可选，gpt-image-2/doubao-seedream-4.0专用）
+     * @param imageUrls 参考图片URL列表（可选，gpt-image-2/doubao-seedream-4.0专用）
+     * @param promptPriority 提示词优化策略（可选，doubao-seedream-4.0专用，standard/fast）
+     * @return 任务ID
+     */
+    public String generateImage(String prompt, String size, Integer seed,
+                                String resolution, String quality, Integer n,
+                                List<String> imageUrls, String promptPriority) {
         if (evoLinkConfig.getApiToken() == null || evoLinkConfig.getApiToken().trim().isEmpty()) {
             throw new RuntimeException("EvoLink API Token 未配置");
         }
@@ -183,6 +203,33 @@ public class EvoLinkImageService {
                 }
             }
 
+            // doubao-seedream-4.0/4.5 专用参数
+            if (model != null && model.startsWith("doubao-seedream-4")) {
+                // quality 参数 (4.0: 1K/2K/4K, 4.5: 2K/4K)
+                if (quality != null && !quality.isEmpty()) {
+                    requestBody.put("quality", quality);
+                    logger.info("使用 quality 参数: {}", quality);
+                }
+
+                // n 参数（生成图片数量，1-15）
+                if (n != null && n >= 1 && n <= 15) {
+                    requestBody.put("n", n);
+                    logger.info("使用 n 参数: {}", n);
+                }
+
+                // image_urls 参数（参考图片，最多14张）
+                if (imageUrls != null && !imageUrls.isEmpty()) {
+                    requestBody.put("image_urls", imageUrls);
+                    logger.info("使用 image_urls 参数，数量: {}", imageUrls.size());
+                }
+
+                // prompt_priority 参数（4.0: standard/fast, 4.5: standard）
+                if (promptPriority != null && !promptPriority.isEmpty()) {
+                    requestBody.put("prompt_priority", promptPriority);
+                    logger.info("使用 prompt_priority 参数: {}", promptPriority);
+                }
+            }
+
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<String> response = restTemplate.postForEntity(
@@ -230,13 +277,14 @@ public class EvoLinkImageService {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + evoLinkConfig.getApiToken());
-            
+
             HttpEntity<Void> request = new HttpEntity<>(headers);
-            
+
             String url = "https://api.evolink.ai/v1/tasks/" + taskId;
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
-            
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                logger.debug("任务状态响应: {}", response.getBody());
                 return parseTaskStatus(response.getBody());
             } else {
                 throw new RuntimeException("查询任务状态失败：" + response.getStatusCode());
@@ -249,22 +297,43 @@ public class EvoLinkImageService {
     
     private TaskStatus parseTaskStatus(String responseBody) throws Exception {
         JsonNode rootNode = objectMapper.readTree(responseBody);
-        
+
         TaskStatus status = new TaskStatus();
         status.setId(rootNode.path("id").asText());
         status.setStatus(rootNode.path("status").asText());
         status.setProgress(rootNode.path("progress").asInt(0));
-        
+
+        // 尝试多种可能的结果字段名
         JsonNode resultsNode = rootNode.path("results");
         if (resultsNode.isArray() && resultsNode.size() > 0) {
             status.setImageUrl(resultsNode.get(0).asText());
+        } else {
+            // 尝试其他可能的字段名
+            JsonNode outputNode = rootNode.path("output");
+            if (outputNode.isArray() && outputNode.size() > 0) {
+                status.setImageUrl(outputNode.get(0).path("url").asText(null));
+            } else {
+                JsonNode imageUrlNode = rootNode.path("image_url");
+                if (!imageUrlNode.isMissingNode()) {
+                    status.setImageUrl(imageUrlNode.asText());
+                } else {
+                    JsonNode urlNode = rootNode.path("url");
+                    if (!urlNode.isMissingNode()) {
+                        status.setImageUrl(urlNode.asText());
+                    }
+                }
+            }
         }
-        
+
         JsonNode errorNode = rootNode.path("error");
         if (!errorNode.isMissingNode()) {
-            status.setError(errorNode.path("message").asText(null));
+            if (errorNode.isObject()) {
+                status.setError(errorNode.path("message").asText(null));
+            } else {
+                status.setError(errorNode.asText(null));
+            }
         }
-        
+
         return status;
     }
     

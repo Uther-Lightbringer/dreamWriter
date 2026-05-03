@@ -1367,6 +1367,8 @@
                     <select id="modelSelect" class="dream-select" onchange="onModelChange()">
                         <option value="z-image-turbo">Z Image Turbo（快速生成）</option>
                         <option value="gpt-image-2">GPT Image 2（高质量，支持图生图）</option>
+                        <option value="doubao-seedream-4.0">Seedream 4.0（豆包新一代，高质量批量生成）</option>
+                        <option value="doubao-seedream-4.5">Seedream 4.5（豆包最新，超高画质）</option>
                     </select>
                 </div>
 
@@ -1445,7 +1447,7 @@
                     <div class="param-hint">相同种子 + 相同提示词 = 相似结果</div>
                 </div>
 
-                <!-- 批量数量（仅 gpt-image-2） -->
+                <!-- 批量数量（gpt-image-2/doubao-seedream-4.0） -->
                 <div class="form-group" id="batchGroup" style="display: none;">
                     <label class="form-label">批量生成数量</label>
                     <select id="batchSelect" class="dream-select">
@@ -1453,7 +1455,28 @@
                         <option value="2">2 张</option>
                         <option value="3">3 张</option>
                         <option value="4">4 张</option>
+                        <option value="5">5 张</option>
+                        <option value="6">6 张</option>
+                        <option value="7">7 张</option>
+                        <option value="8">8 张</option>
+                        <option value="9">9 张</option>
+                        <option value="10">10 张</option>
                     </select>
+                </div>
+
+                <!-- 提示词优化策略（仅 doubao-seedream-4.0） -->
+                <div class="form-group" id="promptPriorityGroup" style="display: none;">
+                    <label class="form-label">提示词优化策略</label>
+                    <div class="size-selector">
+                        <div class="size-option selected" data-priority="standard" onclick="selectPromptPriority(this)">
+                            <div class="size-ratio">标准</div>
+                            <div class="size-name">高质量输出</div>
+                        </div>
+                        <div class="size-option" data-priority="fast" onclick="selectPromptPriority(this)">
+                            <div class="size-ratio">快速</div>
+                            <div class="size-name">快速生成</div>
+                        </div>
+                    </div>
                 </div>
 
                 <button class="dream-btn dream-btn-secondary" onclick="generateImage()" id="generateImageBtn">
@@ -1535,6 +1558,7 @@
         let selectedModel = 'z-image-turbo';
         let selectedResolution = '1K';
         let selectedQuality = 'medium';
+        let selectedPromptPriority = 'standard';
         let modelCapabilities = null;
 
         // 初始化
@@ -1828,6 +1852,70 @@
             // 显示/隐藏批量选择
             document.getElementById('batchGroup').style.display =
                 cap.supportsBatch ? 'block' : 'none';
+
+            // 显示/隐藏提示词优化策略选择
+            document.getElementById('promptPriorityGroup').style.display =
+                cap.supportsPromptPriority ? 'block' : 'none';
+
+            // 根据模型更新质量选择的选项
+            updateQualityOptions();
+        }
+
+        // 根据模型更新质量选择的选项
+        function updateQualityOptions() {
+            const qualityGroup = document.getElementById('qualityGroup');
+            if (qualityGroup.style.display === 'none') return;
+
+            const qualitySelector = qualityGroup.querySelector('.size-selector');
+
+            if (selectedModel === 'doubao-seedream-4.0') {
+                // Seedream 4.0 使用 1K/2K/4K
+                qualitySelector.innerHTML = `
+                    <div class="size-option" data-quality="1K" onclick="selectQuality(this)">
+                        <div class="size-ratio">1K</div>
+                        <div class="size-name">标准</div>
+                    </div>
+                    <div class="size-option selected" data-quality="2K" onclick="selectQuality(this)">
+                        <div class="size-ratio">2K</div>
+                        <div class="size-name">高清</div>
+                    </div>
+                    <div class="size-option" data-quality="4K" onclick="selectQuality(this)">
+                        <div class="size-ratio">4K</div>
+                        <div class="size-name">超高清</div>
+                    </div>
+                `;
+                selectedQuality = '2K';
+            } else if (selectedModel === 'doubao-seedream-4.5') {
+                // Seedream 4.5 使用 2K/4K（不支持1K）
+                qualitySelector.innerHTML = `
+                    <div class="size-option selected" data-quality="2K" onclick="selectQuality(this)">
+                        <div class="size-ratio">2K</div>
+                        <div class="size-name">高清</div>
+                    </div>
+                    <div class="size-option" data-quality="4K" onclick="selectQuality(this)">
+                        <div class="size-ratio">4K</div>
+                        <div class="size-name">超高清</div>
+                    </div>
+                `;
+                selectedQuality = '2K';
+            } else {
+                // gpt-image-2 使用 low/medium/high
+                qualitySelector.innerHTML = `
+                    <div class="size-option" data-quality="low" onclick="selectQuality(this)">
+                        <div class="size-ratio">低</div>
+                        <div class="size-name">快速</div>
+                    </div>
+                    <div class="size-option selected" data-quality="medium" onclick="selectQuality(this)">
+                        <div class="size-ratio">中</div>
+                        <div class="size-name">平衡</div>
+                    </div>
+                    <div class="size-option" data-quality="high" onclick="selectQuality(this)">
+                        <div class="size-ratio">高</div>
+                        <div class="size-name">精细</div>
+                    </div>
+                `;
+                selectedQuality = 'medium';
+            }
         }
 
         // 选择分辨率
@@ -1844,6 +1932,14 @@
                 opt.classList.remove('selected'));
             element.classList.add('selected');
             selectedQuality = element.getAttribute('data-quality');
+        }
+
+        // 选择提示词优化策略
+        function selectPromptPriority(element) {
+            document.querySelectorAll('#promptPriorityGroup .size-option').forEach(opt =>
+                opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedPromptPriority = element.getAttribute('data-priority');
         }
 
         // 调用AI聊天API的辅助函数
@@ -2203,6 +2299,12 @@ ${finalPromptInput}
                     requestBody.quality = selectedQuality;
                     const batch = document.getElementById('batchSelect')?.value;
                     if (batch) requestBody.n = parseInt(batch);
+                } else if (selectedModel.startsWith('doubao-seedream-4')) {
+                    // doubao-seedream-4.0 和 4.5 使用相同的参数结构
+                    requestBody.quality = selectedQuality;
+                    const batch = document.getElementById('batchSelect')?.value;
+                    if (batch) requestBody.n = parseInt(batch);
+                    requestBody.promptPriority = selectedPromptPriority;
                 }
 
                 const response = await fetch('/api/image/generate', {

@@ -19,6 +19,9 @@ public class ImageGenerationRequest {
     private Integer n;
     private List<String> imageUrls;
 
+    // doubao-seedream-4.0 专用参数
+    private String promptPriority;
+
     public ImageGenerationRequest() {
     }
 
@@ -37,4 +40,6 @@ public class ImageGenerationRequest {
     public void setN(Integer n) { this.n = n; }
     public List<String> getImageUrls() { return imageUrls; }
     public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
+    public String getPromptPriority() { return promptPriority; }
+    public void setPromptPriority(String promptPriority) { this.promptPriority = promptPriority; }
 }

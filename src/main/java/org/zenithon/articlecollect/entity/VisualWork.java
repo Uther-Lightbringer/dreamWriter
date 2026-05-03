@@ -25,6 +25,9 @@ public class VisualWork {
     @Column(columnDefinition = "TEXT")
     private String storyboard;
 
+    @Column(name = "visual_outline", columnDefinition = "TEXT")
+    private String visualOutline;
+
     @Column(nullable = false)
     private String status = "DRAFT";
 
@@ -57,6 +60,8 @@ public class VisualWork {
     public void setDescription(String description) { this.description = description; }
     public String getStoryboard() { return storyboard; }
     public void setStoryboard(String storyboard) { this.storyboard = storyboard; }
+    public String getVisualOutline() { return visualOutline; }
+    public void setVisualOutline(String visualOutline) { this.visualOutline = visualOutline; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreateTime() { return createTime; }

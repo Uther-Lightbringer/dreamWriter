@@ -13,15 +13,12 @@
             --dream-peach: #fff3e0;
             --accent-purple: #9c27b0;
             --accent-blue: #3f51b5;
+            --accent-teal: #009688;
             --text-dark: #5d4037;
             --text-light: #8d6e63;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
@@ -57,6 +54,7 @@
         .header-actions {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
 
         .header-btn {
@@ -71,9 +69,7 @@
             background: rgba(255, 255, 255, 0.8);
         }
 
-        .header-btn:hover {
-            background: rgba(156, 39, 176, 0.1);
-        }
+        .header-btn:hover { background: rgba(156, 39, 176, 0.1); }
 
         .chat-area {
             flex: 1;
@@ -103,9 +99,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .message.user {
-            flex-direction: row-reverse;
-        }
+        .message.user { flex-direction: row-reverse; }
 
         .message-avatar {
             width: 36px;
@@ -119,15 +113,8 @@
             flex-shrink: 0;
         }
 
-        .message.user .message-avatar {
-            background: var(--accent-purple);
-            color: white;
-        }
-
-        .message.assistant .message-avatar {
-            background: var(--dream-lavender);
-            color: var(--accent-purple);
-        }
+        .message.user .message-avatar { background: var(--accent-purple); color: white; }
+        .message.assistant .message-avatar { background: var(--dream-lavender); color: var(--accent-purple); }
 
         .message-content {
             max-width: 75%;
@@ -148,14 +135,16 @@
             border-bottom-left-radius: 4px;
         }
 
-        .message.assistant .message-content p {
-            margin-bottom: 8px;
-        }
-
+        .message.assistant .message-content p { margin-bottom: 8px; }
         .message.assistant .message-content ul,
-        .message.assistant .message-content ol {
+        .message.assistant .message-content ol { margin: 8px 0; padding-left: 20px; }
+        .message.assistant .message-content strong { color: var(--accent-purple); }
+        .message.assistant .message-content blockquote {
+            border-left: 3px solid var(--accent-purple);
+            padding-left: 12px;
             margin: 8px 0;
-            padding-left: 20px;
+            color: var(--text-light);
+            font-style: italic;
         }
 
         .chat-input-area {
@@ -164,10 +153,7 @@
             border-top: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        .input-container {
-            display: flex;
-            gap: 12px;
-        }
+        .input-container { display: flex; gap: 12px; }
 
         .chat-input {
             flex: 1;
@@ -179,9 +165,7 @@
             transition: border-color 0.2s;
         }
 
-        .chat-input:focus {
-            border-color: var(--accent-purple);
-        }
+        .chat-input:focus { border-color: var(--accent-purple); }
 
         .send-btn {
             padding: 12px 24px;
@@ -194,20 +178,17 @@
             transition: background 0.2s;
         }
 
-        .send-btn:hover {
-            background: #7b1fa2;
-        }
+        .send-btn:hover { background: #7b1fa2; }
+        .send-btn:disabled { background: #ccc; cursor: not-allowed; }
 
-        .send-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .options-container {
-            margin-top: 12px;
+        /* Bubble options */
+        .bubble-options {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .option-btn {
@@ -221,24 +202,16 @@
             transition: all 0.2s;
         }
 
-        .option-btn:hover {
-            background: rgba(156, 39, 176, 0.2);
-        }
+        .option-btn:hover { background: rgba(156, 39, 176, 0.2); }
 
-        .loading {
-            display: flex;
-            gap: 4px;
-            padding: 8px;
-        }
-
+        /* Loading dots */
+        .loading { display: flex; gap: 4px; padding: 8px; }
         .loading span {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background: var(--accent-purple);
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out;
         }
-
         .loading span:nth-child(1) { animation-delay: -0.32s; }
         .loading span:nth-child(2) { animation-delay: -0.16s; }
 
@@ -246,20 +219,405 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
+
+        /* Reasoning block */
+        .reasoning-block {
+            margin: 8px 0;
+            border-left: 3px solid rgba(156, 39, 176, 0.3);
+            padding: 0;
+            font-size: 0.85rem;
+        }
+
+        .reasoning-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: rgba(156, 39, 176, 0.7);
+            font-size: 0.8rem;
+            user-select: none;
+            background: rgba(156, 39, 176, 0.05);
+            border-radius: 4px;
+        }
+
+        .reasoning-toggle:hover { background: rgba(156, 39, 176, 0.1); }
+        .reasoning-toggle .arrow { transition: transform 0.2s; font-size: 0.7rem; }
+        .reasoning-toggle .arrow.open { transform: rotate(90deg); }
+
+        .reasoning-content {
+            display: none;
+            padding: 8px 10px;
+            color: rgba(93, 64, 55, 0.6);
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .reasoning-content.show { display: block; }
+
+        /* ===== Tool Toast ===== */
+        .tool-toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tool-toast {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 10px 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 14px;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 150px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .tool-toast-main { display: flex; align-items: center; gap: 8px; }
+
+        .tool-toast-params {
+            font-size: 12px;
+            color: var(--text-light);
+            padding-left: 24px;
+            border-top: 1px dashed rgba(0, 0, 0, 0.1);
+            padding-top: 4px;
+            margin-top: 2px;
+        }
+
+        .tool-toast.success { background: rgba(76, 175, 80, 0.15); border: 1px solid rgba(76, 175, 80, 0.3); }
+        .tool-toast.pending { background: rgba(33, 150, 243, 0.15); border: 1px solid rgba(33, 150, 243, 0.3); }
+        .tool-toast.error { background: rgba(244, 67, 54, 0.15); border: 1px solid rgba(244, 67, 54, 0.3); }
+        .tool-toast.fade-out { animation: fadeOut 0.5s ease forwards; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateX(20px); }
+        }
+
+        /* ===== History Panel ===== */
+        .history-panel {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 16px rgba(0, 0, 0, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 200;
+        }
+
+        .history-panel.open { transform: translateX(0); }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .history-header h4 { color: var(--text-dark); }
+
+        .history-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .history-list {
+            padding: 12px;
+            overflow-y: auto;
+            max-height: calc(100vh - 60px);
+        }
+
+        .history-item {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.02);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover { background: rgba(156, 39, 176, 0.1); }
+        .history-item-title { font-weight: 600; color: var(--text-dark); }
+        .history-item-time { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+        .history-item-delete {
+            float: right;
+            background: none;
+            border: none;
+            color: #e53935;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .history-item-delete:hover { opacity: 1; }
+
+        /* ===== Info Drawer (Right) ===== */
+        .info-drawer {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            z-index: 200;
+        }
+
+        .info-drawer.open { transform: translateX(0); }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .drawer-header h4 { color: var(--text-dark); margin: 0; }
+
+        .drawer-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .drawer-content { padding: 12px; }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .refresh-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .refresh-btn:hover { opacity: 1; }
+
+        /* Session Stats */
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: var(--text-dark);
+            font-size: 0.85rem;
+        }
+
+        .stats-label { color: var(--text-light); }
+        .stats-value { font-weight: 600; }
+
+        .stats-progress { margin-top: 10px; }
+
+        .stats-progress-bar {
+            height: 4px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stats-progress-fill {
+            height: 100%;
+            background: var(--accent-purple);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .stats-progress-fill.warning { background: #ff9800; }
+        .stats-progress-fill.danger { background: #f44336; }
+
+        .compress-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            border-radius: 8px;
+            color: var(--accent-purple);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .compress-btn:hover { background: rgba(156, 39, 176, 0.2); }
+        .compress-btn.loading { opacity: 0.6; pointer-events: none; }
+
+        /* Params Section */
+        .params-progress { margin-bottom: 10px; }
+
+        .params-progress-bar {
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .params-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .params-progress-text {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .params-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .params-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .params-list li:last-child { border-bottom: none; }
+        .params-list .param-field { color: var(--text-light); }
+        .params-list .param-value {
+            color: var(--text-dark);
+            font-weight: 500;
+            max-width: 150px;
+            text-align: right;
+            word-break: break-all;
+        }
+        .params-list .param-value.pending {
+            color: var(--text-light);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        /* Welcome Message */
+        .welcome-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dark);
+        }
+
+        .welcome-message h2 { margin-bottom: 16px; }
+        .welcome-message p { color: var(--text-light); margin-bottom: 24px; }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .quick-action-btn {
+            padding: 10px 20px;
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid rgba(156, 39, 176, 0.2);
+            border-radius: 20px;
+            color: var(--accent-purple);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover { background: rgba(156, 39, 176, 0.2); }
+
+        /* Overlay for panels */
+        .panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 199;
+            display: none;
+        }
+        .panel-overlay.show { display: block; }
     </style>
 </head>
 <body>
+    <!-- Tool Toast Container -->
+    <div class="tool-toast-container" id="toolToastContainer"></div>
+
+    <!-- Panel Overlay -->
+    <div class="panel-overlay" id="panelOverlay" onclick="closeAllPanels()"></div>
+
     <div class="guide-container">
         <div class="guide-header">
             <h1 th:text="${genreName} + '创作引导'">创作引导</h1>
             <div class="header-actions">
+                <button class="header-btn" onclick="startNewSession()">✨ 新会话</button>
+                <button class="header-btn" onclick="toggleHistory()">📜 历史</button>
+                <button class="header-btn" onclick="toggleInfoDrawer()">ℹ️ 信息</button>
                 <a href="/genre-select" class="header-btn">切换体裁</a>
                 <a href="/" class="header-btn">返回首页</a>
             </div>
         </div>
 
         <div class="chat-area">
-            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Welcome message -->
+                <div class="welcome-message" id="welcomeMessage">
+                    <h2 id="welcomeTitle">欢迎来到创作引导</h2>
+                    <p id="welcomeDesc">我是您的 AI 创作助手</p>
+                    <div class="quick-actions" id="quickActions"></div>
+                </div>
+            </div>
 
             <div class="chat-input-area">
                 <div class="input-container">
@@ -267,20 +625,232 @@
                            placeholder="输入你的想法..." onkeypress="handleKeyPress(event)">
                     <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
                 </div>
-                <div class="options-container" id="optionsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Panel -->
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h4>📜 历史会话</h4>
+            <button class="history-close" onclick="closeHistory()">×</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- Info Drawer -->
+    <div class="info-drawer" id="infoDrawer">
+        <div class="drawer-header">
+            <h4>ℹ️ 信息面板</h4>
+            <button class="drawer-close" onclick="closeInfoDrawer()">×</button>
+        </div>
+        <div class="drawer-content">
+            <!-- Session Stats -->
+            <div class="info-section">
+                <div class="section-header">
+                    <span>💬 对话统计</span>
+                    <button class="refresh-btn" onclick="loadSessionStats()" title="刷新">🔄</button>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">对话轮数</span>
+                    <span class="stats-value" id="statsUserTurns">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">消息数量</span>
+                    <span class="stats-value" id="statsMessageCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">预估 tokens</span>
+                    <span class="stats-value" id="statsTokens">~0</span>
+                </div>
+                <div class="stats-progress">
+                    <div class="stats-progress-bar">
+                        <div class="stats-progress-fill" id="statsProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <button class="compress-btn" id="compressBtn" onclick="compressSession()" style="display: none;">
+                    <span>🗜️</span> 压缩历史
+                </button>
+            </div>
+
+            <!-- Params Section -->
+            <div class="info-section">
+                <div class="section-header">
+                    <span>📝 作品参数</span>
+                </div>
+                <div class="params-progress">
+                    <div class="params-progress-bar">
+                        <div class="params-progress-fill" id="paramsProgressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="params-progress-text" id="paramsProgressText">已完成 0%</div>
+                </div>
+                <ul class="params-list" id="paramsList"></ul>
+            </div>
+
+            <!-- Current Work Section -->
+            <div class="info-section" id="currentWorkSection" style="display: none;">
+                <div class="section-header">
+                    <span id="currentWorkIcon">📚</span>
+                    <span id="currentWorkLabel">当前作品</span>
+                </div>
+                <div id="currentWorkContent"></div>
             </div>
         </div>
     </div>
 
     <script th:inline="javascript">
-        const genreType = [[${genreType}]];
-        const genreName = [[${genreName}]];
+        const genreType = /*[[${genreType}]]*/ 'script';
+        const genreName = /*[[${genreName}]]*/ '创作';
+
         let currentSessionId = null;
-        let isProcessing = false;
+        let currentParams = {};
+        let isStreaming = false;
+        let activeToolToasts = new Map();
+
+        // Genre-specific param field definitions
+        const genreParamFields = {
+            script: [
+                { key: 'scriptType', label: '剧本类型' },
+                { key: 'theme', label: '题材' },
+                { key: 'style', label: '风格' },
+                { key: 'structure', label: '结构' },
+                { key: 'dialogueStyle', label: '对白风格' },
+                { key: 'actCount', label: '幕数' }
+            ],
+            visual: [
+                { key: 'visualType', label: '视觉类型' },
+                { key: 'theme', label: '题材' },
+                { key: 'style', label: '风格' },
+                { key: 'artStyle', label: '画风' },
+                { key: 'panelLayout', label: '分镜布局' },
+                { key: 'panelCount', label: '分镜数' }
+            ],
+            essay: [
+                { key: 'essayType', label: '散文类型' },
+                { key: 'theme', label: '题材' },
+                { key: 'emotion', label: '情感' },
+                { key: 'perspective', label: '视角' },
+                { key: 'languageStyle', label: '语言风格' },
+                { key: 'structure', label: '结构' },
+                { key: 'wordCount', label: '字数' }
+            ],
+            novel: [
+                { key: 'scriptType', label: '剧本类型' },
+                { key: 'theme', label: '题材' },
+                { key: 'style', label: '风格' },
+                { key: 'structure', label: '结构' },
+                { key: 'dialogueStyle', label: '对白风格' },
+                { key: 'actCount', label: '幕数' }
+            ]
+        };
+
+        // Tool operation map for toasts
+        const toolOperationMap = {
+            'fill_params': { pending: '正在整理参数...', success: '参数整理完成' },
+            'create_script': { pending: '正在创建剧本...', success: '剧本创建成功' },
+            'add_scene': { pending: '正在添加场景...', success: '场景添加成功' },
+            'update_scene': { pending: '正在更新场景...', success: '场景更新成功' },
+            'get_scene_summaries': { pending: '正在获取场景摘要...', success: '场景摘要获取完成' },
+            'generate_script_outline': { pending: '正在生成剧本大纲...', success: '剧本大纲生成完成' },
+            'update_script': { pending: '正在更新剧本...', success: '剧本更新成功' },
+            'update_script_outline': { pending: '正在更新大纲...', success: '大纲更新成功' },
+            'create_visual_work': { pending: '正在创建视觉作品...', success: '视觉作品创建成功' },
+            'add_panel': { pending: '正在添加分镜...', success: '分镜添加成功' },
+            'update_panel': { pending: '正在更新分镜...', success: '分镜更新成功' },
+            'get_panel_summaries': { pending: '正在获取分镜摘要...', success: '分镜摘要获取完成' },
+            'generate_storyboard': { pending: '正在生成分镜脚本...', success: '分镜脚本生成完成' },
+            'update_visual_work': { pending: '正在更新视觉作品...', success: '视觉作品更新成功' },
+            'update_storyboard': { pending: '正在更新分镜脚本...', success: '分镜脚本更新成功' },
+            'create_essay': { pending: '正在创建散文...', success: '散文创建成功' },
+            'add_paragraph': { pending: '正在添加段落...', success: '段落添加成功' },
+            'update_paragraph': { pending: '正在更新段落...', success: '段落更新成功' },
+            'get_paragraph_summaries': { pending: '正在获取段落摘要...', success: '段落摘要获取完成' },
+            'generate_essay_outline': { pending: '正在生成散文大纲...', success: '散文大纲生成完成' },
+            'update_essay': { pending: '正在更新散文...', success: '散文更新成功' },
+            'update_essay_outline': { pending: '正在更新大纲...', success: '大纲更新成功' }
+        };
+
+        // Quick actions per genre
+        const genreQuickActions = {
+            script: [
+                { text: '写一部电影剧本', msg: '我想写一部电影剧本' },
+                { text: '创作话剧剧本', msg: '帮我创作一部话剧剧本' },
+                { text: '写短视频脚本', msg: '我想写一个短视频脚本' }
+            ],
+            visual: [
+                { text: '创作漫画分镜', msg: '我想创作一部漫画的分镜脚本' },
+                { text: '绘本故事', msg: '帮我构思一个绘本故事' },
+                { text: '视觉叙事', msg: '我想用视觉方式讲述一个故事' }
+            ],
+            essay: [
+                { text: '写一篇抒情散文', msg: '我想写一篇抒情散文' },
+                { text: '叙事散文', msg: '帮我写一篇叙事散文' },
+                { text: '议论性散文', msg: '我想创作一篇议论性散文' }
+            ],
+            novel: [
+                { text: '写一部小说', msg: '我想写一部小说' },
+                { text: '构思故事', msg: '帮我构思一个故事' },
+                { text: '创建角色', msg: '我想创建角色' }
+            ]
+        };
+
+        // ==================== Init ====================
 
         window.onload = function() {
+            setupWelcome();
             createNewSession();
         };
+
+        function setupWelcome() {
+            const actions = genreQuickActions[genreType] || genreQuickActions['novel'];
+            document.getElementById('welcomeTitle').textContent = `欢迎来到${genreName}创作引导`;
+            document.getElementById('welcomeDesc').textContent = `我是您的${genreName}创作助手，让我们一起开始创作吧`;
+            const container = document.getElementById('quickActions');
+            container.innerHTML = '';
+            actions.forEach(a => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-action-btn';
+                btn.textContent = a.text;
+                btn.onclick = () => startWith(a.msg);
+                container.appendChild(btn);
+            });
+        }
+
+        function startWith(message) {
+            const welcome = document.getElementById('welcomeMessage');
+            if (welcome) welcome.style.display = 'none';
+            document.getElementById('chatInput').value = message;
+            sendMessage();
+        }
+
+        async function startNewSession() {
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const session = await response.json();
+                currentSessionId = session.sessionId;
+                currentParams = {};
+
+                // Clear chat
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+                // Re-add welcome
+                const welcome = document.createElement('div');
+                welcome.className = 'welcome-message';
+                welcome.id = 'welcomeMessage';
+                welcome.innerHTML = `<h2 id="welcomeTitle">欢迎来到${genreName}创作引导</h2><p id="welcomeDesc">我是您的${genreName}创作助手，让我们一起开始创作吧</p><div class="quick-actions" id="quickActions"></div>`;
+                messagesContainer.appendChild(welcome);
+                setupWelcome();
+
+                renderParamsPanel();
+                updateSessionStats(null);
+            } catch (error) {
+                console.error('创建会话失败:', error);
+                addMessage('assistant', '抱歉，创建会话时出现问题，请刷新页面重试。');
+            }
+        }
 
         async function createNewSession() {
             try {
@@ -290,12 +860,22 @@
                 });
                 const session = await response.json();
                 currentSessionId = session.sessionId;
-                addMessage('assistant', `你好！我是你的${genreName}创作顾问。让我们开始创作之旅吧！请告诉我，你想创作什么类型的作品？`);
+                currentParams = {};
+
+                // Parse initial params
+                if (session.extractedParams) {
+                    try {
+                        currentParams = JSON.parse(session.extractedParams);
+                    } catch (e) {}
+                }
+
+                renderParamsPanel();
             } catch (error) {
                 console.error('创建会话失败:', error);
-                addMessage('assistant', '抱歉，创建会话时出现问题，请刷新页面重试。');
             }
         }
+
+        // ==================== Messages ====================
 
         function addMessage(role, content) {
             const messagesContainer = document.getElementById('chatMessages');
@@ -308,34 +888,49 @@
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            contentDiv.innerHTML = marked.parse(content);
+            const displayText = content.replace(/\[OPTIONS[:\s：](\w+)[:\s：]([^\]]+)\]([\s\S]*?)\[\/OPTIONS\]/g, '');
+            contentDiv.innerHTML = marked.parse(displayText.trim());
 
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
             messagesContainer.appendChild(messageDiv);
 
-            parseOptions(content);
+            parseOptions(content, contentDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        function parseOptions(content) {
-            const optionsContainer = document.getElementById('optionsContainer');
-            optionsContainer.innerHTML = '';
+        function parseOptions(content, targetContainer) {
+            if (!content || !targetContainer) return;
 
-            const optionRegex = /\[OPTIONS:(\w+):([^\]]+)\]([^[]+)\[\/OPTIONS\]/g;
+            const oldOptions = targetContainer.querySelector('.bubble-options');
+            if (oldOptions) oldOptions.remove();
+
+            const optionRegex = /\[OPTIONS[:\s：](\w+)[:\s：]([^\]]+)\]([\s\S]*?)\[\/OPTIONS\]/g;
             let match;
+            let found = false;
 
             while ((match = optionRegex.exec(content)) !== null) {
+                if (!found) {
+                    found = true;
+                    const optionsDiv = document.createElement('div');
+                    optionsDiv.className = 'bubble-options';
+                    targetContainer.appendChild(optionsDiv);
+                }
+
                 const fieldName = match[1];
-                const displayName = match[2];
-                const options = match[3].split('|');
+                const optionsStr = match[3].trim();
+                const options = optionsStr.split('|');
+                const optionsDiv = targetContainer.querySelector('.bubble-options');
 
                 options.forEach(option => {
-                    const btn = document.createElement('button');
-                    btn.className = 'option-btn';
-                    btn.textContent = option.trim();
-                    btn.onclick = () => selectOption(fieldName, option.trim());
-                    optionsContainer.appendChild(btn);
+                    const opt = option.trim();
+                    if (opt) {
+                        const btn = document.createElement('button');
+                        btn.className = 'option-btn';
+                        btn.textContent = opt;
+                        btn.onclick = () => selectOption(fieldName, opt);
+                        optionsDiv.appendChild(btn);
+                    }
                 });
             }
         }
@@ -346,21 +941,161 @@
             sendMessage();
         }
 
+        // ==================== Tool Toasts ====================
+
+        function showToolToast(toolName, status, params) {
+            const container = document.getElementById('toolToastContainer');
+            const op = toolOperationMap[toolName] || { pending: '正在执行: ' + toolName, success: toolName + ' 完成' };
+
+            const toast = document.createElement('div');
+            toast.className = `tool-toast ${status}`;
+
+            if (status === 'pending') {
+                let paramsHtml = '';
+                if (params) {
+                    paramsHtml = `<div class="tool-toast-params">${escapeHtml(params)}</div>`;
+                }
+                toast.innerHTML = `<div class="tool-toast-main">🔄 ${op.pending}</div>${paramsHtml}`;
+            } else if (status === 'success') {
+                toast.innerHTML = `<div class="tool-toast-main">✅ ${op.success}</div>`;
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 500);
+                }, 2000);
+            } else if (status === 'error') {
+                toast.innerHTML = `<div class="tool-toast-main">❌ ${op.pending}</div>`;
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 500);
+                }, 5000);
+            }
+
+            container.appendChild(toast);
+            return toast;
+        }
+
+        function handleToolCallStart(data) {
+            const toolName = data.tool || data.displayName || '';
+            const callId = data.callId || toolName;
+            const toast = showToolToast(toolName, 'pending', data.params || '');
+
+            const timeoutId = setTimeout(() => {
+                const existing = activeToolToasts.get(callId);
+                if (existing) {
+                    existing.toastElement.className = 'tool-toast error';
+                    existing.toastElement.innerHTML = '<div class="tool-toast-main">❌ 超时</div>';
+                    activeToolToasts.delete(callId);
+                }
+            }, 30000);
+
+            activeToolToasts.set(callId, { toastElement: toast, timeoutId });
+        }
+
+        function handleToolResult(data) {
+            const callId = data.callId || data.tool || '';
+            const existing = activeToolToasts.get(callId);
+
+            if (existing) {
+                clearTimeout(existing.timeoutId);
+                existing.toastElement.className = 'tool-toast success';
+                const op = toolOperationMap[data.tool] || { success: (data.tool || '') + ' 完成' };
+                existing.toastElement.innerHTML = `<div class="tool-toast-main">✅ ${op.success}</div>`;
+                setTimeout(() => {
+                    existing.toastElement.classList.add('fade-out');
+                    setTimeout(() => existing.toastElement.remove(), 500);
+                }, 2000);
+                activeToolToasts.delete(callId);
+            } else {
+                showToolToast(data.tool || '', 'success');
+            }
+
+            // Refresh params after tool call
+            loadSessionParams();
+        }
+
+        // ==================== Send Message ====================
+
         async function sendMessage() {
-            if (isProcessing) return;
+            if (isStreaming) return;
 
             const input = document.getElementById('chatInput');
             const content = input.value.trim();
             if (!content) return;
 
+            // Hide welcome
+            const welcome = document.getElementById('welcomeMessage');
+            if (welcome) welcome.style.display = 'none';
+
             addMessage('user', content);
             input.value = '';
-            document.getElementById('optionsContainer').innerHTML = '';
 
-            isProcessing = true;
+            isStreaming = true;
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
             sendBtn.textContent = '思考中...';
+
+            // Create assistant message placeholder
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = 'AI';
+
+            const bodyDiv = document.createElement('div');
+            bodyDiv.style.cssText = 'max-width: 75%; display: flex; flex-direction: column; gap: 4px;';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            bodyDiv.appendChild(contentDiv);
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bodyDiv);
+            messagesContainer.appendChild(messageDiv);
+
+            let assistantMessage = '';
+            let reasoningMessage = '';
+            let reasoningBlockEl = null;
+            let reasoningContentEl = null;
+            let buffer = '';
+
+            function createReasoningBlock() {
+                if (reasoningBlockEl) return;
+                reasoningBlockEl = document.createElement('div');
+                reasoningBlockEl.className = 'reasoning-block';
+
+                const toggle = document.createElement('div');
+                toggle.className = 'reasoning-toggle';
+                toggle.innerHTML = '<span class="arrow">▶</span> <span>思考过程</span>';
+                toggle.onclick = function() {
+                    const arrow = toggle.querySelector('.arrow');
+                    const content = reasoningBlockEl.querySelector('.reasoning-content');
+                    if (content.classList.contains('show')) {
+                        content.classList.remove('show');
+                        arrow.classList.remove('open');
+                    } else {
+                        content.classList.add('show');
+                        arrow.classList.add('open');
+                    }
+                };
+
+                reasoningContentEl = document.createElement('div');
+                reasoningContentEl.className = 'reasoning-content';
+
+                reasoningBlockEl.appendChild(toggle);
+                reasoningBlockEl.appendChild(reasoningContentEl);
+                bodyDiv.insertBefore(reasoningBlockEl, bodyDiv.firstChild);
+            }
+
+            function updateContent() {
+                if (assistantMessage) {
+                    parseOptions(assistantMessage, contentDiv);
+                    const displayText = assistantMessage.replace(/\[OPTIONS[:\s：](\w+)[:\s：]([^\]]+)\]([\s\S]*?)\[\/OPTIONS\]/g, '');
+                    contentDiv.innerHTML = marked.parse(displayText.trim());
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
 
             try {
                 const response = await fetch(`/api/genres/${genreType}/sessions/${currentSessionId}/chat`, {
@@ -371,37 +1106,83 @@
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let assistantMessage = '';
+                let currentEvent = '';
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
 
                     for (const line of lines) {
-                        if (line.startsWith('data: ')) {
+                        const trimmedLine = line.trim();
+
+                        if (trimmedLine.startsWith('event:')) {
+                            currentEvent = trimmedLine.slice(6).trim();
+                        } else if (trimmedLine.startsWith('data:')) {
+                            const dataStr = trimmedLine.slice(5).trim();
                             try {
-                                const data = JSON.parse(line.slice(6));
-                                if (data.text) {
+                                const data = JSON.parse(dataStr);
+
+                                if (currentEvent === 'reasoning_content') {
+                                    if (data.text !== undefined) {
+                                        reasoningMessage += data.text;
+                                        createReasoningBlock();
+                                        reasoningContentEl.textContent = reasoningMessage;
+                                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                    }
+                                } else if (currentEvent === 'tool_call_start') {
+                                    handleToolCallStart(data);
+                                } else if (currentEvent === 'tool_result') {
+                                    handleToolResult(data);
+                                } else if (currentEvent === 'tool_calls_done') {
+                                    // All tool calls done - clean up inline markers
+                                    assistantMessage = assistantMessage.replace(/\n\n> [🔧✅❌].*/g, '');
+                                    updateContent();
+                                } else if (data.text !== undefined) {
                                     assistantMessage += data.text;
+                                    updateContent();
                                 }
                             } catch (e) {
-                                // 忽略解析错误
+                                console.debug('SSE parse error:', e, dataStr);
                             }
+                            currentEvent = '';
                         }
                     }
                 }
 
-                if (assistantMessage) {
-                    addMessage('assistant', assistantMessage);
+                // Handle remaining buffer
+                if (buffer.trim()) {
+                    const remaining = buffer.trim();
+                    if (remaining.startsWith('data:')) {
+                        try {
+                            const dataStr = remaining.slice(5).trim();
+                            const data = JSON.parse(dataStr);
+                            if (data.text !== undefined) {
+                                assistantMessage += data.text;
+                                updateContent();
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
                 }
+
+                if (!assistantMessage.trim()) {
+                    contentDiv.innerHTML = '<span style="color: #999;">（AI未返回内容）</span>';
+                } else {
+                    updateContent();
+                }
+
+                // Refresh session stats and params after response
+                loadSessionStats();
+                loadSessionParams();
+
             } catch (error) {
                 console.error('发送消息失败:', error);
-                addMessage('assistant', '抱歉，发送消息时出现问题，请重试。');
+                contentDiv.innerHTML = '<span style="color: #f44336;">抱歉，发送消息时出现问题，请重试。</span>';
             } finally {
-                isProcessing = false;
+                isStreaming = false;
                 sendBtn.disabled = false;
                 sendBtn.textContent = '发送';
             }
@@ -411,6 +1192,283 @@
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 sendMessage();
+            }
+        }
+
+        // ==================== History Panel ====================
+
+        function toggleHistory() {
+            const panel = document.getElementById('historyPanel');
+            if (panel.classList.contains('open')) {
+                closeHistory();
+            } else {
+                openHistory();
+            }
+        }
+
+        function openHistory() {
+            closeInfoDrawer();
+            document.getElementById('historyPanel').classList.add('open');
+            document.getElementById('panelOverlay').classList.add('show');
+            loadHistoryList();
+        }
+
+        function closeHistory() {
+            document.getElementById('historyPanel').classList.remove('open');
+            document.getElementById('panelOverlay').classList.remove('show');
+        }
+
+        async function loadHistoryList() {
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions`);
+                const sessions = await response.json();
+                const list = document.getElementById('historyList');
+                list.innerHTML = '';
+
+                if (!sessions || sessions.length === 0) {
+                    list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);">暂无历史会话</div>';
+                    return;
+                }
+
+                sessions.forEach(session => {
+                    const time = session.updateTime || session.update_time || session.createTime || session.create_time || '';
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    item.innerHTML = `
+                        <button class="history-item-delete" onclick="event.stopPropagation(); deleteHistorySession('${session.sessionId}')">删除</button>
+                        <div class="history-item-title">📚 ${escapeHtml(session.title || '新会话')}</div>
+                        <div class="history-item-time">${formatTime(time)}</div>
+                    `;
+                    item.onclick = () => loadSession(session.sessionId);
+                    list.appendChild(item);
+                });
+            } catch (error) {
+                console.error('加载历史失败:', error);
+            }
+        }
+
+        async function loadSession(sessionId) {
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions/${sessionId}`);
+                const session = await response.json();
+                currentSessionId = session.sessionId;
+
+                // Parse params
+                currentParams = {};
+                if (session.extractedParams) {
+                    try { currentParams = JSON.parse(session.extractedParams); } catch (e) {}
+                }
+
+                // Parse and render messages
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+
+                if (session.messages) {
+                    try {
+                        const messages = JSON.parse(session.messages);
+                        messages.forEach(msg => {
+                            if (msg.role === 'system') return;
+                            if (msg.role === 'user') {
+                                addMessage('user', msg.content || '');
+                            } else if (msg.role === 'assistant') {
+                                // Handle messages with tool_calls - extract text content
+                                let textContent = msg.content || '';
+                                if (!textContent && msg.tool_calls) {
+                                    // Skip pure tool-call messages with no text
+                                    return;
+                                }
+                                if (textContent) {
+                                    addMessage('assistant', textContent);
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        console.error('解析消息失败:', e);
+                    }
+                }
+
+                renderParamsPanel();
+                loadSessionStats();
+                closeHistory();
+            } catch (error) {
+                console.error('加载会话失败:', error);
+            }
+        }
+
+        async function deleteHistorySession(sessionId) {
+            if (!confirm('确定要删除这个会话吗？')) return;
+            try {
+                await fetch(`/api/genres/${genreType}/sessions/${sessionId}`, { method: 'DELETE' });
+                if (sessionId === currentSessionId) {
+                    startNewSession();
+                }
+                loadHistoryList();
+            } catch (error) {
+                console.error('删除会话失败:', error);
+            }
+        }
+
+        // ==================== Info Drawer ====================
+
+        function toggleInfoDrawer() {
+            const drawer = document.getElementById('infoDrawer');
+            if (drawer.classList.contains('open')) {
+                closeInfoDrawer();
+            } else {
+                openInfoDrawer();
+            }
+        }
+
+        function openInfoDrawer() {
+            closeHistory();
+            document.getElementById('infoDrawer').classList.add('open');
+            document.getElementById('panelOverlay').classList.add('show');
+            loadSessionStats();
+            loadSessionParams();
+        }
+
+        function closeInfoDrawer() {
+            document.getElementById('infoDrawer').classList.remove('open');
+            document.getElementById('panelOverlay').classList.remove('show');
+        }
+
+        function closeAllPanels() {
+            closeHistory();
+            closeInfoDrawer();
+        }
+
+        // ==================== Session Stats ====================
+
+        async function loadSessionStats() {
+            if (!currentSessionId) return;
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions/${currentSessionId}/stats`);
+                const stats = await response.json();
+                updateSessionStats(stats);
+            } catch (e) {
+                console.error('加载会话统计失败', e);
+            }
+        }
+
+        function updateSessionStats(stats) {
+            if (!stats) {
+                document.getElementById('statsUserTurns').textContent = '0';
+                document.getElementById('statsMessageCount').textContent = '0';
+                document.getElementById('statsTokens').textContent = '~0';
+                document.getElementById('statsProgressFill').style.width = '0%';
+                document.getElementById('compressBtn').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('statsUserTurns').textContent = stats.userTurns;
+            document.getElementById('statsMessageCount').textContent = stats.messageCount;
+            document.getElementById('statsTokens').textContent = '~' + (stats.estimatedTokens || 0).toLocaleString();
+
+            const pct = Math.min(stats.thresholdPercentage || 0, 100);
+            const fill = document.getElementById('statsProgressFill');
+            fill.style.width = pct + '%';
+            fill.className = 'stats-progress-fill' + (pct >= 100 ? ' danger' : pct >= 70 ? ' warning' : '');
+
+            document.getElementById('compressBtn').style.display = stats.needsCompression ? 'flex' : 'none';
+        }
+
+        async function compressSession() {
+            if (!currentSessionId) return;
+            const btn = document.getElementById('compressBtn');
+            btn.classList.add('loading');
+            btn.innerHTML = '<span>🗜️</span> 压缩中...';
+
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions/${currentSessionId}/compress`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadSessionStats();
+                    // Reload messages
+                    loadSession(currentSessionId);
+                } else {
+                    alert(result.message || '无需压缩');
+                }
+            } catch (e) {
+                console.error('压缩失败', e);
+            } finally {
+                btn.classList.remove('loading');
+                btn.innerHTML = '<span>🗜️</span> 压缩历史';
+            }
+        }
+
+        // ==================== Params Panel ====================
+
+        async function loadSessionParams() {
+            if (!currentSessionId) return;
+            try {
+                const response = await fetch(`/api/genres/${genreType}/sessions/${currentSessionId}`);
+                const session = await response.json();
+                if (session.extractedParams) {
+                    try {
+                        currentParams = JSON.parse(session.extractedParams);
+                        renderParamsPanel();
+                    } catch (e) {}
+                }
+            } catch (e) {
+                console.error('加载参数失败', e);
+            }
+        }
+
+        function renderParamsPanel() {
+            const fields = genreParamFields[genreType] || genreParamFields['novel'];
+            const list = document.getElementById('paramsList');
+            list.innerHTML = '';
+
+            let filledCount = 0;
+            const requiredFields = fields.filter(f => f.key !== 'actCount' && f.key !== 'panelCount' && f.key !== 'wordCount');
+
+            fields.forEach(field => {
+                const value = currentParams[field.key];
+                const li = document.createElement('li');
+                const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+                if (!isEmpty && requiredFields.some(f => f.key === field.key)) filledCount++;
+
+                li.innerHTML = `
+                    <span class="param-field">${field.label}</span>
+                    <span class="param-value${isEmpty ? ' pending' : ''}">${isEmpty ? '待确定' : formatParamValue(value)}</span>
+                `;
+                list.appendChild(li);
+            });
+
+            // Progress
+            const pct = requiredFields.length > 0 ? Math.round((filledCount / requiredFields.length) * 100) : 0;
+            document.getElementById('paramsProgressFill').style.width = pct + '%';
+            document.getElementById('paramsProgressText').textContent = `已完成 ${pct}%`;
+        }
+
+        function formatParamValue(value) {
+            if (Array.isArray(value)) return value.join('、');
+            return String(value);
+        }
+
+        // ==================== Utilities ====================
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            try {
+                const date = new Date(timeStr);
+                if (isNaN(date.getTime())) return timeStr;
+                const now = new Date();
+                const diff = now - date;
+                if (diff < 60000) return '刚刚';
+                if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+                if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+                return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return timeStr;
             }
         }
     </script>

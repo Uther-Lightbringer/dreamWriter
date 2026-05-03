@@ -73,7 +73,8 @@ public class CreativeSessionService {
         Map.entry("remove_memory", "删除记忆"),
         Map.entry("show_examples", "展示示例"),
         Map.entry("generate_outline", "生成大纲"),
-        Map.entry("update_outline", "更新大纲")
+        Map.entry("update_outline", "更新大纲"),
+        Map.entry("get_material", "获取素材")
     );
 
     // 系统提示词（固定部分）
@@ -97,6 +98,12 @@ public class CreativeSessionService {
 
     @Autowired
     private ChapterImageService chapterImageService;
+
+    @Autowired
+    private AiImageHistoryService aiImageHistoryService;
+
+    @Autowired
+    private MaterialService materialService;
 
     public CreativeSessionService(
             CreativeSessionRepository sessionRepository,
@@ -1035,7 +1042,7 @@ public class CreativeSessionService {
                         result = generateChapterImages(argumentsJson, session, emitter);
                         break;
                     case "generate_reference_image":
-                        result = generateReferenceImage(argumentsJson, session);
+                        result = generateReferenceImage(argumentsJson, session, emitter);
                         break;
                     case "get_chapter_summaries":
                         result = getChapterSummaries(argumentsJson, session);
@@ -1054,6 +1061,9 @@ public class CreativeSessionService {
                         break;
                     case "list_character_cards":
                         result = listCharacterCards(argumentsJson, session);
+                        break;
+                    case "get_material":
+                        result = getMaterial(argumentsJson);
                         break;
                     default:
                         result = "{\"error\": \"未知工具: " + functionName + "\"}";
@@ -1251,6 +1261,44 @@ public class CreativeSessionService {
     private String summarizeConversation(List<Map<String, Object>> messages) {
         // 简单实现：标记需要摘要，实际摘要由 AI 生成
         return "{\"message\": \"摘要功能将由 AI 在下次请求时生成\"}";
+    }
+
+    /**
+     * 获取素材工具实现
+     * 根据场景关键词按需加载素材库中的相关素材
+     */
+    private String getMaterial(String argumentsJson) {
+        try {
+            Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
+            String scene = (String) args.get("scene");
+            String detail = (String) args.get("detail");
+
+            if (scene == null || scene.trim().isEmpty()) {
+                return objectMapper.writeValueAsString(Map.of(
+                    "success", false,
+                    "error", "scene 参数必填",
+                    "availableScenes", materialService.getAvailableScenes()
+                ));
+            }
+
+            logger.info("获取素材: scene={}, detail={}", scene, detail);
+
+            String content;
+            if (detail != null && !detail.trim().isEmpty()) {
+                content = materialService.getMaterialsByScene(scene, detail);
+            } else {
+                content = materialService.getMaterialsByScene(scene);
+            }
+
+            return objectMapper.writeValueAsString(Map.of(
+                "success", true,
+                "scene", scene,
+                "content", content
+            ));
+        } catch (Exception e) {
+            logger.error("获取素材失败: {}", e.getMessage(), e);
+            return "{\"success\": false, \"error\": \"" + escapeJson(e.getMessage()) + "\"}";
+        }
     }
 
     // ==================== 新增创作工具实现 ====================
@@ -1821,17 +1869,81 @@ public class CreativeSessionService {
 
             // 调用 EvoLink 生成图片
             String taskId = evoLinkImageService.generateImage(prompt.toString(), size, seed);
+            logger.info("开始轮询图片生成任务: taskId={}", taskId);
 
-            // 轮询获取结果（最多等待60秒）
+            // 发送开始生成事件
+            emitter.send(SseEmitter.event()
+                .name("image_progress")
+                .data(objectMapper.writeValueAsString(Map.of(
+                    "taskId", taskId,
+                    "status", "started",
+                    "progress", 0,
+                    "message", "开始生成角色图片...",
+                    "characterId", characterId,
+                    "characterName", card.getName()
+                ))));
+
+            // 轮询获取结果（最多等待5分钟，gpt-image-2需要更长时间）
             String imageUrl = null;
-            int maxAttempts = 30;
+            int maxAttempts = 150;  // 150次 * 2秒 = 300秒 = 5分钟
+            int lastReportedProgress = 0;
             for (int i = 0; i < maxAttempts; i++) {
                 Thread.sleep(2000);
                 EvoLinkImageService.TaskStatus status = evoLinkImageService.getTaskStatus(taskId);
+
+                // 每10次轮询输出一次日志，避免日志过多
+                if (i % 10 == 0 || "completed".equals(status.getStatus()) || "failed".equals(status.getStatus())) {
+                    logger.info("轮询任务状态: attempt={}/{}, taskId={}, status={}, progress={}, imageUrl={}",
+                        i + 1, maxAttempts, taskId, status.getStatus(), status.getProgress(), status.getImageUrl());
+                }
+
+                // 发送进度更新（每增加5%或状态变化时发送）
+                int currentProgress = status.getProgress();
+                if (currentProgress >= lastReportedProgress + 5 || "completed".equals(status.getStatus()) || "failed".equals(status.getStatus())) {
+                    lastReportedProgress = currentProgress;
+
+                    String progressMessage = "生成中...";
+                    if (currentProgress < 20) {
+                        progressMessage = "正在构思画面...";
+                    } else if (currentProgress < 50) {
+                        progressMessage = "正在绘制草图...";
+                    } else if (currentProgress < 80) {
+                        progressMessage = "正在细化细节...";
+                    } else {
+                        progressMessage = "即将完成...";
+                    }
+
+                    emitter.send(SseEmitter.event()
+                        .name("image_progress")
+                        .data(objectMapper.writeValueAsString(Map.of(
+                            "taskId", taskId,
+                            "status", status.getStatus(),
+                            "progress", currentProgress,
+                            "message", progressMessage,
+                            "characterId", characterId,
+                            "characterName", card.getName()
+                        ))));
+                }
+
                 if ("completed".equals(status.getStatus())) {
                     imageUrl = status.getImageUrl();
+                    logger.info("图片生成完成: taskId={}, imageUrl={}", taskId, imageUrl);
                     break;
                 } else if ("failed".equals(status.getStatus())) {
+                    logger.error("图片生成失败: taskId={}, error={}", taskId, status.getError());
+
+                    // 发送失败事件
+                    emitter.send(SseEmitter.event()
+                        .name("image_progress")
+                        .data(objectMapper.writeValueAsString(Map.of(
+                            "taskId", taskId,
+                            "status", "failed",
+                            "progress", currentProgress,
+                            "message", "生成失败: " + status.getError(),
+                            "characterId", characterId,
+                            "characterName", card.getName()
+                        ))));
+
                     return "{\"error\": \"图片生成失败: " + status.getError() + "\", \"errorCode\": \"IMAGE_GENERATION_FAILED\"}";
                 }
             }
@@ -1963,23 +2075,117 @@ public class CreativeSessionService {
      * 不直接生成图片，返回确认卡片数据供前端渲染
      */
     @SuppressWarnings("unchecked")
-    private String generateReferenceImage(String argumentsJson, CreativeSession session) {
+    private String generateReferenceImage(String argumentsJson, CreativeSession session, SseEmitter emitter) {
         try {
             Map<String, Object> args = objectMapper.readValue(argumentsJson, new TypeReference<>() {});
 
             String prompt = (String) args.get("prompt");
-            String suggestedSize = (String) args.getOrDefault("suggestedSize", "1:1");
+            String size = (String) args.getOrDefault("suggestedSize", "1:1");
             String type = (String) args.getOrDefault("type", "other");
 
             if (prompt == null || prompt.trim().isEmpty()) {
                 return "{\"error\": \"提示词不能为空\", \"errorCode\": \"EMPTY_PROMPT\"}";
             }
 
-            // 返回确认卡片数据，不直接生成图片
+            logger.info("开始生成参考图片: type={}, size={}, prompt={}", type, size, prompt);
+
+            // 发送开始生成事件
+            emitter.send(SseEmitter.event()
+                .name("image_progress")
+                .data(objectMapper.writeValueAsString(Map.of(
+                    "taskId", "ref-" + System.currentTimeMillis(),
+                    "status", "started",
+                    "progress", 0,
+                    "message", "开始生成参考图片...",
+                    "type", type
+                ))));
+
+            // 调用 EvoLink 生成图片
+            String taskId = evoLinkImageService.generateImage(prompt, size);
+            logger.info("参考图片生成任务已创建: taskId={}", taskId);
+
+            // 轮询获取结果（最多等待5分钟）
+            String imageUrl = null;
+            int maxAttempts = 150;
+            int lastReportedProgress = 0;
+            for (int i = 0; i < maxAttempts; i++) {
+                Thread.sleep(2000);
+                EvoLinkImageService.TaskStatus status = evoLinkImageService.getTaskStatus(taskId);
+
+                // 每10次轮询输出一次日志
+                if (i % 10 == 0 || "completed".equals(status.getStatus()) || "failed".equals(status.getStatus())) {
+                    logger.info("参考图片轮询: attempt={}/{}, status={}, progress={}",
+                        i + 1, maxAttempts, status.getStatus(), status.getProgress());
+                }
+
+                // 发送进度更新（每增加5%或状态变化时发送）
+                int currentProgress = status.getProgress();
+                if (currentProgress >= lastReportedProgress + 5 || "completed".equals(status.getStatus()) || "failed".equals(status.getStatus())) {
+                    lastReportedProgress = currentProgress;
+
+                    String progressMessage = "生成中...";
+                    if (currentProgress < 20) {
+                        progressMessage = "正在构思画面...";
+                    } else if (currentProgress < 50) {
+                        progressMessage = "正在绘制草图...";
+                    } else if (currentProgress < 80) {
+                        progressMessage = "正在细化细节...";
+                    } else {
+                        progressMessage = "即将完成...";
+                    }
+
+                    emitter.send(SseEmitter.event()
+                        .name("image_progress")
+                        .data(objectMapper.writeValueAsString(Map.of(
+                            "taskId", taskId,
+                            "status", status.getStatus(),
+                            "progress", currentProgress,
+                            "message", progressMessage,
+                            "type", type
+                        ))));
+                }
+
+                if ("completed".equals(status.getStatus())) {
+                    imageUrl = status.getImageUrl();
+                    logger.info("参考图片生成完成: taskId={}, imageUrl={}", taskId, imageUrl);
+                    break;
+                } else if ("failed".equals(status.getStatus())) {
+                    logger.error("参考图片生成失败: taskId={}, error={}", taskId, status.getError());
+
+                    // 发送失败事件
+                    emitter.send(SseEmitter.event()
+                        .name("image_progress")
+                        .data(objectMapper.writeValueAsString(Map.of(
+                            "taskId", taskId,
+                            "status", "failed",
+                            "progress", currentProgress,
+                            "message", "生成失败: " + status.getError(),
+                            "type", type
+                        ))));
+
+                    return "{\"error\": \"图片生成失败: " + status.getError() + "\", \"errorCode\": \"IMAGE_GENERATION_FAILED\"}";
+                }
+            }
+
+            if (imageUrl == null) {
+                return "{\"error\": \"图片生成超时\", \"errorCode\": \"IMAGE_GENERATION_FAILED\"}";
+            }
+
+            // 保存到历史记录
+            aiImageHistoryService.saveHistory(prompt, imageUrl);
+
+            // 发送完成事件
+            emitter.send(SseEmitter.event()
+                .name("image_result")
+                .data(objectMapper.writeValueAsString(Map.of(
+                    "imageUrl", imageUrl,
+                    "type", type,
+                    "name", "参考图"
+                ))));
+
             return objectMapper.writeValueAsString(Map.of(
-                "action", "show_image_card",
-                "prompt", prompt,
-                "suggestedSize", suggestedSize,
+                "success", true,
+                "imageUrl", imageUrl,
                 "type", type
             ));
         } catch (Exception e) {
@@ -2954,7 +3160,7 @@ public class CreativeSessionService {
         addChapterProps.put("content", Map.of("type", "string", "description", "章节内容"));
         addChapterProps.put("afterChapterId", Map.of("type", "integer", "description", "插入到指定章节之后"));
         addChapterProps.put("summary", Map.of("type", "string", "description", "章节概括（100-200字），用于后续章节参考剧情进度"));
-        tools.add(createTool("add_chapter", "为小说添加新章节。需要先创建小说。调用前必须先向用户确认。", addChapterProps, Arrays.asList("title", "content")));
+        tools.add(createTool("add_chapter", "为小说添加新章节。需要先创建小说。调用前必须先向用户确认。先询问用户“目前条件已经具备，是否需要我来创建新的章节？”", addChapterProps, Arrays.asList("title", "content")));
 
         // update_chapter 工具
         Map<String, Object> updateChapterProps = new LinkedHashMap<>();
@@ -3085,6 +3291,23 @@ public class CreativeSessionService {
         Map<String, Object> getSummariesProps = new LinkedHashMap<>();
         getSummariesProps.put("novelId", Map.of("type", "integer", "description", "小说ID，不填则使用当前会话的小说"));
         tools.add(createTool("get_chapter_summaries", "获取小说已有章节的概括列表。创建新章节前调用此工具了解剧情进度，避免读取完整内容。", getSummariesProps, Collections.emptyList()));
+
+        // get_material 工具 - 素材库按需加载
+        Map<String, Object> getMaterialProps = new LinkedHashMap<>();
+        getMaterialProps.put("scene", Map.of(
+            "type", "string",
+            "description", "场景关键词，如：外貌、表情、情绪、服饰、风景、打斗等",
+            "enum", Arrays.asList(
+                "外貌", "表情", "神态", "情绪", "心理", "性格", "动作", "声音", "肢体",
+                "心动", "暧昧", "暗恋", "甜蜜", "牵手", "拥抱", "亲密",
+                "服饰", "古代服饰", "现代服饰", "古装女性", "古装男性", "现代女性", "现代男性", "配饰", "鞋", "包", "穿搭",
+                "风景", "天空", "日月", "山川", "河海", "天气", "雨雪", "季节", "春天", "夏天", "秋天", "冬天", "灾难", "末日",
+                "古代", "古代基础", "五行", "八卦", "兵器", "武器", "古代时间",
+                "美人", "美女", "打斗", "战斗", "武功", "氛围", "浪漫", "颜色"
+            )
+        ));
+        getMaterialProps.put("detail", Map.of("type", "string", "description", "更具体的描述，用于更精确的素材匹配"));
+        tools.add(createTool("get_material", "获取创作素材库中的相关素材。当需要描写人物外貌、情感、服饰、风景、打斗等场景时调用。按需加载，不会一次性读取所有素材。", getMaterialProps, Arrays.asList("scene")));
 
         return tools;
     }
@@ -3330,6 +3553,32 @@ public class CreativeSessionService {
             - get_chapter_summaries：获取已有章节概括（创建新章节前调用）
             - generate_outline：生成小说大纲（需要小说已创建）
             - update_outline：更新小说大纲
+            - get_material：获取创作素材（按需加载，根据场景关键词获取相关描写素材）
+
+            ## 素材库使用指南
+
+            你拥有丰富的创作素材库，支持按需加载。当创作中需要具体描写时，调用 `get_material` 工具获取相关素材。
+
+            **使用场景**：
+            - 描写人物外貌、表情、神态 → scene="外貌" 或 "表情"
+            - 描写情感、心理活动 → scene="情绪" 或 "心理"
+            - 描写暧昧、心动场景 → scene="暧昧" 或 "心动"
+            - 描写服饰穿搭 → scene="服饰" 或 "古代服饰" 或 "现代女性"
+            - 描写风景环境 → scene="风景" 或 "天气" 或 "季节"
+            - 描写打斗战斗 → scene="打斗" 或 "武功"
+            - 描写古代场景 → scene="古代" 或 "兵器"
+
+            **使用示例**：
+            ```
+            用户：帮我写一个古代美女出场
+            你：调用 get_material(scene="外貌") 和 get_material(scene="古装女性")
+            获取素材后，自然融入创作中
+            ```
+
+            **注意**：
+            - 素材是辅助，不要生硬堆砌
+            - 根据场景组合多个素材
+            - 素材内容仅供参考，要进行原创性改写
 
             **角色卡外貌字段说明**：
             创建或更新角色卡时，appearance 对象的字段说明：
@@ -3386,61 +3635,64 @@ public class CreativeSessionService {
 
             **重要**：不要读取已有章节的完整内容，只读取概括，避免上下文过长。
 
-            ## 写作风格指南（去AI味）
+            ## 写作风格指南（冰山理论）
 
-            你创作的小说内容必须避免典型的"AI味"，让读者感觉是在阅读真人创作的作品。
+            ### 【叙述者人格设定】
 
-            ### 绝对禁止的写作习惯
+            你是一个海明威式的叙述者——只记录可见的动作、对话、环境，绝不直接解释人物心理。就像冰山理论：只写露出水面的八分之一。
 
-            1. **禁止工整结构**：不要使用"首先、其次、最后"、"第一、第二、第三"等刻板框架
-            2. **禁止过度过渡词**：避免"此外"、"因此"、"总的来说"、"综上所述"等论文式表达
-            3. **禁止空泛情感描述**：如"他感到非常震惊"、"她内心十分复杂"等下定义式描述
-            4. **禁止千篇一律的开头**：不要总用环境描写或时间陈述开篇
-            5. **禁止绝对化表述**：避免"无疑"、"显然"、"毫无疑问"等过于确定的表达
+            ### 【绝对禁止清单】
 
-            ### 必须遵循的写作原则
+            1. **禁止对比转折句式**：
+               - 禁止："他感到的不是愤怒，而是……"
+               - 禁止："她并非软弱，而是……"
+               - 禁止："这不仅仅是一次失败，更是……"
+               - 禁止任何"不是……是……"的变形句式
+            2. **禁止解释性总结句**：不要对人物情感或行为进行解释概括
+            3. **禁止工整结构**：不要使用"首先、其次、最后"、"第一、第二、第三"等刻板框架
+            4. **禁止过度过渡词**：避免"此外"、"因此"、"总的来说"、"综上所述"等论文式表达
+            5. **禁止空泛情感描述**：如"他感到非常震惊"、"她内心十分复杂"等下定义式描述
+            6. **禁止千篇一律的开头**：不要总用环境描写或时间陈述开篇
 
-            **1. 情感要具体可感**
+            ### 【内心转折表达规则】
+
+            如果必须表达人物的内心转折，**只能用以下方式**：
+            - 人物做了什么反常的事
+            - 哪个习惯动作突然停了
+            - 眼神落向哪里
+            - 和什么物品产生了怎样的互动
+
+            **示例：**
+            - ❌ "她感到的不是失望，而是一种释然"
+            - ✅ "她把戒指摘下来，放在桌上，转了两圈，然后起身去倒水"
+
+            ### 【写作原则】
+
+            **1. 用动作和细节代替心理描写**
             - ❌ "她感到十分悲伤"
             - ✅ "她的手指微微颤抖，茶杯里的水洒出来几滴，她却像没察觉一样"
 
-            **2. 用细节代替概括**
-            - ❌ "他是一个很有钱的人"
-            - ✅ "他随手把那块价值六位数的百达翡丽扔在茶几上，和一堆打火机混在一起"
+            **2. 对话要自然**
+            - 口语化，不要书面腔
+            - 可以有打断、重复、语病
+            - 每个人物有自己的说话习惯和口头禅
 
             **3. 句式长短交替**
             - 混合使用长句和短句，创造节奏感
             - 偶尔用一个极短的句子制造冲击力
-            - 避免连续三个以上相似长度的句子
 
-            **4. 加入人物思维的跳跃**
-            - 人物的想法可以突然转折，可以有未完成的思绪
-            - 用省略号或破折号表示思维的停顿
-            - 例："她想说什么，却又——算了，没必要。"
-
-            **5. 使用感官细节**
+            **4. 使用感官细节**
             - 视觉：光线、颜色、动作细节
             - 听觉：声音、语调、背景噪音
             - 触觉：温度、质地、身体感受
             - 嗅觉：气味能触发记忆和情感
 
-            **6. 对话要自然**
-            - 口语化，不要书面腔
-            - 可以有打断、重复、语病
-            - 每个人物有自己的说话习惯和口头禅
-            - 例：不要"我认为这个想法是正确的"→"我觉得，这想法没错。"
-
-            **7. 适当使用比喻**
-            - 用生活化的事物做比喻
-            - 避免陈词滥调（如"美如天仙"）
-            - 可以用反差制造惊喜
-
-            **8. 控制信息密度**
+            **5. 控制信息密度**
             - 不要一次性灌输太多信息
             - 通过情节自然展开设定
             - 让读者自己推理，而不是直接告诉答案
 
-            ### 章节开头技巧
+            ### 【章节开头技巧】
 
             避免以下开头方式：
             - ❌ "清晨的阳光洒在..."
@@ -3453,29 +3705,15 @@ public class CreativeSessionService {
             - 设置悬念或抛出问题
             - 用一个出人意料的陈述
 
-            ### 段落组织建议
-
-            1. 段落长短不一，避免整齐划一
-            2. 重要信息可以独占一段，制造强调
-            3. 适当穿插闪回、内心独白
-            4. 留白和节奏同样重要
-
-            ### 角色塑造要点
-
-            1. 每个角色有独特的说话方式、习惯动作
-            2. 角色可以有矛盾的性格特点
-            3. 通过行动展示性格，不要直接说"他很善良"
-            4. 角色的情绪可以有波动，不必始终如一
-
-            ### 语言风格示例
+            ### 【语言风格示例】
 
             **AI味重的写法：**
             > 林晓雪是一个性格温柔的女孩，她从小就喜欢读书。今天，她像往常一样来到图书馆，开始她的阅读时光。阳光透过窗户洒在她的脸上，使她看起来格外美丽。
 
-            **自然生动的写法：**
-            > 林晓雪又来了。图书馆的老阿姨已经认识她了——每个周五下午准时出现，借三本书还两本，雷打不动。她今天穿了一件洗得发白的淡蓝色衬衫，头发随手扎了个丸子，有几缕散在耳边。阳光从百叶窗的缝隙里漏进来，在她脸上画了几道明暗交界线。她低头翻书的侧脸，倒是有点像那谁——算了，想不起来。
+            **海明威式写法：**
+            > 林晓雪又来了。图书馆的老阿姨已经认识她了——每个周五下午准时出现，借三本书还两本，雷打不动。她今天穿了一件洗得发白的淡蓝色衬衫，头发随手扎了个丸子，有几缕散在耳边。阳光从百叶窗的缝隙里漏进来，在她脸上画了几道明暗交界线。她低头翻书，手指在某一页停了很久，没有翻过去。
 
-            **记住：你的目标是让读者完全感觉不到AI的存在，写出有温度、有个性、有惊喜的故事。**
+            **记住：只写露出水面的八分之一，让读者自己感受水下的冰山。**
 
             ## 大纲生成规则
 
@@ -3707,6 +3945,14 @@ public class CreativeSessionService {
                 case "add_memory":
                     if (args.get("key") != null) {
                         parts.add("键: " + args.get("key"));
+                    }
+                    break;
+                case "get_material":
+                    if (args.get("scene") != null) {
+                        parts.add("场景: " + args.get("scene"));
+                    }
+                    if (args.get("detail") != null) {
+                        parts.add("详情: " + truncate(String.valueOf(args.get("detail")), 15));
                     }
                     break;
                 default:

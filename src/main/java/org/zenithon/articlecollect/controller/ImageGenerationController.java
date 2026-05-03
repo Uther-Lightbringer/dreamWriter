@@ -52,6 +52,7 @@ public class ImageGenerationController {
             Integer n = request.get("n") != null ? ((Number) request.get("n")).intValue() : null;
             @SuppressWarnings("unchecked")
             List<String> imageUrls = (List<String>) request.get("imageUrls");
+            String promptPriority = (String) request.get("promptPriority");
 
             if (prompt == null || prompt.trim().isEmpty()) {
                 response.put("success", false);
@@ -77,9 +78,16 @@ public class ImageGenerationController {
 
             // 根据模型能力过滤参数
             Integer effectiveSeed = capability.isSupportsSeed() ? seed : null;
+            String effectiveResolution = capability.isSupportsResolution() ? resolution : null;
+            String effectiveQuality = capability.isSupportsQuality() ? quality : null;
+            Integer effectiveN = capability.isSupportsBatch() ? n : null;
+            List<String> effectiveImageUrls = capability.isSupportsImageToImage() ? imageUrls : null;
+            String effectivePromptPriority = capability.isSupportsPromptPriority() ? promptPriority : null;
 
-            // 调用图片生成服务
-            String taskId = imageService.generateImage(prompt, size, effectiveSeed);
+            // 调用图片生成服务（使用完整参数版本）
+            String taskId = imageService.generateImage(prompt, size, effectiveSeed,
+                    effectiveResolution, effectiveQuality, effectiveN,
+                    effectiveImageUrls, effectivePromptPriority);
 
             response.put("success", true);
             response.put("taskId", taskId);
@@ -102,6 +110,9 @@ public class ImageGenerationController {
             if (!capability.isSupportsImageToImage() && imageUrls != null && !imageUrls.isEmpty()) {
                 response.put("warning", "当前模型不支持图生图，已忽略 imageUrls 参数");
             }
+            if (!capability.isSupportsPromptPriority() && promptPriority != null) {
+                response.put("warning", "当前模型不支持 prompt_priority 参数，已忽略");
+            }
 
             return ResponseEntity.ok(response);
 
@@ -116,7 +127,7 @@ public class ImageGenerationController {
      * 查询任务状态
      */
     @GetMapping("/status/{taskId}")
-    public ResponseEntity<Map<String, Object>> getTaskStatus(@PathVariable String taskId) {
+    public ResponseEntity<Map<String, Object>> getTaskStatus(@PathVariable("taskId") String taskId) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -163,7 +174,7 @@ public class ImageGenerationController {
     private boolean validateSize(String size) {
         // 检查比例格式 (如 16:9)
         if (size.contains(":")) {
-            String[] validRatios = {"1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "1:2", "2:1"};
+            String[] validRatios = {"auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "1:2", "2:1", "21:9"};
             for (String ratio : validRatios) {
                 if (ratio.equals(size)) {
                     return true;
@@ -252,7 +263,7 @@ public class ImageGenerationController {
      * 删除图片历史记录
      */
     @DeleteMapping("/history/{id}")
-    public ResponseEntity<Map<String, Object>> deleteHistory(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteHistory(@PathVariable("id") Long id) {
         Map<String, Object> response = new HashMap<>();
         try {
             historyService.deleteHistory(id);

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zenithon.articlecollect.dto.CharacterCard;
 import org.zenithon.articlecollect.dto.CharacterCardAppearance;
@@ -55,9 +56,16 @@ public class NovelGeneratorStepService {
         currentModel.remove();
     }
 
+    private MaterialService materialService;
+
     public NovelGeneratorStepService(AIPromptService aiPromptService, ObjectMapper objectMapper) {
         this.aiPromptService = aiPromptService;
         this.objectMapper = objectMapper;
+    }
+
+    @Autowired
+    public void setMaterialService(MaterialService materialService) {
+        this.materialService = materialService;
     }
 
     /**
@@ -403,12 +411,16 @@ public class NovelGeneratorStepService {
 
         String systemPrompt = SYSTEM_PREFIX + "根据关键词得出来的内容，我需要进行续扩写。对故事的扩写保持输入的内容的基本基调，不要偏离基调。\n" +
             "文章中要加入更多具体的例子、生动的描述和感官细节等。使用具体的例子和生动的故事。\n" +
-            "调教工具：" + tools + "\n" +
+            "可用的创作工具：" + tools + "\n" +
             "玩法：" + gameplay + "\n" +
             "世界观:" + worldview + "\n" +
             "可用的人物角色卡:" + charactersJson + "\n" +
             "叙述视角：" + pointOfView + "\n" +
-            "主角:" + protagonist;
+            "主角:" + protagonist + "\n\n" +
+            "## 写作原则\n" +
+            "- 采用海明威式冰山理论：只写露出水面的八分之一，用动作和细节代替心理描写\n" +
+            "- 禁止解释性总结句和空泛情感描述\n" +
+            "- 章节概括只描写动作和事实，不要带有总结性话语";
 
         String userPrompt = "先生成整个故事的大纲，然后帮我生成" + chapterCount + "个章节，章节标题和章节概括。\n\n" +
             "根据" + keyword + "来创作一个故事。\n\n" +
@@ -691,7 +703,10 @@ public class NovelGeneratorStepService {
     }
 
     /**
-     * 扩写章节
+     * 扩写章节（两阶段生成）
+     * 第一阶段：AI 分析章节内容，输出需要的素材关键词
+     * 第二阶段：加载素材后，正式扩写
+     *
      * @param chapterInfo 章节信息
      * @param outline 整体大纲
      * @param relevantContext 相关上下文
@@ -710,7 +725,14 @@ public class NovelGeneratorStepService {
                                 String languageStyle, int wordsPerChapter) throws Exception {
         logger.info("开始扩写章节: {}", chapterInfo.getSection());
 
-        String systemPrompt = SYSTEM_PREFIX + "女王可以使用的工具：" + tools + "\n" +
+        // ========== 第一阶段：AI 分析需要的素材 ==========
+        String materialsContent = "";
+        if (materialService != null) {
+            materialsContent = analyzeMaterialsByAI(chapterInfo, outline, relevantContext, genre);
+        }
+
+        // ========== 第二阶段：带素材正式扩写 ==========
+        String systemPrompt = SYSTEM_PREFIX + "可用的创作工具：" + tools + "\n" +
             "玩法：" + gameplay + "\n" +
             requires + "\n" +
             "# 以" + genre + "的格式进行描写。\n" +
@@ -718,7 +740,28 @@ public class NovelGeneratorStepService {
             "语言风格：" + languageStyle + "\n" +
             "每章字数要求：" + wordsPerChapter + "字以上\n" +
             "故事扩写里面的人物要严格按照角色卡进行：" + relevantContext + "\n" +
-            "叙述视角：" + pointOfView;
+            "叙述视角：" + pointOfView + "\n\n" +
+            "## 写作风格指南（冰山理论）\n\n" +
+            "### 【叙述者人格设定】\n\n" +
+            "你是一个海明威式的叙述者——只记录可见的动作、对话、环境，绝不直接解释人物心理。就像冰山理论：只写露出水面的八分之一。\n\n" +
+            "### 【绝对禁止清单】\n\n" +
+            "1. **禁止对比转折句式**：\n" +
+            "   - 禁止：\"他感到的不是愤怒，而是……\"\n" +
+            "   - 禁止：\"她并非软弱，而是……\"\n" +
+            "   - 禁止：\"这不仅仅是一次失败，更是……\"\n" +
+            "   - 禁止任何\"不是……是……\"的变形句式\n" +
+            "2. **禁止解释性总结句**：不要对人物情感或行为进行解释概括\n" +
+            "3. **禁止工整结构**：不要使用\"首先、其次、最后\"、\"第一、第二、第三\"等刻板框架\n" +
+            "4. **禁止过度过渡词**：避免\"此外\"、\"因此\"、\"总的来说\"、\"综上所述\"等论文式表达\n" +
+            "5. **禁止空泛情感描述**：如\"他感到非常震惊\"、\"她内心十分复杂\"等下定义式描述\n" +
+            "6. **禁止陈述句式**：人物对话不要有陈述句，要口语化、有个性\n\n" +
+            "### 【内心转折表达规则】\n\n" +
+            "如果必须表达人物的内心转折，**只能用以下方式**：\n" +
+            "- 人物做了什么反常的事\n" +
+            "- 哪个习惯动作突然停了\n" +
+            "- 眼神落向哪里\n" +
+            "- 和什么物品产生了怎样的互动\n\n" +
+            materialsContent;
 
         String userPrompt = "## 整体大纲\n" + outline + "\n## 需要扩展的段落\n" +
             chapterInfo.getSection() + "\n" + chapterInfo.getDescription() + "\n\n" +
@@ -734,6 +777,223 @@ public class NovelGeneratorStepService {
         return result;
     }
 
+    /**
+     * 第一阶段：让 AI 分析章节内容，输出需要的素材关键词
+     * 然后根据 AI 返回的关键词加载素材
+     */
+    private String analyzeMaterialsByAI(GeneratedOutline.ChapterInfo chapterInfo,
+                                         String outline, String relevantContext, String genre) {
+        try {
+            // 构建分析提示词
+            String analyzePrompt = "你是一个创作素材分析师。请分析以下章节内容，列出创作时需要参考的素材类型。\n\n" +
+                "## 可用的素材类型\n" +
+                "外貌、表情、神态、情绪、心理、性格、动作、声音、肢体\n" +
+                "心动、暧昧、暗恋、甜蜜、牵手、拥抱、亲密\n" +
+                "服饰、古代服饰、现代服饰、古装女性、古装男性、现代女性、现代男性\n" +
+                "风景、天空、日月、山川、河海、天气、雨雪、季节、春天、夏天、秋天、冬天\n" +
+                "古代、古代基础、五行、八卦、兵器、武器\n" +
+                "美人、美女、打斗、战斗、武功、氛围、浪漫、颜色\n\n" +
+                "## 章节信息\n" +
+                "标题：" + chapterInfo.getSection() + "\n" +
+                "描述：" + chapterInfo.getDescription() + "\n" +
+                "体裁：" + genre + "\n\n" +
+                "## 输出要求\n" +
+                "请输出3-5个最相关的素材类型关键词，用逗号分隔，不要输出其他内容。\n" +
+                "示例输出：外貌,古代服饰,情绪,风景";
+
+            String analysisResult = callAPI(
+                "你是一个精准的素材分析师，只输出关键词，不要任何解释。",
+                analyzePrompt,
+                false, null, 200
+            );
+
+            // 解析 AI 返回的关键词
+            List<String> materialTypes = parseMaterialTypes(analysisResult);
+            logger.info("AI 分析需要的素材类型: {}", materialTypes);
+
+            if (materialTypes.isEmpty()) {
+                // 如果 AI 分析失败，回退到关键词匹配
+                return analyzeAndLoadMaterialsByKeyword(chapterInfo);
+            }
+
+            // 根据关键词加载素材
+            StringBuilder materials = new StringBuilder();
+            materials.append("## 【参考素材】\n\n");
+            materials.append("以下是根据章节内容分析后加载的参考素材，请在创作中参考使用（要进行原创性改写，不要生硬堆砌）：\n\n");
+
+            List<String> loadedScenes = new ArrayList<>();
+            for (String type : materialTypes) {
+                String material = loadMaterial(type.trim(), loadedScenes);
+                if (!material.isEmpty()) {
+                    materials.append(material);
+                }
+            }
+
+            materials.append("\n**使用提示**：以上素材仅供参考，请根据剧情需要选择性使用，并进行原创性改写。\n\n");
+
+            logger.info("加载素材完成，章节: {}, 加载的素材类型: {}", chapterInfo.getSection(), loadedScenes);
+            return materials.toString();
+
+        } catch (Exception e) {
+            logger.warn("AI 分析素材失败，回退到关键词匹配: {}", e.getMessage());
+            return analyzeAndLoadMaterialsByKeyword(chapterInfo);
+        }
+    }
+
+    /**
+     * 解析 AI 返回的素材类型关键词
+     */
+    private List<String> parseMaterialTypes(String aiResponse) {
+        List<String> types = new ArrayList<>();
+        if (aiResponse == null || aiResponse.trim().isEmpty()) {
+            return types;
+        }
+
+        // 清理响应，移除可能的标点和空格
+        String cleaned = aiResponse.replaceAll("[,.;:!?\u3000-\u303F\uFF00-\uFFEF\\s]+", ",");
+
+        // 有效的素材类型列表
+        List<String> validTypes = List.of(
+            "外貌", "表情", "神态", "情绪", "心理", "性格", "动作", "声音", "肢体",
+            "心动", "暧昧", "暗恋", "甜蜜", "牵手", "拥抱", "亲密",
+            "服饰", "古代服饰", "现代服饰", "古装女性", "古装男性", "现代女性", "现代男性", "配饰", "鞋", "包", "穿搭",
+            "风景", "天空", "日月", "山川", "河海", "天气", "雨雪", "季节", "春天", "夏天", "秋天", "冬天", "灾难", "末日",
+            "古代", "古代基础", "五行", "八卦", "兵器", "武器", "古代时间",
+            "美人", "美女", "打斗", "战斗", "武功", "氛围", "浪漫", "颜色"
+        );
+
+        // 分割并匹配有效类型
+        String[] parts = cleaned.split(",");
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (validTypes.contains(trimmed)) {
+                types.add(trimmed);
+            }
+        }
+
+        return types;
+    }
+
+    /**
+     * 回退方案：根据关键词匹配加载素材
+     */
+    private String analyzeAndLoadMaterialsByKeyword(GeneratedOutline.ChapterInfo chapterInfo) {
+        StringBuilder materials = new StringBuilder();
+        materials.append("## 【参考素材】\n\n");
+        materials.append("以下是根据章节内容自动加载的参考素材，请在创作中参考使用（要进行原创性改写，不要生硬堆砌）：\n\n");
+
+        String section = chapterInfo.getSection() != null ? chapterInfo.getSection() : "";
+        String description = chapterInfo.getDescription() != null ? chapterInfo.getDescription() : "";
+        String combinedText = section + " " + description;
+
+        List<String> loadedScenes = new ArrayList<>();
+
+        // 情感相关
+        if (containsAny(combinedText, "心动", "暧昧", "暗恋", "喜欢", "爱", "恋爱", "甜蜜", "情")) {
+            materials.append(loadMaterial("暧昧", loadedScenes));
+            materials.append(loadMaterial("心动", loadedScenes));
+        }
+        if (containsAny(combinedText, "伤心", "难过", "哭", "泪", "悲伤", "痛苦", "绝望")) {
+            materials.append(loadMaterial("情绪", loadedScenes));
+        }
+
+        // 外貌相关
+        if (containsAny(combinedText, "美女", "帅哥", "容貌", "外貌", "长相", "漂亮", "英俊", "美")) {
+            materials.append(loadMaterial("外貌", loadedScenes));
+        }
+        if (containsAny(combinedText, "表情", "神态", "眼神", "目光", "微笑", "笑", "哭")) {
+            materials.append(loadMaterial("表情", loadedScenes));
+        }
+
+        // 服饰相关
+        if (containsAny(combinedText, "衣服", "穿着", "服饰", "裙", "西装", "古装", "汉服", "校服")) {
+            if (containsAny(combinedText, "古", "古代", "汉服", "唐装", "宋", "明", "清")) {
+                materials.append(loadMaterial("古代服饰", loadedScenes));
+            } else {
+                materials.append(loadMaterial("现代服饰", loadedScenes));
+            }
+        }
+
+        // 场景相关
+        if (containsAny(combinedText, "风景", "景色", "山", "水", "河", "海", "天空", "云", "日", "月", "星")) {
+            materials.append(loadMaterial("风景", loadedScenes));
+        }
+        if (containsAny(combinedText, "雨", "雪", "风", "霜", "雾", "天气", "晴", "阴")) {
+            materials.append(loadMaterial("天气", loadedScenes));
+        }
+        if (containsAny(combinedText, "春", "夏", "秋", "冬", "季节", "花开", "落叶", "雪")) {
+            materials.append(loadMaterial("季节", loadedScenes));
+        }
+
+        // 动作相关
+        if (containsAny(combinedText, "打", "斗", "战", "武", "拳", "剑", "刀", "战斗", "打架")) {
+            materials.append(loadMaterial("打斗", loadedScenes));
+        }
+        if (containsAny(combinedText, "跑", "跳", "走", "坐", "站", "躺", "动作", "姿态")) {
+            materials.append(loadMaterial("动作", loadedScenes));
+        }
+
+        // 声音相关
+        if (containsAny(combinedText, "声音", "说话", "喊", "叫", "笑", "哭", "语", "声")) {
+            materials.append(loadMaterial("声音", loadedScenes));
+        }
+
+        // 心理相关
+        if (containsAny(combinedText, "想", "心", "回忆", "记忆", "思考", "内心", "心理")) {
+            materials.append(loadMaterial("心理", loadedScenes));
+        }
+
+        // 如果没有匹配到任何素材，加载一些通用素材
+        if (loadedScenes.isEmpty()) {
+            materials.append(loadMaterial("情绪", loadedScenes));
+            materials.append(loadMaterial("动作", loadedScenes));
+        }
+
+        materials.append("\n**使用提示**：以上素材仅供参考，请根据剧情需要选择性使用，并进行原创性改写。\n\n");
+
+        logger.info("预加载素材完成（关键词匹配），章节: {}, 加载的素材类型: {}", section, loadedScenes);
+        return materials.toString();
+    }
+
+    /**
+     * 加载单个素材
+     */
+    private String loadMaterial(String scene, List<String> loadedScenes) {
+        if (loadedScenes.contains(scene)) {
+            return ""; // 避免重复加载
+        }
+        loadedScenes.add(scene);
+
+        try {
+            String content = materialService.getMaterialsByScene(scene);
+            if (content != null && !content.isEmpty()) {
+                // 截取部分内容，避免提示词过长
+                if (content.length() > 1500) {
+                    content = content.substring(0, 1500) + "\n...(内容已截断)";
+                }
+                return content + "\n\n";
+            }
+        } catch (Exception e) {
+            logger.warn("加载素材失败: scene={}, error={}", scene, e.getMessage());
+        }
+        return "";
+    }
+
+    /**
+     * 检查文本是否包含任意一个关键词
+     */
+    private boolean containsAny(String text, String... keywords) {
+        if (text == null || text.isEmpty()) {
+            return false;
+        }
+        for (String keyword : keywords) {
+            if (text.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ==================== Step 8: 去除AI味润色 ====================
 
     /**
@@ -744,29 +1004,48 @@ public class NovelGeneratorStepService {
     public String polishContent(String content, int wordsPerChapter) throws Exception {
         logger.info("开始去除AI味润色");
 
-        String systemPrompt = SYSTEM_PREFIX + "# 质量检查清单\n" +
-            "需要对传入的扩写内容进行检查，并修改。检查完之后修改对应的内容，更符合清单。结果只输出修改后的文章,不要附带其他任何东西。。\n" +
-            "请用以下规范输出：\n" +
-            "1.语言平实直述，避免抽象隐喻；\n" +
-            "2.使用日常场景化案例辅助说明；\n" +
-            "3.优先选择具体名词替代抽象概念；\n" +
-            "4.保持段落简明（不超过5行）；\n" +
-            "5.技术表述需附通俗解释；\n" +
-            "6.禁用文学化修辞；\n" +
-            "7.重点信息前置；\n" +
-            "8.复杂内容分点说明；\n" +
-            "9.保持口语化但不过度简化专业内容；\n" +
-            "10.确保信息准确前提下优先选择大众认知词汇\n" +
-            "交付章节前使用此清单确保质量。\n\n" +
-            "**深度润色（去除AI味）** - 重点检查并修改：\n" +
-            "    - **去除过度修饰的形容词**：删减「璀璨」、「瑰丽」、「绚烂」等AI常用词堆砌\n" +
-            "    - **减少抽象陈述**：把「心中涌起复杂的情感」改为具体动作/对话\n" +
-            "    - **打破四字格律**：避免「心潮澎湃、热血沸腾」等陈词滥调\n" +
-            "    - **增加口语化表达**：人物对话要有个性，避免「书面语套话」\n" +
-            "    - **优化节奏感**：长句和短句交替，避免句式单调\n" +
-            "    - **细节具象化**：用具体的视觉/听觉/嗅觉细节替代笼统描述\n" +
-            "    - **去掉「记住」**： 去掉类似「记住xxx」这样的对话，替换成更贴近人的话语\n" +
-            "    - **人物对话不要有陈述句**\n\n" +
+        String systemPrompt = SYSTEM_PREFIX + "# 质量检查与润色\n\n" +
+            "你是一名专业的文字润色师，需要对传入的内容进行深度润色。结果只输出修改后的文章，不要附带其他任何说明。\n\n" +
+            "## 【叙述者人格设定 - 海明威式冰山理论】\n\n" +
+            "你是一个海明威式的叙述者——只记录可见的动作、对话、环境，绝不直接解释人物心理。就像冰山理论：只写露出水面的八分之一。\n\n" +
+            "## 【绝对禁止清单 - 必须检查并修改】\n\n" +
+            "1. **禁止对比转折句式**：\n" +
+            "   - 禁止：\"他感到的不是愤怒，而是……\"\n" +
+            "   - 禁止：\"她并非软弱，而是……\"\n" +
+            "   - 禁止：\"这不仅仅是一次失败，更是……\"\n" +
+            "   - 禁止任何\"不是……是……\"、\"与其说……不如说……\"的变形句式\n" +
+            "   - 直接描述事实和感受，不要用对比来解释\n\n" +
+            "2. **禁止解释性总结句**：\n" +
+            "   - 不要对人物情感或行为进行解释概括\n" +
+            "   - 删除所有\"这说明了...\"、\"这意味着...\"、\"由此可见...\"等总结性语句\n\n" +
+            "3. **禁止空泛情感描述**：\n" +
+            "   - 删除\"他感到非常震惊\"、\"她内心十分复杂\"、\"心中涌起复杂的情感\"等下定义式描述\n" +
+            "   - 改为具体的动作、表情、互动\n\n" +
+            "4. **禁止过度修饰**：\n" +
+            "   - 删减「璀璨」、「瑰丽」、「绚烂」等AI常用词堆砌\n" +
+            "   - 避免「心潮澎湃、热血沸腾」等陈词滥调\n\n" +
+            "5. **禁止工整结构**：\n" +
+            "   - 不要使用\"首先、其次、最后\"、\"第一、第二、第三\"等刻板框架\n" +
+            "   - 避免\"此外\"、\"因此\"、\"总的来说\"、\"综上所述\"等论文式表达\n\n" +
+            "6. **禁止陈述句式**：\n" +
+            "   - 人物对话不要有陈述句，要口语化、有个性\n" +
+            "   - 去掉类似「记住xxx」这样的对话，替换成更贴近人的话语\n\n" +
+            "## 【内心转折表达规则】\n\n" +
+            "如果必须表达人物的内心转折，**只能用以下方式**：\n" +
+            "- 人物做了什么反常的事\n" +
+            "- 哪个习惯动作突然停了\n" +
+            "- 眼神落向哪里\n" +
+            "- 和什么物品产生了怎样的互动\n\n" +
+            "示例：\n" +
+            "- ❌ \"她感到的不是失望，而是一种释然\"\n" +
+            "- ✅ \"她把戒指摘下来，放在桌上，转了两圈，然后起身去倒水\"\n\n" +
+            "## 【必须遵循的写作原则】\n\n" +
+            "1. **用动作和细节代替心理描写**\n" +
+            "2. **口语化表达**：人物对话要有个性，避免书面语套话\n" +
+            "3. **句式长短交替**：长句和短句交替，避免句式单调\n" +
+            "4. **细节具象化**：用具体的视觉/听觉/嗅觉细节替代笼统描述\n" +
+            "5. **语言平实直述**：避免抽象隐喻，优先选择具体名词\n" +
+            "6. **段落简明**：保持段落不超过5行\n\n" +
             "字数不得少于" + wordsPerChapter + "字。";
 
         String result = callAPI(systemPrompt, content, true, "high", MAX_TOKENS);

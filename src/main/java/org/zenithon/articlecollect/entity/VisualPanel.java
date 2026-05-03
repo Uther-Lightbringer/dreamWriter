@@ -34,6 +34,9 @@ public class VisualPanel {
     @Column(columnDefinition = "TEXT")
     private String summary;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "create_time")
     private LocalDateTime createTime;
 
@@ -69,6 +72,8 @@ public class VisualPanel {
     public void setAction(String action) { this.action = action; }
     public String getSummary() { return summary; }
     public void setSummary(String summary) { this.summary = summary; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public LocalDateTime getCreateTime() { return createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }
 }

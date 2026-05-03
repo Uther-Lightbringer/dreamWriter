@@ -13,6 +13,7 @@ public class ModelCapability {
     private boolean supportsBatch;
     private boolean supportsImageToImage;
     private boolean supportsSeed;
+    private boolean supportsPromptPriority;
     private List<String> supportedSizes;
     private int maxPromptLength;
     private int minPixel;
@@ -34,6 +35,8 @@ public class ModelCapability {
     public void setSupportsImageToImage(boolean supportsImageToImage) { this.supportsImageToImage = supportsImageToImage; }
     public boolean isSupportsSeed() { return supportsSeed; }
     public void setSupportsSeed(boolean supportsSeed) { this.supportsSeed = supportsSeed; }
+    public boolean isSupportsPromptPriority() { return supportsPromptPriority; }
+    public void setSupportsPromptPriority(boolean supportsPromptPriority) { this.supportsPromptPriority = supportsPromptPriority; }
     public List<String> getSupportedSizes() { return supportedSizes; }
     public void setSupportedSizes(List<String> supportedSizes) { this.supportedSizes = supportedSizes; }
     public int getMaxPromptLength() { return maxPromptLength; }

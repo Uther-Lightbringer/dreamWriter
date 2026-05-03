@@ -2442,6 +2442,10 @@
                         <span class="stats-label">预估 tokens</span>
                         <span class="stats-value" id="statsTokens">~0</span>
                     </div>
+                    <div class="stats-row">
+                        <span class="stats-label">累计费用</span>
+                        <span class="stats-value" id="statsCost" style="color: #e67e22;">¥0.00</span>
+                    </div>
                     <div class="stats-progress">
                         <div class="stats-progress-bar">
                             <div class="stats-progress-fill" id="statsProgressFill" style="width: 0%"></div>
@@ -2682,6 +2686,7 @@ let isStreaming = false;
                 let fullResponse = '';
                 let fullReasoning = '';
                 let currentUsage = null;  // 存储 usage 信息
+                let totalSessionCost = 0;  // 累计会话费用（元）
                 let aiMessageEl = null;
                 let aiContentEl = null;
                 let reasoningBlockEl = null;
@@ -2759,6 +2764,15 @@ let isStreaming = false;
                                 } else if (currentEventType === 'usage') {
                                     // 存储 usage 信息
                                     currentUsage = json;
+                                    // 累计会话费用（DeepSeek V4 Flash 定价）
+                                    const cacheHit = json.prompt_cache_hit_tokens || 0;
+                                    const cacheMiss = json.prompt_cache_miss_tokens || (cacheHit > 0 ? 0 : (json.prompt_tokens || 0));
+                                    const completion = json.completion_tokens || 0;
+                                    const msgCost = (cacheHit / 1_000_000) * 0.02
+                                                  + (cacheMiss / 1_000_000) * 1.0
+                                                  + (completion / 1_000_000) * 2.0;
+                                    totalSessionCost += msgCost;
+                                    updateSessionCostDisplay();
                                 } else if (currentEventType === 'reasoning_content') {
                                     if (json.text && json.text !== 'null') {
                                         fullReasoning += json.text;
@@ -2880,6 +2894,20 @@ let isStreaming = false;
             scrollToBottom();
         }
 
+        // 更新会话累计费用显示
+        function updateSessionCostDisplay() {
+            const el = document.getElementById('statsCost');
+            if (el) {
+                if (totalSessionCost < 0.01) {
+                    el.textContent = '¥' + totalSessionCost.toFixed(6);
+                } else if (totalSessionCost < 1) {
+                    el.textContent = '¥' + totalSessionCost.toFixed(4);
+                } else {
+                    el.textContent = '¥' + totalSessionCost.toFixed(2);
+                }
+            }
+        }
+
         // 添加 token 用量标识
         function addUsageIndicator(messageEl, usage) {
             const totalTokens = usage.total_tokens || 0;
@@ -2920,18 +2948,18 @@ let isStreaming = false;
             const cacheMiss = usage.prompt_cache_miss_tokens || 0;
             const reasoningTokens = usage.completion_tokens_details?.reasoning_tokens || 0;
 
-            // 计算费用（DeepSeek 定价：元/百万 tokens）
-            // 缓存命中: 0.5, 缓存未命中: 2.0, 输出: 8.0
+            // 计算费用（DeepSeek V4 Flash 定价：元/百万 tokens）
+            // 缓存命中: 0.02, 缓存未命中: 1.0, 输出: 2.0
             const actualCacheHit = cacheHit || 0;
             const actualCacheMiss = cacheMiss || (cacheHit > 0 ? 0 : promptTokens);
 
-            const cacheHitCost = (actualCacheHit / 1_000_000) * 0.5;
-            const cacheMissCost = (actualCacheMiss / 1_000_000) * 2.0;
-            const outputCost = (completionTokens / 1_000_000) * 8.0;
+            const cacheHitCost = (actualCacheHit / 1_000_000) * 0.02;
+            const cacheMissCost = (actualCacheMiss / 1_000_000) * 1.0;
+            const outputCost = (completionTokens / 1_000_000) * 2.0;
             const totalCost = cacheHitCost + cacheMissCost + outputCost;
 
             // 计算节省的费用（如果没有缓存命中）
-            const costWithoutCache = (promptTokens / 1_000_000) * 2.0 + outputCost;
+            const costWithoutCache = (promptTokens / 1_000_000) * 1.0 + outputCost;
             const savedCost = costWithoutCache - totalCost;
 
             // 格式化费用显示
