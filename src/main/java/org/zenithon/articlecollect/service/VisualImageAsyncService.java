@@ -22,10 +22,14 @@ import org.zenithon.articlecollect.repository.VisualWorkRepository;
 import org.zenithon.articlecollect.util.FileUploadUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 视觉叙事图片异步生成服务
@@ -87,6 +91,23 @@ public class VisualImageAsyncService {
     }
 
     /**
+     * 分镜任务信息
+     */
+    private static class PanelTask {
+        final VisualPanel panel;
+        final Map<String, Object> panelStyle;
+        final String prompt;
+        final String taskId;
+
+        PanelTask(VisualPanel panel, Map<String, Object> panelStyle, String prompt, String taskId) {
+            this.panel = panel;
+            this.panelStyle = panelStyle;
+            this.prompt = prompt;
+            this.taskId = taskId;
+        }
+    }
+
+    /**
      * 获取任务进度
      */
     public TaskProgress getTaskProgress(Long groupId) {
@@ -132,48 +153,60 @@ public class VisualImageAsyncService {
             String globalStyle = objectMapper.writeValueAsString(outlineData.get("globalStyle"));
             List<Map<String, Object>> panelStyles = (List<Map<String, Object>>) outlineData.get("panels");
 
-            // 4. 异步并行生成图片
+            // 4. 并行生成图片
             progress.setStatus("generating_images");
 
+            // 4.1 先提交所有图片生成任务
+            List<PanelTask> panelTasks = new ArrayList<>();
             for (int i = 0; i < panels.size(); i++) {
                 VisualPanel panel = panels.get(i);
                 Map<String, Object> panelStyle = i < panelStyles.size() ? panelStyles.get(i) : null;
 
                 try {
-                    // 构建提示词：全局风格 + 分镜风格 + 分镜内容
                     String prompt = buildImagePrompt(globalStyle, panelStyle, panel);
-
-                    // 调用 EvoLink 生成图片
                     String taskId = evoLinkImageService.generateImage(prompt, "16:9", null);
-
-                    // 轮询等待完成
-                    String imageUrl = pollForImage(taskId);
-
-                    if (imageUrl != null) {
-                        // 下载并保存到本地
-                        String localPath = FileUploadUtil.downloadAndSaveImage(imageUrl, "visual", workId);
-
-                        // 保存到数据库
-                        VisualImage image = new VisualImage();
-                        image.setGroupId(groupId);
-                        image.setPanelId(panel.getId());
-                        image.setPanelNumber(panel.getPanelNumber());
-                        image.setImageUrl(localPath);
-                        image.setPrompt(prompt);
-                        imageRepository.save(image);
-
-                        // 更新分镜图片
-                        panel.setImageUrl(localPath);
-                        visualPanelRepository.save(panel);
-
-                        progress.setCompletedPanels(progress.getCompletedPanels() + 1);
-                        logger.info("分镜{}图片生成完成: {}", panel.getPanelNumber(), localPath);
-                    }
+                    panelTasks.add(new PanelTask(panel, panelStyle, prompt, taskId));
+                    logger.info("分镜{}任务已提交: taskId={}", panel.getPanelNumber(), taskId);
                 } catch (Exception e) {
-                    logger.error("分镜{}图片生成失败: {}", panel.getPanelNumber(), e.getMessage());
-                    // 继续处理下一个分镜
+                    logger.error("分镜{}提交任务失败: {}", panel.getPanelNumber(), e.getMessage());
                 }
             }
+
+            // 4.2 并行轮询所有任务
+            ExecutorService executor = Executors.newFixedThreadPool(Math.min(panelTasks.size(), 5));
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+            for (PanelTask task : panelTasks) {
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    try {
+                        String imageUrl = pollForImage(task.taskId);
+                        if (imageUrl != null) {
+                            String localPath = FileUploadUtil.downloadAndSaveImage(imageUrl, "visual", workId);
+
+                            VisualImage image = new VisualImage();
+                            image.setGroupId(groupId);
+                            image.setPanelId(task.panel.getId());
+                            image.setPanelNumber(task.panel.getPanelNumber());
+                            image.setImageUrl(localPath);
+                            image.setPrompt(task.prompt);
+                            imageRepository.save(image);
+
+                            task.panel.setImageUrl(localPath);
+                            visualPanelRepository.save(task.panel);
+
+                            progress.setCompletedPanels(progress.getCompletedPanels() + 1);
+                            logger.info("分镜{}图片生成完成: {}", task.panel.getPanelNumber(), localPath);
+                        }
+                    } catch (Exception e) {
+                        logger.error("分镜{}图片生成失败: {}", task.panel.getPanelNumber(), e.getMessage());
+                    }
+                }, executor);
+                futures.add(future);
+            }
+
+            // 4.3 等待所有任务完成
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            executor.shutdown();
 
             progress.setStatus("completed");
             logger.info("所有分镜图片生成完成: workId={}, completed={}/{}",
