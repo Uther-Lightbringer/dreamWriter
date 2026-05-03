@@ -118,7 +118,7 @@ public class NovelGenreService extends AbstractGenreService {
 
             // 更新会话
             session.setMessages(toJson(messages));
-            sessionRepository.save(session);
+            markSessionHasUserMessage(session);
 
             // 获取运行时配置
             var config = new org.zenithon.articlecollect.dto.DeepSeekRuntimeConfig();

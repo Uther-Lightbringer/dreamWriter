@@ -27,6 +27,9 @@ public class GenreSession {
     @Column(name = "status")
     private String status = "ACTIVE";
 
+    @Column(name = "has_user_message")
+    private boolean hasUserMessage = false;
+
     @Column(name = "context_data", columnDefinition = "TEXT")
     private String contextData;
 
@@ -68,6 +71,9 @@ public class GenreSession {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public boolean isHasUserMessage() { return hasUserMessage; }
+    public void setHasUserMessage(boolean hasUserMessage) { this.hasUserMessage = hasUserMessage; }
 
     public String getContextData() { return contextData; }
     public void setContextData(String contextData) { this.contextData = contextData; }

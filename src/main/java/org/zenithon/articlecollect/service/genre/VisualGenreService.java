@@ -288,7 +288,7 @@ public class VisualGenreService extends AbstractGenreService {
 
             messages.add(Map.of("role", "user", "content", content));
             session.setMessages(toJson(messages));
-            sessionRepository.save(session);
+            markSessionHasUserMessage(session);
 
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", "deepseek-chat");
@@ -732,6 +732,9 @@ public class VisualGenreService extends AbstractGenreService {
             work.setVisualType(visualType);
             work.setDescription(description);
             work = visualWorkRepository.save(work);
+
+            // 更新会话标题
+            updateSessionTitleIfNeeded(session, title);
 
             return objectMapper.writeValueAsString(Map.of(
                 "success", true,

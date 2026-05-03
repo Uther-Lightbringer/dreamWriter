@@ -16,6 +16,8 @@ public interface GenreSessionRepository extends JpaRepository<GenreSession, Long
 
     List<GenreSession> findByGenreTypeOrderByUpdateTimeDesc(String genreType);
 
+    List<GenreSession> findByGenreTypeAndHasUserMessageTrueOrderByUpdateTimeDesc(String genreType);
+
     List<GenreSession> findAllByOrderByUpdateTimeDesc();
 
     void deleteBySessionId(String sessionId);

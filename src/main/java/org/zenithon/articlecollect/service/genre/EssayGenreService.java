@@ -246,7 +246,7 @@ public class EssayGenreService extends AbstractGenreService {
 
             messages.add(Map.of("role", "user", "content", content));
             session.setMessages(toJson(messages));
-            sessionRepository.save(session);
+            markSessionHasUserMessage(session);
 
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", "deepseek-chat");
@@ -684,6 +684,9 @@ public class EssayGenreService extends AbstractGenreService {
             essay.setEssayType(essayType);
             essay.setDescription(description);
             essay = essayRepository.save(essay);
+
+            // 更新会话标题
+            updateSessionTitleIfNeeded(session, title);
 
             return objectMapper.writeValueAsString(Map.of(
                 "success", true,

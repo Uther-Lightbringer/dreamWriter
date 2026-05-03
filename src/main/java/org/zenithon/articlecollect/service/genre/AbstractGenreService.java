@@ -54,7 +54,8 @@ public abstract class AbstractGenreService implements GenreService {
 
     @Override
     public List<GenreSession> getAllSessions() {
-        return sessionRepository.findByGenreTypeOrderByUpdateTimeDesc(getGenreType());
+        // 只返回有用户消息的会话
+        return sessionRepository.findByGenreTypeAndHasUserMessageTrueOrderByUpdateTimeDesc(getGenreType());
     }
 
     @Override
@@ -66,6 +67,27 @@ public abstract class AbstractGenreService implements GenreService {
     @Override
     public void deleteSession(String sessionId) {
         sessionRepository.deleteBySessionId(sessionId);
+    }
+
+    /**
+     * 标记会话有用户消息
+     */
+    protected void markSessionHasUserMessage(GenreSession session) {
+        if (!session.isHasUserMessage()) {
+            session.setHasUserMessage(true);
+            sessionRepository.save(session);
+        }
+    }
+
+    /**
+     * 更新会话标题（用于创建作品时自动设置）
+     */
+    protected void updateSessionTitleIfNeeded(GenreSession session, String title) {
+        if (title != null && !title.trim().isEmpty()) {
+            session.setTitle(title);
+            sessionRepository.save(session);
+            logger.info("会话标题已更新: {}", title);
+        }
     }
 
     /**
