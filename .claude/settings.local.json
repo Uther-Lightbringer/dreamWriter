@@ -73,7 +73,12 @@
       "Bash(curl -s -N -X POST \"http://localhost:38081/api/genres/script/sessions/genre_15620184219f4753/chat\" -H \"Content-Type: application/json\" -d '{\"content\":\"你好\"}')",
       "Bash(curl -s -N -X POST \"http://localhost:38081/api/genres/script/sessions/genre_15620184219f4753/chat\" -H \"Content-Type: application/json\" -d \"{\\\\\"content\\\\\":\\\\\"hello\\\\\"}\")",
       "Bash(curl -s -X POST http://localhost:38081/api/genres/script/sessions -H \"Content-Type: application/json\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git push:*)",
+      "Bash(ping -n 2 github.com)",
+      "Bash(git config:*)",
+      "Bash(curl -I --connect-timeout 10 https://github.com)",
+      "Bash(ls -la test_*)"
     ]
   }
 }
