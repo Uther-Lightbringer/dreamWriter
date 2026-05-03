@@ -78,7 +78,8 @@
       "Bash(ping -n 2 github.com)",
       "Bash(git config:*)",
       "Bash(curl -I --connect-timeout 10 https://github.com)",
-      "Bash(ls -la test_*)"
+      "Bash(ls -la test_*)",
+      "Bash(ls -la *.sql)"
     ]
   }
 }
